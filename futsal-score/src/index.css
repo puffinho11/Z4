@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.hidden-section{display:none}
+@keyframes fadeInUp { from {opacity:0; transform: translateY(8px)} to {opacity:1; transform:none} }
+.fade-in-up { animation: fadeInUp .4s ease both; }
+.tooltip:hover .tooltip-card { opacity:1; transform: translateY(-2px); pointer-events:auto }
+.tooltip-card { transition: .15s ease; }
+.carousel-img { opacity:0; transition: opacity .6s ease; }
+.carousel-img.active { opacity:1; }
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    border-color: #d1d5db !important;
+}
