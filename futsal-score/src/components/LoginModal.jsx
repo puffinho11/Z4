@@ -1,34 +1,43 @@
-import React, { useState } from "react"
-import { getItem, setItem, USERS_KEY, AUTH_KEY } from "../utils/storage"
+import React, { useState } from "react";
+import { setCurrentUser, AUTH_KEY } from "../utils/storage";
+import api from "../api"; 
 
 export default function LoginModal({ onLogin }) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    const users = getItem(USERS_KEY, [])
-    const found = users.find(
-      (u) => u.username === username && u.password === password
-    )
-    if (found) {
-      setItem(AUTH_KEY, { username: found.username, role: found.role })
-      onLogin({ username: found.username, role: found.role })
-    } else {
-      setError("Usuário ou senha inválidos")
+    setError("")
+    setLoading(true)
+
+    try {
+      const response = await api.post("/users/login", { username, password })
+  
+      const { token, user } = response.data; 
+
+      const authData = { username: user.username, role: user.role, token }
+
+      setCurrentUser(authData)
+      
+      onLogin(authData)
+
+    } catch (err) {
+      console.error("Erro de login:", err.response || err)
+      const msg = err.response?.data?.msg || "Usuário ou senha inválidos. Verifique a conexão com a API."
+      setError(msg)
+
+    } finally {
+      setLoading(false)
     }
   }
 
   function createAdminIfNone() {
-    const users = getItem(USERS_KEY, [])
-    if (!users.length) {
-      const admin = { username: "admin", password: "1234", role: "admin" }
-      setItem(USERS_KEY, [admin])
-      setError("Admin criado: usuário 'admin' senha '1234'. Use para entrar.")
-    } else {
-      setError("Já existe usuário cadastrado. Peça ao admin para criar.")
-    }
+    setError(
+      "O cadastro de novos usuários é gerenciado pela tela de Administração (Admin). Peça ao administrador para criar sua conta."
+    );
   }
 
   return (
@@ -51,8 +60,11 @@ export default function LoginModal({ onLogin }) {
             type="password"
             required
           />
-          <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
-            Entrar
+          <button 
+            className="w-full bg-blue-600 text-white py-2 rounded-lg"
+            disabled={loading}
+          >
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
@@ -60,13 +72,13 @@ export default function LoginModal({ onLogin }) {
 
         <div className="mt-4 text-sm text-center">
           <p className="text-gray-600 mb-2">
-            Se não existir usuário, crie um admin padrão:
+            Não consegue entrar?
           </p>
           <button
             onClick={createAdminIfNone}
-            className="text-sm bg-gray-100 px-3 py-2 rounded-lg"
+            className="text-blue-600 hover:underline"
           >
-            Criar admin padrão
+            Informar sobre cadastro
           </button>
         </div>
       </div>
