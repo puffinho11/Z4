@@ -44,9 +44,10 @@ export default function App(){
         {section === 'desempenho' && <Desempenho />}
         {section === 'exames' && <Exames />}
         {section === 'calendario' && <Calendario />}
-        {section === 'admin' && <div>Admin (implemente como no HTML)</div>}
+        {section === 'admin' && <Admin />}
       </main>
     </div>
   )
 }
+
 

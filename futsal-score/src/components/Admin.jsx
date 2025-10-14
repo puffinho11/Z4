@@ -1,67 +1,67 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"
 
-const USERS_KEY = "sfinge_users_v1";
-const AUTH_KEY = "sfinge_auth_v1";
+const USERS_KEY = "sfinge_users_v1"
+const AUTH_KEY = "sfinge_auth_v1"
 
 export default function Admin() {
-  const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({ username: "", password: "", role: "user" });
-  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([])
+  const [form, setForm] = useState({ username: "", password: "", role: "user" })
+  const [currentUser, setCurrentUser] = useState(null)
 
   useEffect(() => {
-    const savedUsers = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    setUsers(savedUsers);
-    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-    setCurrentUser(auth);
-  }, []);
+    const savedUsers = JSON.parse(localStorage.getItem(USERS_KEY) || "[]")
+    setUsers(savedUsers)
+    const auth = JSON.parse(localStorage.getItem(AUTH_KEY) || "null")
+    setCurrentUser(auth)
+  }, [])
 
   function saveUsers(updated) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(updated));
-    setUsers(updated);
+    localStorage.setItem(USERS_KEY, JSON.stringify(updated))
+    setUsers(updated)
   }
 
   function handleSubmit(e) {
-    e.preventDefault();
+    e.preventDefault()
     if (!currentUser || currentUser.role !== "admin") {
-      alert("Acesso negado.");
-      return;
+      alert("Acesso negado.")
+      return
     }
 
-    const { username, password, role } = form;
+    const { username, password, role } = form
     if (!username || !password) {
-      alert("Preencha todos os campos.");
-      return;
+      alert("Preencha todos os campos.")
+      return
     }
 
-    const updated = [...users];
-    const idx = updated.findIndex((u) => u.username === username);
+    const updated = [...users]
+    const idx = updated.findIndex((u) => u.username === username)
 
     if (idx >= 0) {
-      updated[idx] = { username, password, role };
-      alert("Usuário atualizado.");
+      updated[idx] = { username, password, role }
+      alert("Usuário atualizado.")
     } else {
-      updated.push({ username, password, role });
-      alert("Usuário criado.");
+      updated.push({ username, password, role })
+      alert("Usuário criado.")
     }
 
-    saveUsers(updated);
-    setForm({ username: "", password: "", role: "user" });
+    saveUsers(updated)
+    setForm({ username: "", password: "", role: "user" })
   }
 
   function deleteUser(username) {
     if (!currentUser || currentUser.role !== "admin") {
-      alert("Acesso negado.");
-      return;
+      alert("Acesso negado.")
+      return
     }
 
-    const adminCount = users.filter((u) => u.role === "admin").length;
+    const adminCount = users.filter((u) => u.role === "admin").length
     if (username === "admin" && adminCount === 1) {
-      alert("Não é possível remover o último admin.");
-      return;
+      alert("Não foi possí­vel remover o Ultimo admin.")
+      return
     }
 
-    const updated = users.filter((u) => u.username !== username);
-    saveUsers(updated);
+    const updated = users.filter((u) => u.username !== username)
+    saveUsers(updated)
   }
 
   function clearData() {
@@ -70,9 +70,9 @@ export default function Admin() {
         "Apagar todos os usuários? Esta ação não pode ser desfeita."
       )
     )
-      return;
-    localStorage.removeItem(USERS_KEY);
-    setUsers([]);
+      return
+    localStorage.removeItem(USERS_KEY)
+    setUsers([])
   }
 
   return (
@@ -121,11 +121,11 @@ export default function Admin() {
       </form>
 
       <div>
-        <h3 className="font-semibold mb-2">Lista de usuários</h3>
+        <h3 className="font-semibold mb-2">Lista de Usuários</h3>
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-3 py-2 text-left">Usuário</th>
+              <th className="px-3 py-2 text-left">Usuários</th>
               <th className="px-3 py-2 text-left">Papel</th>
               <th className="px-3 py-2 text-center">Ações</th>
             </tr>
@@ -137,7 +137,7 @@ export default function Admin() {
                   colSpan="3"
                   className="px-3 py-4 text-center text-gray-500"
                 >
-                  Nenhum usuário cadastrado.
+                 Nenhum usuário cadastrado.
                 </td>
               </tr>
             ) : (
@@ -160,5 +160,5 @@ export default function Admin() {
         </table>
       </div>
     </section>
-  );
+  )
 }
