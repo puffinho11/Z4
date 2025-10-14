@@ -7,6 +7,7 @@ import Relatorio from './components/Relatorio'
 import Desempenho from './components/Desempenho'
 import Exames from './components/Exames'
 import Calendario from './components/Calendario'
+import Admin from './components/Admin'
 import { seedAdminIfEmpty, getCurrentUser, setCurrentUser, logoutUser } from './utils/storage'
 import './index.css'
 
