@@ -42,10 +42,15 @@ export default function Calendario() {
     setForm((p) => ({ ...p, [k]: v }))
   }
 
-  async function salvar(e) {
-    e?.preventDefault()
+  function editar(ev) {
+    setForm(ev)
+    setEditingId(ev._id)
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
     if (!form.titulo || !form.data) {
-      alert("Preencha título e data")
+      alert("Preencha Título e Data.")
       return
     }
 
@@ -53,154 +58,175 @@ export default function Calendario() {
     setError(null)
     try {
       if (editingId) {
+        // PUT /calendario/:id
         await api.put(`/calendario/${editingId}`, form)
-        alert(`Evento '${form.titulo}' atualizado!`)
       } else {
+        // POST /calendario
         await api.post("/calendario", form)
-        alert(`Novo evento '${form.titulo}' salvo!`)
       }
-
-      await fetchEventos()
+      
+      // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
+      await fetchEventos() 
 
       setForm(blank)
       setEditingId(null)
+      alert(editingId ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!")
 
     } catch (err) {
-      console.error("Erro ao salvar/atualizar evento:", err.response || err)
-      setError("Erro ao salvar o evento. Verifique se está logado.")
+      console.error("Erro ao salvar evento:", err.response || err)
+      setError("Erro ao salvar o evento. Verifique o console.")
     } finally {
       setLoading(false)
     }
   }
 
-  function editar(ev) {
-    setEditingId(ev._id) 
-    setForm({
-      titulo: ev.titulo,
-      adversario: ev.adversario || "",
-      data: ev.data.split('T')[0],
-      hora: ev.hora || "18:00",
-      local: ev.local || "",
-    })
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  async function excluir(_id) {
+    if (window.confirm("Tem certeza que deseja remover este evento?")) {
+      setLoading(true)
+      try {
+        // DELETE /calendario/:id
+        await api.delete(`/calendario/${_id}`)
 
-  async function excluir(id) {
-    if (!window.confirm("Excluir este evento?")) return
+        // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
+        await fetchEventos()
 
-    setLoading(true)
-    setError(null)
-    try {
-
-      await api.delete(`/calendario/${id}`)
-      
-      setLista(p => p.filter(ev => ev._id !== id))
-      alert("Evento excluído com sucesso!")
-
-    } catch (err) {
-      console.error("Erro ao excluir evento:", err.response || err)
-      setError("Erro ao excluir. Verifique se está logado.")
-    } finally {
-      setLoading(false)
+        alert("Evento removido com sucesso!")
+      } catch (err) {
+        console.error("Erro ao excluir evento:", err.response || err)
+        setError("Erro ao excluir o evento. Verifique o console.")
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  const sortedLista = lista.slice().sort((a, b) => new Date(a.data) - new Date(b.data))
+  const listaOrdenada = lista.slice().sort((a, b) => {
+    // Ordena pela data + hora
+    const dtA = new Date(a.data + 'T' + (a.hora || '00:00'))
+    const dtB = new Date(b.data + 'T' + (b.hora || '00:00'))
+    return dtA - dtB // Ordena do mais antigo para o mais novo
+  })
 
   return (
-    <section className="space-y-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold">Calendário de Jogos e Eventos</h2>
-      {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
+    <section className="p-6">
+      <h2 className="text-2xl font-bold mb-6">Calendário de Eventos</h2>
 
-      <form onSubmit={salvar} className="bg-white p-6 rounded-2xl shadow space-y-4">
-        <h3 className="font-semibold text-lg">
-           {editingId ? "Editar Evento" : "Cadastrar Novo Evento"}
+      {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg mb-4">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow mb-8">
+        <h3 className="text-xl font-semibold mb-4">
+          {editingId ? "Editar Evento" : "Novo Evento"}
         </h3>
-        <div>
-          <label className="block text-sm">Título / Evento</label>
-          <input
-            value={form.titulo}
-            onChange={(e) => handleChange("titulo", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-            required
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Título (Ex: Treino, Jogo, Reunião)
+            </label>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2"
+              value={form.titulo}
+              onChange={(e) => handleChange("titulo", e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm">Adversário (Opcional)</label>
-          <input
-            value={form.adversario}
-            onChange={(e) => handleChange("adversario", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm">Data</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data
+            </label>
             <input
               type="date"
+              className="w-full border rounded-lg px-3 py-2"
               value={form.data}
               onChange={(e) => handleChange("data", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
               required
+              disabled={loading}
             />
           </div>
-          <div className="col-span-1">
-            <label className="block text-sm">Hora</label>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Hora
+            </label>
             <input
               type="time"
+              className="w-full border rounded-lg px-3 py-2"
               value={form.hora}
               onChange={(e) => handleChange("hora", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              disabled={loading}
             />
           </div>
-          <div className="col-span-1">
-            <label className="block text-sm">Local (Opcional)</label>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Adversário (Se for jogo)
+            </label>
             <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2"
+              value={form.adversario}
+              onChange={(e) => handleChange("adversario", e.target.value)}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Local
+            </label>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2"
               value={form.local}
               onChange={(e) => handleChange("local", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              disabled={loading}
             />
           </div>
+
         </div>
 
-        <div className="flex items-center gap-3">
-          <button 
-            type="submit" 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-400"
+        <div className="mt-6 flex gap-3">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
             disabled={loading}
           >
-            {loading ? "Processando..." : editingId ? "Atualizar Evento" : "Salvar Evento"}
+            {loading ? "Aguarde..." : editingId ? "Atualizar Evento" : "Salvar Evento"}
           </button>
-          <button 
+          <button
             type="button"
             onClick={() => {
-                setForm(blank)
-                setEditingId(null)
-            }} 
-            className="px-3 py-2 border rounded-lg"
+              setForm(blank);
+              setEditingId(null);
+            }}
+            className="px-3 py-2 rounded-lg border"
             disabled={loading}
           >
             Limpar
           </button>
         </div>
       </form>
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h3 className="font-semibold mb-2">Próximos Jogos/Eventos</h3>
+
+      <div className="mt-6">
+        <h3 className="font-semibold mb-2">Próximos Eventos ({lista.length})</h3>
         
-        {loading && <div className="text-blue-600">Carregando eventos...</div>}
-
-        {!loading && sortedLista.length === 0 && (
-            <div className="text-gray-500">Nenhum evento cadastrado.</div>
-        )}
-
-        {!loading && (
-            <div className="space-y-2">
-            {sortedLista.map(ev => (
-                <div key={ev._id} className="border p-3 rounded-lg flex justify-between items-center">
+        {loading && lista.length === 0 ? (
+          <div className="text-blue-600">Carregando eventos...</div>
+        ) : (
+            <div className="space-y-3">
+            {listaOrdenada.length === 0 && (
+                <div className="text-gray-500">Nenhum evento encontrado.</div>
+            )}
+            {listaOrdenada.map((ev) => (
+                <div 
+                    key={ev._id} 
+                    className="p-4 border rounded-lg flex justify-between items-center bg-white shadow-sm"
+                >
                 <div>
-                    <div className="font-medium">
+                    <div className="font-medium text-base">
                         {ev.titulo} 
                         {ev.adversario && <span className="text-xs text-gray-500"> • vs {ev.adversario}</span>}
                     </div>

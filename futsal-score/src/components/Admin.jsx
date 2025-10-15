@@ -28,6 +28,19 @@ export default function Admin() {
     }
   }
 
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  function handleChange(k, v) {
+    setForm((p) => ({ ...p, [k]: v }));
+  }
+
+  function editUser(user) {
+    setForm({ username: user.username, password: "", role: user.role });
+    setEditingUsername(user.username);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -35,32 +48,30 @@ export default function Admin() {
     const { username, password, role } = form
     
     if (!username || (!password && !editingUsername)) { 
-      alert("Preencha o nome de usuário e a senha (obrigatório na criação).")
+      alert("Preencha o nome de usuário e a senha (se estiver criando).")
       return
     }
-        
-    const payload = editingUsername 
-        ? { username: editingUsername, newUsername: username, password, role } 
-        : { username, password, role }
 
-    if (editingUsername && !password) {
-        delete payload.password;
-    }
-
-    setLoading(true);
+    setLoading(true)
     try {
-      
-        await api.post("/users", payload) 
+        if (editingUsername) {
+            // PUT /users/:username
+            await api.put(`/users/${editingUsername}`, { username, password, role })
+        } else {
+            // POST /users/register
+            await api.post("/users/register", { username, password, role })
+        }
         
-        await fetchUsers()
-        
+        // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
+        await fetchUsers() 
+
         setForm({ username: "", password: "", role: "user" })
         setEditingUsername(null)
-        alert(`Usuário ${username} salvo com sucesso!`)
-        
+        alert(editingUsername ? "Usuário atualizado com sucesso!" : "Usuário criado com sucesso!")
+
     } catch (err) {
         console.error("Erro ao salvar usuário:", err.response || err)
-        const msg = err.response?.data?.msg || "Erro ao salvar usuário. Verifique se o nome de usuário já existe."
+        const msg = err.response?.data?.msg || "Erro ao salvar usuário. Verifique o console."
         setError(msg)
     } finally {
         setLoading(false)
@@ -68,108 +79,113 @@ export default function Admin() {
   }
 
   async function deleteUser(username) {
-    if (!window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
-      return
+    if (window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
+        setLoading(true)
+        try {
+            // DELETE /users/:username
+            await api.delete(`/users/${username}`)
+            
+            // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
+            await fetchUsers() 
+            
+            alert(`Usuário ${username} removido com sucesso!`)
+
+        } catch (err) {
+            console.error("Erro ao remover usuário:", err.response || err)
+            const msg = err.response?.data?.msg || "Erro ao remover usuário. Verifique o console."
+            setError(msg)
+        } finally {
+            setLoading(false)
+        }
     }
-    
-    setLoading(true)
-    setError(null)
-    try {
-
-        await api.delete(`/users/${username}`)
-        
-        alert(`Usuário ${username} removido!`)
-        await fetchUsers()
-        
-    } catch (err) {
-        console.error("Erro ao deletar usuário:", err.response || err)
-        const msg = err.response?.data?.msg || "Erro ao remover usuário."
-        setError(msg)
-    } finally {
-        setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  function handleChange(k, v) {
-    setForm((p) => ({ ...p, [k]: v }))
-  }
-  
-  function editUser(user) {
-    setForm({ username: user.username, password: "", role: user.role })
-    setEditingUsername(user.username)
   }
 
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-bold">Administração de Usuários</h2>
+    <section className="p-6">
+      <h2 className="text-2xl font-bold mb-6">Administração de Usuários</h2>
 
-      {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
+      {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg mb-4">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow space-y-4">
-        <h3 className="font-semibold text-lg">
-          {editingUsername ? `Editar ${editingUsername}` : "Cadastrar Novo Usuário"}
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow mb-8">
+        <h3 className="text-xl font-semibold mb-4">
+          {editingUsername ? `Editar: ${editingUsername}` : "Criar Novo Usuário"}
         </h3>
-        
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Usuário"
-            value={form.username}
-            onChange={(e) => handleChange("username", e.target.value)}
-            required
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder={editingUsername ? "Nova Senha (deixe vazio para manter)" : "Senha"}
-            value={form.password}
-            onChange={(e) => handleChange("password", e.target.value)}
-            type="password"
-            required={!editingUsername} 
-          />
-          <select
-            className="w-full border rounded-lg px-3 py-2"
-            value={form.role}
-            onChange={(e) => handleChange("role", e.target.value)}
-          >
-            <option value="user">Usuário Comum</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Usuário
+            </label>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2"
+              value={form.username}
+              onChange={(e) => handleChange("username", e.target.value)}
+              required
+              disabled={loading || editingUsername} 
+            />
+             {editingUsername && <p className="text-xs text-gray-500 mt-1">Nome de usuário não pode ser editado.</p>}
+          </div>
 
-        <div className="flex gap-3">
-          <button 
-            type="submit" 
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition"
-            disabled={loading}
-          >
-            {loading 
-                ? "Salvando..." 
-                : editingUsername ? "Atualizar" : "Salvar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setForm({ username: "", password: "", role: "user" })
-              setEditingUsername(null)
-              setError(null)
-            }}
-            className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
-          >
-            Limpar
-          </button>
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Senha {editingUsername && <span className="text-xs text-gray-500">(Opcional para edição)</span>}
+            </label>
+            <input
+              type="password"
+              className="w-full border rounded-lg px-3 py-2"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              required={!editingUsername}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Papel
+            </label>
+            <select
+              className="w-full border rounded-lg px-3 py-2"
+              value={form.role}
+              onChange={(e) => handleChange("role", e.target.value)}
+              required
+              disabled={loading}
+            >
+              <option value="user">Usuário Comum</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          
+          <div className="md:col-span-1 flex items-end gap-3">
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
+              disabled={loading}
+            >
+              {loading ? "Aguarde..." : editingUsername ? "Salvar Edição" : "Criar Usuário"}
+            </button>
+            <button
+                type="button"
+                onClick={() => {
+                    setForm({ username: "", password: "", role: "user" })
+                    setEditingUsername(null)
+                }}
+                className="px-3 py-2 rounded-lg border flex-shrink-0"
+                disabled={loading}
+                >
+                Limpar
+            </button>
+          </div>
+
         </div>
       </form>
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h3 className="font-semibold mb-2 text-lg">Lista de Usuários</h3>
-        {loading && users.length === 0 && <div className="text-blue-600">Carregando usuários...</div>}
+
+      <div className="mt-6 bg-white p-6 rounded-2xl shadow">
+        <h3 className="font-semibold mb-4">Lista de Usuários ({users.length})</h3>
         
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
               <th className="px-3 py-2 text-left">Usuário</th>
               <th className="px-3 py-2 text-left">Papel</th>

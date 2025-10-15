@@ -39,230 +39,222 @@ export default function Exames() {
     fetchExames()
   }, [])
 
-  function handleChange(key, value) {
-    setForm((p) => ({ ...p, [key]: value }))
+  function handleChange(k, v) {
+    setForm((p) => ({ ...p, [k]: v }))
+  }
+
+  function handleCancel() {
+    setForm(blank)
+    setEditingId(null)
+  }
+
+  function editar(exame) {
+    setForm(exame)
+    setEditingId(exame._id)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.atleta || !form.tipo || !form.data) {
-      alert("Preencha Atleta, Tipo e Data.")
-      return
-    }
-
     setLoading(true)
     setError(null)
+
+    const payload = { 
+        ...form, 
+        id: editingId 
+    }
+
     try {
-      if (editingId) {
-        await api.put(`/exames/${editingId}`, form)
-        alert(`Exame de ${form.atleta} atualizado!`)
-      } else {
-        await api.post("/exames", form)
-        alert(`Novo exame para ${form.atleta} salvo!`)
-      }
+        const response = await api.post("/exames", payload)
+        
+        if (editingId) {
+            setLista(lista.map(ex => ex._id === editingId ? response.data : ex));
+        } else {
+            setLista([response.data, ...lista]);
+        }
 
-      await fetchExames()
-
-      setForm(blank);
-      setEditingId(null)
-
+        handleCancel()
+        alert(editingId ? "Exame atualizado com sucesso!" : "Exame salvo com sucesso!")
     } catch (err) {
-      console.error("Erro ao salvar/atualizar exame:", err.response || err)
-      setError("Erro ao salvar o exame. Verifique se está logado.")
+      console.error("Erro ao salvar exame:", err.response || err)
+      setError("Erro ao salvar exame. Verifique o console ou a conexão com a API.")
     } finally {
       setLoading(false)
     }
-  }
-  function editar(exame) {
-    setEditingId(exame._id); 
-    setForm({
-      atleta: exame.atleta,
-      tipo: exame.tipo,
-      resultado: exame.resultado,
-      data: exame.data,
-      obs: exame.obs,
-    })
-    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   async function excluir(id) {
-    if (!window.confirm("Excluir este exame?")) return
+    if (!window.confirm("Tem certeza que deseja excluir este exame?")) return
 
     setLoading(true)
     setError(null)
+
     try {
-
-      await api.delete(`/exames/${id}`);
-      
-      setLista(p => p.filter(e => e._id !== id))
-      alert("Exame excluído com sucesso!")
-
+        await api.delete(`/exames/${id}`)
+        setLista(lista.filter(ex => ex._id !== id))
+        alert("Exame excluído com sucesso!")
     } catch (err) {
-      console.error("Erro ao excluir exame:", err.response || err)
-      setError("Erro ao excluir. Verifique se está logado.")
+        console.error("Erro ao excluir exame:", err.response || err)
+        setError("Erro ao excluir exame. Verifique o console.")
     } finally {
-      setLoading(false)
+        setLoading(false)
     }
   }
 
-  const filteredLista = lista.filter((e) =>
-    e.atleta.toLowerCase().includes(q.toLowerCase()) ||
-    e.tipo.toLowerCase().includes(q.toLowerCase())
-  );
-
-  function imprimir(e) {
-    const laudoWindow = window.open("", "_blank")
-    laudoWindow.document.write(`
-      <html>
-        <head>
-          <title>Laudo de Exame - ${e.atleta}</title>
-          <style>
-            body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; }
-            .section { margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
-            .section h2 { font-size: 1.1em; color: #333; margin-top: 0; }
-          </style>
-        </head>
-        <body>
-          <h1>Laudo de Exame - Futsal Score</h1>
-          
-          <div class="section">
-            <h2>Dados do Atleta e Exame</h2>
-            <p><strong>Atleta:</strong> ${e.atleta}</p>
-            <p><strong>Tipo de Exame:</strong> ${e.tipo}</p>
-            <p><strong>Data:</strong> ${new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}</p>
-          </div>
-
-          <div class="section">
-            <h2>Resultado</h2>
-            <pre style="white-space: pre-wrap;">${e.resultado || 'Sem resultado registrado.'}</pre>
-          </div>
-          
-          <div class="section">
-            <h2>Observações</h2>
-            <pre style="white-space: pre-wrap;">${e.obs || 'Nenhuma observação registrada.'}</pre>
-          </div>
-
-          <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background-color: #1e40af; color: white; border: none; cursor: pointer;">Imprimir</button>
-        </body>
-      </html>
-    `);
-    laudoWindow.document.close();
+  function imprimir(exame) {
+    // Lógica simples para gerar uma janela de impressão
+    const content = `
+        <html>
+            <head>
+                <title>Exame de ${exame.atleta}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; }
+                    h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; }
+                    .info { margin-bottom: 15px; }
+                    .info span { font-weight: bold; }
+                    .resultado { margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; }
+                </style>
+            </head>
+            <body>
+                <h1>Relatório de Exame</h1>
+                <div class="info"><span>Atleta:</span> ${exame.atleta}</div>
+                <div class="info"><span>Tipo:</span> ${exame.tipo}</div>
+                <div class="info"><span>Data:</span> ${new Date(exame.data + "T00:00:00").toLocaleDateString("pt-BR")}</div>
+                ${exame.obs ? `<div class="info"><span>Observação:</span> ${exame.obs}</div>` : ''}
+                <h2>Resultado:</h2>
+                <div class="resultado">${exame.resultado || 'Nenhum resultado registrado.'}</div>
+                <script>window.print()</script>
+            </body>
+        </html>
+    `
+    const printWindow = window.open('', '', 'height=600,width=800')
+    printWindow.document.write(content)
+    printWindow.document.close()
   }
 
+  const filteredLista = lista.filter(e => 
+    e.atleta.toLowerCase().includes(q.toLowerCase()) || 
+    e.tipo.toLowerCase().includes(q.toLowerCase()) ||
+    e.resultado.toLowerCase().includes(q.toLowerCase())
+  );
+  
   return (
-    <section className="space-y-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold">Monitoramento de Exames</h2>
-      {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow space-y-4">
-        <h3 className="font-semibold text-lg">
-          {editingId ? "Editar Exame" : "Cadastrar Novo Exame"}
-        </h3>
-        <div>
-          <label className="block text-sm">Atleta</label>
-          <input
-            value={form.atleta}
-            onChange={(e) => handleChange("atleta", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-            required
-          />
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
+    <section>
+      <h2 className="text-2xl font-bold mb-4">Gerenciamento de Exames</h2>
+      
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-4 mb-6">
+        <h3 className="text-lg font-semibold mb-3">{editingId ? 'Editar Exame' : 'Novo Exame'}</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
           <div>
-            <label className="block text-sm">Tipo de Exame</label>
-            <select
-              value={form.tipo}
-              onChange={(e) => handleChange("tipo", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+            <label className="block text-sm font-medium text-gray-700">Atleta</label>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2 mt-1"
+              value={form.atleta}
+              onChange={(e) => handleChange('atleta', e.target.value)}
               required
+              disabled={loading}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tipo de Exame</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 mt-1"
+              value={form.tipo}
+              onChange={(e) => handleChange('tipo', e.target.value)}
+              required
+              disabled={loading}
             >
-              <option>Avaliação Física</option>
-              <option>Hemograma</option>
-              <option>Cardíaco</option>
-              <option>Outro</option>
+                <option>Avaliação Física</option>
+                <option>Exame Médico</option>
+                <option>Exame de Imagem</option>
+                <option>Outro</option>
             </select>
           </div>
+
           <div>
-            <label className="block text-sm">Data</label>
+            <label className="block text-sm font-medium text-gray-700">Data</label>
             <input
               type="date"
+              className="w-full border rounded-lg px-3 py-2 mt-1"
               value={form.data}
-              onChange={(e) => handleChange("data", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              onChange={(e) => handleChange('data', e.target.value)}
               required
+              disabled={loading}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm">Resultado</label>
-          <textarea
-            value={form.resultado}
-            onChange={(e) => handleChange("resultado", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 h-24"
-            placeholder="Resultado do exame, observações importantes, etc."
-          ></textarea>
+            <label className="block text-sm font-medium text-gray-700">Resultado</label>
+            <textarea
+                className="w-full border rounded-lg px-3 py-2 mt-1"
+                rows="4"
+                value={form.resultado}
+                onChange={(e) => handleChange('resultado', e.target.value)}
+                disabled={loading}
+            ></textarea>
         </div>
         
         <div>
-          <label className="block text-sm">Observações</label>
-          <textarea
-            value={form.obs}
-            onChange={(e) => handleChange("obs", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 h-16"
-            placeholder="Observações adicionais para uso interno."
-          ></textarea>
+            <label className="block text-sm font-medium text-gray-700">Observações</label>
+            <input
+                type="text"
+                className="w-full border rounded-lg px-3 py-2 mt-1"
+                value={form.obs}
+                onChange={(e) => handleChange('obs', e.target.value)}
+                disabled={loading}
+            />
         </div>
+        
+        {error && <div className="text-red-600 font-medium">{error}</div>}
 
-        <div className="flex items-center gap-3">
-          <button 
-            type="submit" 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:bg-gray-400"
-            disabled={loading}
-          >
-            {loading ? "Processando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
-          </button>
+        <div className="flex justify-end gap-3 pt-4">
+          {editingId && (
+            <button
+                type="button"
+                onClick={handleCancel}
+                className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+                disabled={loading}
+            >
+                Cancelar Edição
+            </button>
+          )}
           <button
-            type="button"
-            onClick={() => {
-              setForm(blank);
-              setEditingId(null);
-            }}
-            className="px-3 py-2 rounded-lg border"
+            type="submit"
+            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             disabled={loading}
           >
-            Limpar
+            {loading ? "Salvando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
           </button>
         </div>
       </form>
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h3 className="font-semibold mb-3">Exames Cadastrados</h3>
-        
-        <input
-            className="w-full border rounded-lg px-3 py-2 mb-4"
-            placeholder="Pesquisar por atleta ou tipo de exame..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-        />
 
-        {loading && <div className="text-blue-600">Carregando exames...</div>}
+      {/* Lista de Exames */}
+      <div className="bg-white p-6 rounded-xl shadow">
+        <h3 className="text-xl font-semibold mb-3">Exames Salvos ({filteredLista.length})</h3>
+        <div className="mb-4">
+            <input
+                type="text"
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="Pesquisar por atleta, tipo ou resultado..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+            />
+        </div>
 
-        {!loading && filteredLista.length === 0 && (
-          <div className="text-gray-500">
-            {q ? "Nenhum exame encontrado com a pesquisa." : "Nenhum exame cadastrado."}
-          </div>
-        )}
-
-        {!loading && filteredLista.length > 0 && (
-          <div className="space-y-3">
+        {loading && !lista.length ? (
+            <div className="text-blue-600">Carregando exames...</div>
+        ) : (
+          <div className="space-y-4">
+            {filteredLista.length === 0 && <div className="text-gray-500">Nenhum exame encontrado.</div>}
             {filteredLista.slice().reverse().map((e) => (
-              <div
-                key={e._id}
-                className="p-3 border rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-              >
+              <div key={e._id} className="p-4 border rounded-lg bg-gray-50 flex justify-between items-start">
                 <div>
                   <div className="font-medium text-base">{e.atleta}</div>
+                  {/* CORRIGIDO: Adicionado "T00:00:00" para forçar interpretação correta da data */}
                   <div className="text-xs text-gray-500">
                     {e.tipo} • {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
                   </div>

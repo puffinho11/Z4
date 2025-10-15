@@ -1,9 +1,9 @@
-// src/components/LoginModal.jsx (FINAL)
+// src/components/LoginModal.jsx (COMPLETO E REVISADO)
 
 import React, { useState } from "react"
-// Removida a importação de USERS_KEY e getItem/setItem de storage
+// Presume que o setCurrentUser salva o objeto { token, user: {...} } em localStorage.setItem("currentUser", JSON.stringify(userToSave))
 import { setCurrentUser } from "../utils/storage" 
-import api from "../api" // Usamos a API para fazer login
+import api from "../api" // Usamos a API corrigida para fazer login
 
 export default function LoginModal({ onLogin }) {
   const [username, setUsername] = useState("")
@@ -23,28 +23,31 @@ export default function LoginModal({ onLogin }) {
         password 
       })
 
-      // O servidor retorna { username, role, token }
-      const user = response.data 
+      // O servidor retorna { token, user: userData }
+      const { token, user: userData } = response.data 
 
-      // Salva o token e o usuário no localStorage do navegador
-      setCurrentUser(user) 
+      const userToSave = {
+          ...userData, 
+          token 
+      }
+      
+      // Salva o objeto { token, username, role } no localStorage
+      setCurrentUser(userToSave) 
       
       // Chama a função onLogin para fechar o modal e atualizar o App.jsx
-      onLogin(user) 
+      onLogin(userToSave) 
 
     } catch (err) {
       console.error("Erro de Login:", err.response || err)
       if (err.response && err.response.status === 401) {
         setError("Usuário ou senha inválidos. Tente novamente.")
       } else {
-        setError("Erro ao conectar ao servidor. Verifique o console.")
+        setError("Erro ao conectar ao servidor. Verifique o console ou se o servidor está rodando.")
       }
     } finally {
       setLoading(false)
     }
   }
-
-  // A função createAdminIfNone() foi removida
   
   return (
     <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-50">
@@ -78,11 +81,6 @@ export default function LoginModal({ onLogin }) {
 
         {error && <p className="text-red-600 mt-3 text-sm">{error}</p>}
 
-        <div className="mt-4 text-sm text-center">
-          <p className="text-gray-600 mb-2">
-            Se você não possui uma conta, entre em contato com o administrador do sistema.
-          </p>
-        </div>
       </div>
     </div>
   )
