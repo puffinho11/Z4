@@ -1,45 +1,51 @@
-import React, { useState } from "react";
-import { setCurrentUser, AUTH_KEY } from "../utils/storage";
-import api from "../api"; 
+// src/components/LoginModal.jsx (FINAL)
+
+import React, { useState } from "react"
+// Removida a importação de USERS_KEY e getItem/setItem de storage
+import { setCurrentUser } from "../utils/storage" 
+import api from "../api" // Usamos a API para fazer login
 
 export default function LoginModal({ onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError("")
     setLoading(true)
+    setError("")
 
     try {
-      const response = await api.post("/users/login", { username, password })
-  
-      const { token, user } = response.data; 
+      // POST para a rota /api/users/login
+      const response = await api.post("/users/login", { 
+        username, 
+        password 
+      })
 
-      const authData = { username: user.username, role: user.role, token }
+      // O servidor retorna { username, role, token }
+      const user = response.data 
 
-      setCurrentUser(authData)
+      // Salva o token e o usuário no localStorage do navegador
+      setCurrentUser(user) 
       
-      onLogin(authData)
+      // Chama a função onLogin para fechar o modal e atualizar o App.jsx
+      onLogin(user) 
 
     } catch (err) {
-      console.error("Erro de login:", err.response || err)
-      const msg = err.response?.data?.msg || "Usuário ou senha inválidos. Verifique a conexão com a API."
-      setError(msg)
-
+      console.error("Erro de Login:", err.response || err)
+      if (err.response && err.response.status === 401) {
+        setError("Usuário ou senha inválidos. Tente novamente.")
+      } else {
+        setError("Erro ao conectar ao servidor. Verifique o console.")
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  function createAdminIfNone() {
-    setError(
-      "O cadastro de novos usuários é gerenciado pela tela de Administração (Admin). Peça ao administrador para criar sua conta."
-    );
-  }
-
+  // A função createAdminIfNone() foi removida
+  
   return (
     <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
@@ -51,6 +57,7 @@ export default function LoginModal({ onLogin }) {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={loading}
           />
           <input
             className="w-full border rounded-lg px-3 py-2"
@@ -59,9 +66,10 @@ export default function LoginModal({ onLogin }) {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             required
+            disabled={loading}
           />
           <button 
-            className="w-full bg-blue-600 text-white py-2 rounded-lg"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
             disabled={loading}
           >
             {loading ? "Entrando..." : "Entrar"}
@@ -72,17 +80,11 @@ export default function LoginModal({ onLogin }) {
 
         <div className="mt-4 text-sm text-center">
           <p className="text-gray-600 mb-2">
-            Não consegue entrar?
+            Se você não possui uma conta, entre em contato com o administrador do sistema.
           </p>
-          <button
-            onClick={createAdminIfNone}
-            className="text-blue-600 hover:underline"
-          >
-            Informar sobre cadastro
-          </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 

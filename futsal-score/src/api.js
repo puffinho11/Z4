@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/api'; 
+const API_URL = 'http://localhost:3000/api'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -12,17 +12,14 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const authString = localStorage.getItem("sfinge_auth_v1")
-    const auth = authString ? JSON.parse(authString) : null
-    const token = auth?.token 
+    const token = authString ? JSON.parse(authString)?.token : null
 
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     }
-    return config;
+    return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
 export default api

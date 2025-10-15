@@ -1,7 +1,4 @@
-// src/components/Admin.jsx
-
 import React, { useState, useEffect } from "react";
-// Importar o módulo de API que criamos no front-end
 import api from "../api"; 
 
 export default function Admin() {
@@ -9,128 +6,109 @@ export default function Admin() {
   const [form, setForm] = useState({ username: "", password: "", role: "user" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editingUsername, setEditingUsername] = useState(null); // Armazena o username original para edição
+  const [editingUsername, setEditingUsername] = useState(null); 
 
-  // --- Funções de Comunicação com a API ---
-
-  // Função para buscar a lista de usuários
   async function fetchUsers() {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
+   
     try {
-      // Requer o token de ADMIN (adicionado pelo interceptor do api.js)
-      const response = await api.get("/users"); 
-      // A API retorna a lista de usuários, incluindo o ID do MongoDB
+      const response = await api.get("/users")
       setUsers(response.data);
     } catch (err) {
-      console.error("Erro ao buscar usuários:", err.response || err);
-      const status = err.response?.status;
+      console.error("Erro ao buscar usuários:", err.response || err)
+      const status = err.response?.status
       const msg = status === 403 || status === 401 
         ? "Acesso negado. Você não é um administrador ou seu token expirou."
-        : err.response?.data?.msg || "Erro ao carregar lista de usuários. Verifique o console.";
-      setError(msg);
-      setUsers([]); 
+        : err.response?.data?.msg || "Erro ao carregar lista de usuários. Verifique o console."
+      setError(msg)
+      setUsers([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  // Função de submissão (Criar ou Atualizar)
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
-    const { username, password, role } = form;
+    const { username, password, role } = form
     
-    // Na criação, a senha é obrigatória. Na edição, pode ser opcional.
     if (!username || (!password && !editingUsername)) { 
-      alert("Preencha o nome de usuário e a senha (obrigatório na criação).");
-      return;
+      alert("Preencha o nome de usuário e a senha (obrigatório na criação).")
+      return
     }
         
-    // O payload deve incluir o username original que está sendo editado, se for o caso.
     const payload = editingUsername 
         ? { username: editingUsername, newUsername: username, password, role } 
-        : { username, password, role };
-        
-    // Não envia a senha se o campo estiver vazio durante a edição.
+        : { username, password, role }
+
     if (editingUsername && !password) {
         delete payload.password;
     }
 
     setLoading(true);
     try {
-        // A rota POST /api/users deve lidar com criação e atualização no back-end
-        await api.post("/users", payload); 
+      
+        await api.post("/users", payload) 
         
-        await fetchUsers(); // Recarrega a lista
+        await fetchUsers()
         
-        // Limpa o formulário após o sucesso
-        setForm({ username: "", password: "", role: "user" });
-        setEditingUsername(null);
-        alert(`Usuário ${username} salvo com sucesso!`);
+        setForm({ username: "", password: "", role: "user" })
+        setEditingUsername(null)
+        alert(`Usuário ${username} salvo com sucesso!`)
         
     } catch (err) {
-        console.error("Erro ao salvar usuário:", err.response || err);
-        const msg = err.response?.data?.msg || "Erro ao salvar usuário. Verifique se o nome de usuário já existe.";
-        setError(msg);
+        console.error("Erro ao salvar usuário:", err.response || err)
+        const msg = err.response?.data?.msg || "Erro ao salvar usuário. Verifique se o nome de usuário já existe."
+        setError(msg)
     } finally {
-        setLoading(false);
+        setLoading(false)
     }
   }
 
-  // Função para deletar um usuário
   async function deleteUser(username) {
     if (!window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
-      return;
+      return
     }
     
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-        // Chama a rota DELETE /api/users/:username
-        await api.delete(`/users/${username}`);
+
+        await api.delete(`/users/${username}`)
         
-        alert(`Usuário ${username} removido!`);
-        await fetchUsers(); 
+        alert(`Usuário ${username} removido!`)
+        await fetchUsers()
         
     } catch (err) {
-        console.error("Erro ao deletar usuário:", err.response || err);
-        const msg = err.response?.data?.msg || "Erro ao remover usuário.";
-        setError(msg);
+        console.error("Erro ao deletar usuário:", err.response || err)
+        const msg = err.response?.data?.msg || "Erro ao remover usuário."
+        setError(msg)
     } finally {
-        setLoading(false);
+        setLoading(false)
     }
   }
-  
-  // --- Funções Auxiliares de Estado ---
 
-  // Carrega os usuários na montagem do componente
   useEffect(() => {
-    fetchUsers();
-  }, []); // [] garante que só roda uma vez
+    fetchUsers()
+  }, [])
 
   function handleChange(k, v) {
-    setForm((p) => ({ ...p, [k]: v }));
+    setForm((p) => ({ ...p, [k]: v }))
   }
   
-  // Preenche o formulário para edição
   function editUser(user) {
-    // Definimos a senha como vazia para forçar o usuário a digitá-la se quiser mudar.
-    setForm({ username: user.username, password: "", role: user.role });
-    setEditingUsername(user.username);
+    setForm({ username: user.username, password: "", role: user.role })
+    setEditingUsername(user.username)
   }
-
-  // --- Renderização ---
 
   return (
     <section className="space-y-6">
       <h2 className="text-2xl font-bold">Administração de Usuários</h2>
 
-      {/* Exibe erro */}
       {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
-      
-      {/* Formulário de Cadastro/Edição */}
+
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow space-y-4">
         <h3 className="font-semibold text-lg">
           {editingUsername ? `Editar ${editingUsername}` : "Cadastrar Novo Usuário"}
@@ -151,7 +129,6 @@ export default function Admin() {
             value={form.password}
             onChange={(e) => handleChange("password", e.target.value)}
             type="password"
-            // Requerido apenas na CRIAÇÃO
             required={!editingUsername} 
           />
           <select
@@ -177,9 +154,9 @@ export default function Admin() {
           <button
             type="button"
             onClick={() => {
-              setForm({ username: "", password: "", role: "user" });
-              setEditingUsername(null);
-              setError(null);
+              setForm({ username: "", password: "", role: "user" })
+              setEditingUsername(null)
+              setError(null)
             }}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
           >
@@ -187,8 +164,6 @@ export default function Admin() {
           </button>
         </div>
       </form>
-      
-      {/* Lista de Usuários */}
       <div className="bg-white p-6 rounded-2xl shadow">
         <h3 className="font-semibold mb-2 text-lg">Lista de Usuários</h3>
         {loading && users.length === 0 && <div className="text-blue-600">Carregando usuários...</div>}
@@ -239,5 +214,5 @@ export default function Admin() {
         </table>
       </div>
     </section>
-  );
+  )
 }
