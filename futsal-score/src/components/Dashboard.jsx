@@ -1,5 +1,3 @@
-// src/components/Dashboard.jsx - CORRIGIDO
-
 import React, { useEffect, useState } from "react"
 import api from "../api"
 
@@ -34,11 +32,10 @@ export default function Dashboard() {
     fetchRegistros()
   }, [])
 
-  // Cálculo de Métricas (mantido do original)
   const atletasCount = [...new Set(registros.map((r) => r.nome))].length
   
   const ultimos30 = registros.filter((r) => {
-    const d = new Date(r.data); 
+    const d = new Date(r.data) 
     const ago = new Date()
     ago.setDate(ago.getDate() - 30)
     return d >= ago

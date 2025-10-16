@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Exame = require('../models/Exame')
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth')
 
 router.post('/', auth, async (req, res) => {
   const { id, atleta, tipo, resultado, data, obs } = req.body
