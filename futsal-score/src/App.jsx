@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import React, { useEffect, useState } from 'react'
 import LoginModal from './components/LoginModal'
 import Sidebar from './components/Sidebar'
@@ -10,7 +8,7 @@ import Desempenho from './components/Desempenho'
 import Exames from './components/Exames'
 import Calendario from './components/Calendario'
 import Admin from './components/Admin'
-import { getCurrentUser, setCurrentUser, logoutUser } from './utils/storage' 
+import { getCurrentUser, setCurrentUser, logoutUser } from './utils/authStorage'
 import './index.css'
 
 export default function App(){
@@ -40,14 +38,13 @@ export default function App(){
       <Sidebar user={user} onLogout={handleLogout} setSection={setSection} />
       <main className="ml-56 max-w-7xl mx-auto px-4 py-6 space-y-6">
         {section === 'dashboard' && <Dashboard /> }
-        {section === 'registro' && <Registro onSectionChange={setSection} />}
-        {section === 'relatorio' && <Relatorio />}
-        {section === 'desempenho' && <Desempenho />}
-        {section === 'exames' && <Exames />}
-        {section === 'calendario' && <Calendario />}
-        {section === 'admin' && user?.role === 'admin' && <Admin user={user} />}
+        {section === 'registro' && <Registro onSectionChange={setSection} /> }
+        {section === 'relatorio' && <Relatorio /> }
+        {section === 'desempenho' && <Desempenho /> }
+        {section === 'exames' && <Exames /> }
+        {section === 'calendario' && <Calendario /> }
+        {user?.role === 'admin' && section === 'admin' && <Admin /> }
       </main>
     </div>
   )
 }
-

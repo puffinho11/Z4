@@ -1,9 +1,6 @@
-// src/components/LoginModal.jsx (COMPLETO E REVISADO)
-
 import React, { useState } from "react"
-// Presume que o setCurrentUser salva o objeto { token, user: {...} } em localStorage.setItem("currentUser", JSON.stringify(userToSave))
-import { setCurrentUser } from "../utils/storage" 
-import api from "../api" // Usamos a API corrigida para fazer login
+import { setCurrentUser } from "../utils/authStorage"
+import api from "../api"
 
 export default function LoginModal({ onLogin }) {
   const [username, setUsername] = useState("")
@@ -17,29 +14,25 @@ export default function LoginModal({ onLogin }) {
     setError("")
 
     try {
-      // POST para a rota /api/users/login
-      const response = await api.post("/users/login", { 
-        username, 
-        password 
+      const response = await api.post("/users/login", {
+        username,
+        password
       })
 
-      // O servidor retorna { token, user: userData }
-      const { token, user: userData } = response.data 
+      const { token, user: userData } = response.data
 
       const userToSave = {
-          ...userData, 
-          token 
+          ...userData,
+          token
       }
-      
-      // Salva o objeto { token, username, role } no localStorage
-      setCurrentUser(userToSave) 
-      
-      // Chama a função onLogin para fechar o modal e atualizar o App.jsx
-      onLogin(userToSave) 
+
+      setCurrentUser(userToSave)
+
+      onLogin(userToSave)
 
     } catch (err) {
-      console.error("Erro de Login:", err.response || err)
-      if (err.response && err.response.status === 401) {
+      console.error("Erro no login:", err.response || err)
+      if (err.response && err.response.status === 400) {
         setError("Usuário ou senha inválidos. Tente novamente.")
       } else {
         setError("Erro ao conectar ao servidor. Verifique o console ou se o servidor está rodando.")
@@ -48,7 +41,7 @@ export default function LoginModal({ onLogin }) {
       setLoading(false)
     }
   }
-  
+
   return (
     <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
@@ -71,16 +64,14 @@ export default function LoginModal({ onLogin }) {
             required
             disabled={loading}
           />
-          <button 
-            className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400"
+          <button
+            className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition"
             disabled={loading}
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? "Conectando..." : "Entrar"}
           </button>
+          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
         </form>
-
-        {error && <p className="text-red-600 mt-3 text-sm">{error}</p>}
-
       </div>
     </div>
   )

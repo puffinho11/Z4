@@ -1,10 +1,7 @@
-// src/components/Sidebar.jsx (COMPLETO E REVISADO)
-
 import React from "react"
 
 export default function Sidebar({ user, onLogout, setSection }) {
-  // A classe 'active' foi removida, o layout usa classes de hover
-  
+
   return (
     <aside className="fixed left-0 top-0 h-full w-56 bg-white shadow-lg flex flex-col justify-between z-40">
       <div>
@@ -50,7 +47,6 @@ export default function Sidebar({ user, onLogout, setSection }) {
           >
             Calendário
           </button>
-          {/* Exibe o link de administração apenas para usuários admin */}
           {user?.role === "admin" && (
           <button
           onClick={() => setSection("admin")}
@@ -64,11 +60,12 @@ export default function Sidebar({ user, onLogout, setSection }) {
 
       <div className="p-4 border-t">
         <p className="text-sm font-medium mb-2 text-gray-800">
-            Logado como: {user?.username} ({user?.role})
+            Logado como: <span className="font-semibold text-blue-600">{user?.username}</span>
+            <span className="text-xs text-gray-500 block">({user?.role})</span>
         </p>
         <button
           onClick={onLogout}
-          className="w-full bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600 transition"
+          className="w-full text-sm bg-red-500 text-white py-1 rounded-lg hover:bg-red-600 transition"
         >
           Sair
         </button>
