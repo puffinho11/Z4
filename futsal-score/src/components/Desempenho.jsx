@@ -166,7 +166,7 @@ export default function Desempenho() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow lg:col-span-2">
           <h3 className="text-lg font-semibold mb-3">
-            Treinos e Lesões por Categoria (Acumulado)
+            Treinos e Lesões por Categoria
           </h3>
           <div className="h-96">
             <canvas ref={catChartRef} />

@@ -48,20 +48,20 @@ export default function Sidebar({ user, onLogout, setSection }) {
             Calendário
           </button>
           {user?.role === "admin" && (
-          <button
-          onClick={() => setSection("admin")}
-          className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700"
-         >
-            Administração
-          </button>
+            <button
+              onClick={() => setSection("admin")}
+              className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700"
+            >
+              Administração
+            </button>
           )}
         </nav>
       </div>
 
       <div className="p-4 border-t">
         <p className="text-sm font-medium mb-2 text-gray-800">
-            Usuário: <span className="font-semibold text-blue-600">{user?.username}</span>
-            <span className="text-xs text-gray-500 block">({user?.role})</span>
+          Usuário: <span className="font-semibold text-blue-600">{user?.username}</span>
+          <span className="text-xs text-gray-500 block">({user?.role})</span>
         </p>
         <button
           onClick={onLogout}

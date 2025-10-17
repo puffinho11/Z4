@@ -35,7 +35,7 @@ export default function Dashboard() {
   const atletasCount = [...new Set(registros.map((r) => r.nome))].length
   
   const ultimos30 = registros.filter((r) => {
-    const d = new Date(r.data); 
+    const d = new Date(r.data) 
     const ago = new Date()
     ago.setDate(ago.getDate() - 30)
     return d >= ago

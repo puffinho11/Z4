@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react"
-import api from "../api"
+import api from "../api" // Resolução: Mantida uma única importação de api.
 
 export default function Admin() {
   const [users, setUsers] = useState([])
   const [form, setForm] = useState({ username: "", password: "", role: "user" })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [editingUsername, setEditingUsername] = useState(null);
+  
+  // Resolução: Mantida uma única declaração de estado para editingUsername.
+  const [editingUsername, setEditingUsername] = useState(null) 
+
 
   async function fetchUsers() {
     setLoading(true)
@@ -54,14 +57,13 @@ export default function Admin() {
 
     setLoading(true)
     try {
+        // Resolução: Condensado o bloco de if/else para uma única lógica.
         if (editingUsername) {
-
             await api.put(`/users/${editingUsername}`, { username, password, role })
         } else {
-
             await api.post("/users/register", { username, password, role })
         }
-        
+
         await fetchUsers() 
 
         setForm({ username: "", password: "", role: "user" })
@@ -81,7 +83,7 @@ export default function Admin() {
     if (window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
         setLoading(true)
         try {
-
+            // Resolução: Mantida a chamada api.delete.
             await api.delete(`/users/${username}`)
             
             await fetchUsers() 

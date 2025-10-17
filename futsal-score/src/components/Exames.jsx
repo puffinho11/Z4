@@ -134,7 +134,7 @@ export default function Exames() {
     e.atleta.toLowerCase().includes(q.toLowerCase()) || 
     e.tipo.toLowerCase().includes(q.toLowerCase()) ||
     e.resultado.toLowerCase().includes(q.toLowerCase())
-  );
+  )
   
   return (
     <section>
