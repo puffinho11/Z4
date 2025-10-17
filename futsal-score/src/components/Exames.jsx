@@ -67,9 +67,9 @@ export default function Exames() {
         const response = await api.post("/exames", payload)
         
         if (editingId) {
-            setLista(lista.map(ex => ex._id === editingId ? response.data : ex));
+            setLista(lista.map(ex => ex._id === editingId ? response.data : ex))
         } else {
-            setLista([response.data, ...lista]);
+            setLista([response.data, ...lista])
         }
 
         handleCancel()
@@ -101,7 +101,6 @@ export default function Exames() {
   }
 
   function imprimir(exame) {
-    // Lógica simples para gerar uma janela de impressão
     const content = `
         <html>
             <head>
@@ -231,8 +230,6 @@ export default function Exames() {
           </button>
         </div>
       </form>
-
-      {/* Lista de Exames */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h3 className="text-xl font-semibold mb-3">Exames Salvos ({filteredLista.length})</h3>
         <div className="mb-4">
@@ -254,7 +251,6 @@ export default function Exames() {
               <div key={e._id} className="p-4 border rounded-lg bg-gray-50 flex justify-between items-start">
                 <div>
                   <div className="font-medium text-base">{e.atleta}</div>
-                  {/* CORRIGIDO: Adicionado "T00:00:00" para forçar interpretação correta da data */}
                   <div className="text-xs text-gray-500">
                     {e.tipo} • {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
                   </div>

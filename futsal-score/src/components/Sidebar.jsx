@@ -60,7 +60,7 @@ export default function Sidebar({ user, onLogout, setSection }) {
 
       <div className="p-4 border-t">
         <p className="text-sm font-medium mb-2 text-gray-800">
-            Logado como: <span className="font-semibold text-blue-600">{user?.username}</span>
+            Usuário: <span className="font-semibold text-blue-600">{user?.username}</span>
             <span className="text-xs text-gray-500 block">({user?.role})</span>
         </p>
         <button

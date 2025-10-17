@@ -58,14 +58,11 @@ export default function Calendario() {
     setError(null)
     try {
       if (editingId) {
-        // PUT /calendario/:id
         await api.put(`/calendario/${editingId}`, form)
       } else {
-        // POST /calendario
         await api.post("/calendario", form)
       }
       
-      // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
       await fetchEventos() 
 
       setForm(blank)
@@ -84,10 +81,8 @@ export default function Calendario() {
     if (window.confirm("Tem certeza que deseja remover este evento?")) {
       setLoading(true)
       try {
-        // DELETE /calendario/:id
         await api.delete(`/calendario/${_id}`)
 
-        // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
         await fetchEventos()
 
         alert("Evento removido com sucesso!")
@@ -101,10 +96,9 @@ export default function Calendario() {
   }
 
   const listaOrdenada = lista.slice().sort((a, b) => {
-    // Ordena pela data + hora
     const dtA = new Date(a.data + 'T' + (a.hora || '00:00'))
     const dtB = new Date(b.data + 'T' + (b.hora || '00:00'))
-    return dtA - dtB // Ordena do mais antigo para o mais novo
+    return dtA - dtB 
   })
 
   return (
@@ -199,8 +193,8 @@ export default function Calendario() {
           <button
             type="button"
             onClick={() => {
-              setForm(blank);
-              setEditingId(null);
+              setForm(blank)
+              setEditingId(null)
             }}
             className="px-3 py-2 rounded-lg border"
             disabled={loading}

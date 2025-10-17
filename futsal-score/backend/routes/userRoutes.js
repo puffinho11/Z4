@@ -115,7 +115,7 @@ router.post('/', auth, async (req, res) => {
     console.error(err.message)
     res.status(500).send('Erro no Servidor')
   }
-});
+})
 
 router.get('/', auth, async (req, res) => {
     if (req.user.role !== 'admin') {
@@ -150,4 +150,4 @@ router.delete('/:username', auth, async (req, res) => {
     }
 })
 
-module.exports = router;
+module.exports = router

@@ -16,7 +16,7 @@ router.post('/', auth, async (req, res) => {
       const novosDados = { titulo, adversario, data, hora, local }
 
       evento = await Calendario.findByIdAndUpdate(id, { $set: novosDados }, { new: true })
-      return res.json(evento);
+      return res.json(evento)
     } else {
       const novoEvento = new Calendario({ titulo, adversario, data, hora, local })
       const evento = await novoEvento.save()

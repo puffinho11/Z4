@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import api from "../api"; 
+import React, { useState, useEffect } from "react"
+import api from "../api"
 
 export default function Admin() {
-  const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({ username: "", password: "", role: "user" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [editingUsername, setEditingUsername] = useState(null); 
+  const [users, setUsers] = useState([])
+  const [form, setForm] = useState({ username: "", password: "", role: "user" })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [editingUsername, setEditingUsername] = useState(null);
 
   async function fetchUsers() {
     setLoading(true)
@@ -33,12 +33,12 @@ export default function Admin() {
   }, [])
 
   function handleChange(k, v) {
-    setForm((p) => ({ ...p, [k]: v }));
+    setForm((p) => ({ ...p, [k]: v }))
   }
 
   function editUser(user) {
-    setForm({ username: user.username, password: "", role: user.role });
-    setEditingUsername(user.username);
+    setForm({ username: user.username, password: "", role: user.role })
+    setEditingUsername(user.username)
   }
 
   async function handleSubmit(e) {
@@ -55,14 +55,13 @@ export default function Admin() {
     setLoading(true)
     try {
         if (editingUsername) {
-            // PUT /users/:username
+
             await api.put(`/users/${editingUsername}`, { username, password, role })
         } else {
-            // POST /users/register
+
             await api.post("/users/register", { username, password, role })
         }
         
-        // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
         await fetchUsers() 
 
         setForm({ username: "", password: "", role: "user" })
@@ -82,10 +81,9 @@ export default function Admin() {
     if (window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
         setLoading(true)
         try {
-            // DELETE /users/:username
+
             await api.delete(`/users/${username}`)
             
-            // *** CORREÇÃO: RECARREGAR A LISTA APÓS O SUCESSO ***
             await fetchUsers() 
             
             alert(`Usuário ${username} removido com sucesso!`)

@@ -24,7 +24,7 @@ export default function Relatorio() {
     setLoading(true)
     setError(null)
     try {
-      // O token será adicionado automaticamente pelo api.js corrigido.
+      
       const response = await api.get("/registros")
       const data = Array.isArray(response.data) ? response.data : []
       
@@ -47,17 +47,17 @@ export default function Relatorio() {
 
   useEffect(() => {
     fetchRegistros()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [])
   
   useEffect(() => {
     aplicarFiltros(registrosOriginais, filtroCat, filtroStatus, selAtleta)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [filtroCat, filtroStatus, selAtleta, registrosOriginais])
 
   useEffect(() => {
     montarChart(registros, metrica, selAtleta)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [registros, metrica, selAtleta])
 
 
@@ -86,14 +86,12 @@ export default function Relatorio() {
         return;
     }
 
-    // Filtra pelo atleta se um for selecionado para ter um gráfico mais limpo
     const chartDataFiltered = nomeAtleta 
         ? data.filter(r => r.nome === nomeAtleta && (r[metricaSelecionada] || r[metricaSelecionada] === 0))
         : data.filter(r => (r[metricaSelecionada] || r[metricaSelecionada] === 0))
     
-    // Agrupa e soma/tira média
     const groupedData = chartDataFiltered.reduce((acc, r) => {
-        const key = r.nome // Agrupar por atleta
+        const key = r.nome 
         if (!acc[key]) {
             acc[key] = {
                 nome: r.nome,
@@ -106,13 +104,12 @@ export default function Relatorio() {
         return acc
     }, {})
 
-    // Calcula a média para VO2, e soma para outras métricas
     const finalData = Object.values(groupedData).map(item => ({
         nome: item.nome,
         valor: metricaSelecionada === 'vo2' 
-            ? (item.soma / item.contagem).toFixed(2) // Média para VO2
-            : item.soma // Soma para Gols, Treinos, etc.
-    })).sort((a, b) => b.valor - a.valor) // Ordena pelo valor
+            ? (item.soma / item.contagem).toFixed(2) 
+            : item.soma 
+    })).sort((a, b) => b.valor - a.valor)
 
     const labels = finalData.map(d => d.nome)
     const values = finalData.map(d => d.valor)
@@ -132,7 +129,7 @@ export default function Relatorio() {
 
     if (chartRef.current) {
         chartInst.current = new Chart(chartRef.current, {
-            type: 'bar', // Gráfico de barras
+            type: 'bar', 
             data: chartConfig,
             options: {
                 responsive: true,
@@ -153,11 +150,10 @@ export default function Relatorio() {
       return
     }
 
-    // Mapeia os dados para o formato de planilha
     const dataToExport = registros.map(r => ({
       'Atleta': r.nome,
       'Categoria': r.categoria,
-      'Data': new Date(r.data + "T00:00:00").toLocaleDateString('pt-BR'), // CORRIGIDO: Formato de data
+      'Data': new Date(r.data + "T00:00:00").toLocaleDateString('pt-BR'), 
       'Status': r.status,
       'Treinos': r.treinos,
       'Lesões': r.lesoes,
@@ -200,8 +196,6 @@ export default function Relatorio() {
   return (
     <section>
       <h2 className="text-2xl font-bold mb-4">Relatórios e Análise de Dados</h2>
-      
-      {/* Filtros e Exportação */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <h3 className="text-lg font-semibold mb-3">Filtros e Exportação</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -257,8 +251,6 @@ export default function Relatorio() {
           </div>
         </div>
       </div>
-      
-      {/* Gráfico */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <h3 className="text-lg font-semibold mb-3">Gráfico de Métrica por Atleta</h3>
         <div className="mb-4">
@@ -284,8 +276,6 @@ export default function Relatorio() {
             )}
         </div>
       </div>
-
-      {/* Tabela de Dados */}
       <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
         <h3 className="text-lg font-semibold mb-3">Tabela de Registros ({registros.length})</h3>
         <table className="min-w-full divide-y divide-gray-200">
@@ -308,7 +298,6 @@ export default function Relatorio() {
                 <tr key={r._id} className="border-b">
                   <td className="px-3 py-2">{r.nome}</td>
                   <td className="px-3 py-2">{r.categoria}</td>
-                  {/* CORRIGIDO: Adicionado "T00:00:00" para forçar interpretação correta da data */}
                   <td className="px-3 py-2">{new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")}</td> 
                   <td className="px-3 py-2 text-center">{r.treinos}</td>
                   <td className="px-3 py-2 text-center">{r.lesoes}</td>
