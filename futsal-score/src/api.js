@@ -1,46 +1,24 @@
 import axios from "axios"
-
-const API_URL = "http://localhost:3000/api"
+import { getCurrentUser } from "./utils/authStorage"
 
 const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "http://localhost:3000/api",
 })
 
 api.interceptors.request.use(
   (config) => {
-    const authString = localStorage.getItem("currentUser")
-
-    if (authString) {
-      try {
-        const authObject = JSON.parse(authString)
-        const token = authObject?.token
-        if (token) config.headers["x-auth-token"] = token
-      } catch {
-        config.headers["x-auth-token"] = authString
-      }
+    const currentUser = getCurrentUser()
+    if (currentUser && currentUser.token) {
+      config.headers.Authorization = `Bearer ${currentUser.token}`
     }
-
     return config
   },
   (error) => Promise.reject(error)
 )
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      console.error(
-        `❌ Erro ${error.response.status}:`,
-        error.response.data?.msg || error.message
-      )
-    } else {
-      console.error("❌ Erro de conexão com o servidor:", error.message)
-    }
-    return Promise.reject(error)
-  }
-)
-
 export default api
+
+
+
+
+

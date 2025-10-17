@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react"
-import api from "../api" 
+// src/components/Registro.jsx
+import React, { useEffect, useState } from "react";
+import api from "../api";
 
 export default function Registro() {
 
@@ -10,7 +11,7 @@ export default function Registro() {
     treinos: 3,
     lesoes: 0,
     vo2: 50,
-    data: new Date().toISOString().slice(0, 10), 
+    data: new Date().toISOString().slice(0, 10),
     gols: 0,
     amarelos: 0,
     vermelhos: 0,
@@ -68,16 +69,12 @@ export default function Registro() {
     try {
       let response
       if (editingId) {
-
-        response = await api.post(`/registros`, { ...dataToSend, id: editingId })
-  
+        // usa PUT para atualização RESTful
+        response = await api.put(`/registros/${editingId}`, dataToSend)
         setLista(lista.map(r => r._id === editingId ? response.data : r))
         alert("Registro atualizado com sucesso!")
-
       } else {
-
         response = await api.post("/registros", dataToSend)
-        
         setLista([...lista, response.data])
         alert("Registro salvo com sucesso!")
       }
@@ -93,9 +90,7 @@ export default function Registro() {
   }
 
   function editar(registro) {
-
     const dataFormatada = new Date(registro.data).toISOString().slice(0, 10)
-    
     setForm({
         nome: registro.nome,
         categoria: registro.categoria,
@@ -320,7 +315,7 @@ export default function Registro() {
         <h3 className="text-xl font-semibold border-b pb-2 mb-4">
           Registros Salvos ({lista.length})
         </h3>
-        
+
         {loading && lista.length === 0 ? (
             <div className="text-blue-600">Carregando registros...</div>
         ) : (
@@ -330,10 +325,10 @@ export default function Registro() {
             )}
             {lista
                 .slice()
-                .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()) 
+                .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
                 .map((r) => (
-                <div 
-                  key={r._id} 
+                <div
+                  key={r._id}
                   className="p-4 border rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white shadow-sm hover:shadow-md transition duration-150"
                 >
                     <div className="mb-2 sm:mb-0">
@@ -341,9 +336,9 @@ export default function Registro() {
                         {r.nome} <span className="text-sm font-normal text-blue-600">({r.categoria})</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5">
-                          Data: {new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")} 
-                          • Status: 
-                          <span 
+                          Data: {new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")}
+                          • Status:
+                          <span
                             className={`font-semibold ml-1 ${r.status === "OK" ? "text-green-600" : "text-yellow-600"}`}
                           >
                             {r.status}
@@ -357,16 +352,16 @@ export default function Registro() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 mt-2 sm:mt-0">
-                      <button 
-                        onClick={() => editar(r)} 
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded transition duration-150" 
+                      <button
+                        onClick={() => editar(r)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded transition duration-150"
                         disabled={loading}
                       >
                         Editar
                       </button>
-                      <button 
-                        onClick={() => excluir(r._id)} 
-                        className="text-red-600 hover:text-red-800 text-sm font-medium p-1 rounded transition duration-150" 
+                      <button
+                        onClick={() => excluir(r._id)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium p-1 rounded transition duration-150"
                         disabled={loading}
                       >
                         Remover
@@ -380,3 +375,6 @@ export default function Registro() {
     </section>
   )
 }
+
+
+

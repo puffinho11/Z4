@@ -1,19 +1,25 @@
-const jwt = require('jsonwebtoken')
+import jwt from "jsonwebtoken";
 
-module.exports = (req, res, next) => {
-  const token = req.header('x-auth-token') || req.header('Authorization')?.replace('Bearer ', '')
+const auth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ msg: 'Nenhum token, autorização negada.' })
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ msg: "Token de autenticação não fornecido." });
   }
+
+  const token = authHeader.split(" ")[1];
 
   try {
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-    req.user = decoded.user
-    next()
-  } catch (e) {
-    res.status(401).json({ msg: 'Token inválido.' })
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; 
+    next();
+  } catch (error) {
+    console.error("Erro na verificação do token:", error);
+    return res.status(403).json({ msg: "Token inválido ou expirado." });
   }
-}
+};
+
+export default auth;
+
+
+

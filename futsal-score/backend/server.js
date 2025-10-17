@@ -1,36 +1,39 @@
-require("dotenv").config()
-const express = require("express")
-const cors = require("cors")
-const connectDB = require("./db")
+import dotenv from "dotenv";
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
 
-const userRoutes = require("./routes/userRoutes")
-const registroRoutes = require("./routes/registroRoutes")
-const exameRoutes = require("./routes/exameRoutes")
-const calendarioRoutes = require("./routes/calendarioRoutes")
-const chamadaRoutes = require("./routes/chamadaRoutes")
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import registroRoutes from "./routes/registroRoutes.js";
 
-connectDB()
+dotenv.config();
 
-const app = express()
+const app = express();
 
-app.use(
-  cors({
-    origin: "http://localhost:5173", 
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Rotas
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/registros", registroRoutes);
+
+// Conexão com o banco MongoDB
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
-)
+  .then(() => {
+    console.log("✅ Conectado ao MongoDB com sucesso!");
+    app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+  })
+  .catch((err) => console.error("Erro ao conectar ao MongoDB:", err));
 
-app.use(express.json())
 
-app.use("/api/users", userRoutes)
-app.use("/api/registros", registroRoutes)
-app.use("/api/exames", exameRoutes)
-app.use("/api/calendario", calendarioRoutes)
-app.use("/api/chamadas", chamadaRoutes)
-
-app.get("/", (req, res) => res.send("✅ API Futsal Score Rodando..."))
-
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`))
 

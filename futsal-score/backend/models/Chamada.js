@@ -11,6 +11,7 @@ const ChamadaSchema = new mongoose.Schema(
         presente: { type: Boolean, default: false },
       },
     ],
+    time: { type: mongoose.Schema.Types.ObjectId, ref: 'Time', required: true, },
   },
   { timestamps: true }
 )

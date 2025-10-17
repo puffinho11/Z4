@@ -1,44 +1,34 @@
-import React, { useState } from "react"
-import { setCurrentUser } from "../utils/authStorage"
-import api from "../api"
+import React, { useState } from "react";
+import { saveUser } from "../utils/authStorage";
+import api from "../api";
 
 export default function LoginModal({ onLogin }) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await api.post("/users/login", {
-        username,
-        password
-      })
+      const response = await api.post("/users/login", { username, password });
+      const { token, user: userData } = response.data;
 
-      const { token, user: userData } = response.data
-
-      const userToSave = {
-          ...userData,
-          token
-      }
-
-      setCurrentUser(userToSave)
-
-      onLogin(userToSave)
-
+      const userToSave = { ...userData, token };
+      saveUser(userToSave); // ✅ corrigido
+      onLogin(userToSave);
     } catch (err) {
-      console.error("Erro no login:", err.response || err)
-      if (err.response && err.response.status === 400) {
-        setError("Usuário ou senha inválidos. Tente novamente.")
+      console.error("Erro no login:", err.response || err);
+      if (err.response?.status === 400) {
+        setError("Usuário ou senha inválidos. Tente novamente.");
       } else {
-        setError("Erro ao conectar ao servidor. Verifique o console ou se o servidor está rodando.")
+        setError("Erro ao conectar ao servidor. Verifique se o backend está rodando.");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -58,9 +48,9 @@ export default function LoginModal({ onLogin }) {
           <input
             className="w-full border rounded-lg px-3 py-2"
             placeholder="Senha"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            type="password"
             required
             disabled={loading}
           />
@@ -74,6 +64,9 @@ export default function LoginModal({ onLogin }) {
         </form>
       </div>
     </div>
-  )
+  );
 }
+
+
+
 
