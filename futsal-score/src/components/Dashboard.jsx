@@ -89,7 +89,7 @@ export default function Dashboard() {
                     <span className="text-lg font-bold text-red-700">{totalLesoes}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
-                    <span className="text-sm text-gray-600">Total de Gols (Todos os registros)</span>
+                    <span className="text-sm text-gray-600">Total de Gols</span>
                     <span className="text-lg font-bold text-green-700">{totalGols}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">

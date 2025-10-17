@@ -7,6 +7,7 @@ import Relatorio from './components/Relatorio'
 import Desempenho from './components/Desempenho'
 import Exames from './components/Exames'
 import Calendario from './components/Calendario'
+import Chamada from './components/Chamada'
 import Admin from './components/Admin'
 import { getCurrentUser, setCurrentUser, logoutUser } from './utils/authStorage'
 import './index.css'
@@ -43,6 +44,7 @@ export default function App(){
         {section === 'desempenho' && <Desempenho /> }
         {section === 'exames' && <Exames /> }
         {section === 'calendario' && <Calendario /> }
+        {section === 'chamada' && <Chamada />}
         {user?.role === 'admin' && section === 'admin' && <Admin /> }
       </main>
     </div>

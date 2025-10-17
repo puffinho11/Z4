@@ -47,6 +47,12 @@ export default function Sidebar({ user, onLogout, setSection }) {
           >
             Calendário
           </button>
+          <button
+            onClick={() => setSection("chamada")}
+            className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700"
+          >
+            Chamada
+          </button>
           {user?.role === "admin" && (
             <button
               onClick={() => setSection("admin")}
