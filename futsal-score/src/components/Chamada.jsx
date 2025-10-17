@@ -12,15 +12,13 @@ export default function Chamada({ user }) {
   const [editandoId, setEditandoId] = useState(null)
   const [professor, setProfessor] = useState("")
 
-  // 🔹 Carrega o nome do professor e o histórico
   useEffect(() => {
     let nome = ""
 
-    // 1️⃣ Se veio via prop
     if (user?.username) {
       nome = user.username
     } else {
-      // 2️⃣ Tenta pegar do localStorage
+
       const savedUser = localStorage.getItem("currentUser")
       if (savedUser) {
         try {
@@ -41,7 +39,6 @@ export default function Chamada({ user }) {
     carregarHistorico()
   }, [user])
 
-  // 🔹 Buscar histórico
   async function carregarHistorico() {
     try {
       const res = await api.get("/chamadas")
@@ -51,7 +48,6 @@ export default function Chamada({ user }) {
     }
   }
 
-  // 🔹 Buscar atletas da categoria
   useEffect(() => {
     async function fetchAtletas() {
       if (!categoria) return
@@ -72,7 +68,6 @@ export default function Chamada({ user }) {
   const handleToggle = (id) =>
     setPresencas((p) => ({ ...p, [id]: !p[id] }))
 
-  // 🔹 Salvar ou atualizar chamada
   const handleSalvar = async () => {
     if (!categoria || atletas.length === 0) {
       alert("Selecione uma categoria e verifique se há atletas cadastrados.")
@@ -114,7 +109,6 @@ export default function Chamada({ user }) {
     }
   }
 
-  // 🔹 Excluir chamada
   const handleExcluir = async (id) => {
     if (!window.confirm("Deseja realmente excluir esta chamada?")) return
     try {
@@ -127,7 +121,6 @@ export default function Chamada({ user }) {
     }
   }
 
-  // 🔹 Editar chamada
   const handleEditar = (chamada) => {
     setEditandoId(chamada._id)
     setCategoria(chamada.categoria)
@@ -145,7 +138,6 @@ export default function Chamada({ user }) {
         Chamada de Atletas
       </h2>
 
-      {/* Cabeçalho */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -192,7 +184,6 @@ export default function Chamada({ user }) {
         </div>
       </div>
 
-      {/* Lista de atletas */}
       {categoria && (
         <>
           <h3 className="text-lg font-semibold mb-2">
@@ -259,7 +250,6 @@ export default function Chamada({ user }) {
         </>
       )}
 
-      {/* Histórico */}
       <div className="mt-10">
         <h3 className="text-xl font-semibold border-b pb-2 mb-4">
           Histórico de Chamadas
