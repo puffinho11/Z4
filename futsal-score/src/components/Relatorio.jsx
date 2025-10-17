@@ -22,14 +22,13 @@ export default function Relatorio() {
     setLoading(true)
     setError(null)
     try {
-      // Conflito resolvido: Mantida a chamada à API.
+      
       const response = await api.get("/registros")
       const data = Array.isArray(response.data) ? response.data : []
 
       setRegistrosOriginais(data)
       setRegistros(data)
-      // A montagem do chart será acionada pelo useEffect abaixo, após o setRegistros
-      // montarChart(data, metrica, selAtleta) // Esta linha pode ser removida pois o useEffect já fará isso
+
     } catch (err) {
       console.error("Erro ao carregar registros:", err.response || err)
       const msg = err.response?.status === 403 || err.response?.status === 401
@@ -104,7 +103,7 @@ export default function Relatorio() {
       valor: metricaSelecionada === 'vo2'
         ? (item.soma / item.contagem).toFixed(2)
         : item.soma
-    })).sort((a, b) => b.valor - a.valor) // Conflito de sintaxe resolvido aqui.
+    })).sort((a, b) => b.valor - a.valor)
 
 
     const labels = finalData.map(d => d.nome)

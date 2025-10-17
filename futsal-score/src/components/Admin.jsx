@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import api from "../api" // Resolução: Mantida uma única importação de api.
+import api from "../api" 
 
 export default function Admin() {
   const [users, setUsers] = useState([])
@@ -7,7 +7,6 @@ export default function Admin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   
-  // Resolução: Mantida uma única declaração de estado para editingUsername.
   const [editingUsername, setEditingUsername] = useState(null) 
 
 
@@ -57,7 +56,7 @@ export default function Admin() {
 
     setLoading(true)
     try {
-        // Resolução: Condensado o bloco de if/else para uma única lógica.
+
         if (editingUsername) {
             await api.put(`/users/${editingUsername}`, { username, password, role })
         } else {
@@ -83,7 +82,7 @@ export default function Admin() {
     if (window.confirm(`Tem certeza que deseja remover o usuário ${username}?`)) {
         setLoading(true)
         try {
-            // Resolução: Mantida a chamada api.delete.
+
             await api.delete(`/users/${username}`)
             
             await fetchUsers() 
