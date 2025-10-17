@@ -15,7 +15,7 @@ export default function Sidebar({ user, onLogout, setSection }) {
             onClick={() => setSection("dashboard")}
             className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700"
           >
-            Dashboard
+            Home
           </button>
           <button
             onClick={() => setSection("registro")}

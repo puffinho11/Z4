@@ -255,12 +255,12 @@ export default function Relatorio() {
             value={metrica}
             onChange={(e) => setMetrica(e.target.value)}
           >
-            <option value="vo2">VO₂ Max (Média)</option>
-            <option value="gols">Gols (Total)</option>
-            <option value="lesoes">Lesões (Total)</option>
-            <option value="treinos">Treinos (Total)</option>
-            <option value="amarelos">Cartões Amarelos (Total)</option>
-            <option value="vermelhos">Cartões Vermelhos (Total)</option>
+            <option value="vo2">VO₂ Max</option>
+            <option value="gols">Gols</option>
+            <option value="lesoes">Lesões</option>
+            <option value="treinos">Treinos</option>
+            <option value="amarelos">Cartões Amarelos</option>
+            <option value="vermelhos">Cartões Vermelhos</option>
           </select>
         </div>
         <div className="h-96">

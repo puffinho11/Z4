@@ -50,7 +50,7 @@ export default function Dashboard() {
 
   return (
     <section className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-blue-800">Dashboard de Atletas</h2>
+      <h2 className="text-2xl font-bold mb-6 text-blue-800">Painel de Gestão de Atletas</h2>
       
       {loading && <p className="text-blue-600">Carregando dados...</p>}
       {error && <p className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</p>}
