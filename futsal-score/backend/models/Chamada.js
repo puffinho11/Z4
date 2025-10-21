@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose"
 
 const ChamadaSchema = new mongoose.Schema(
   {
@@ -11,12 +11,21 @@ const ChamadaSchema = new mongoose.Schema(
         presente: { type: Boolean, default: false },
       },
     ],
-    time: { type: mongoose.Schema.Types.ObjectId, ref: 'Time', required: true, },
+    time: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   { timestamps: true }
 )
 
-module.exports = mongoose.model("Chamada", ChamadaSchema)
+const Chamada = mongoose.model("Chamada", ChamadaSchema)
+
+export default Chamada
+
+
+
 
 
 

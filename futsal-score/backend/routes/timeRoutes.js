@@ -1,48 +1,49 @@
-const express = require('express');
-const router = express.Router();
-const Time = require('../models/Time');
-const auth = require('../middleware/auth');
+import express from "express"
+import Time from "../models/Time.js"
+import auth from "../middleware/auth.js"
 
-// @route   POST /api/times
-// @desc    Criar um novo time (apenas Super Admin)
-// @access  Private (Admin)
-router.post('/', auth, async (req, res) => {
-  // Você pode criar uma nova role 'superadmin' ou deixar admin fazer isso por enquanto
-  if (req.user.role !== 'admin') { 
-    return res.status(403).json({ msg: 'Acesso negado: Requer papel de admin.' });
-  }
+const router = express.Router()
 
-  const { nome } = req.body;
-  if (!nome) return res.status(400).json({ msg: 'O nome do time é obrigatório.' });
-
+router.post("/", auth, async (req, res) => {
   try {
-    let time = await Time.findOne({ nome });
-    if (time) return res.status(400).json({ msg: 'Time já existe.' });
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ msg: "Acesso negado: apenas admin pode criar times." })
+    }
 
-    time = new Time({ nome });
-    await time.save();
-    res.json({ msg: 'Time criado com sucesso!', time });
+    const { nome } = req.body
+    if (!nome) {
+      return res.status(400).json({ msg: "O nome do time é obrigatório." })
+    }
+
+    const existente = await Time.findOne({ nome })
+    if (existente) {
+      return res.status(400).json({ msg: "Time já existe." })
+    }
+
+    const novoTime = new Time({ nome })
+    await novoTime.save()
+
+    res.status(201).json({ msg: "Time criado com sucesso!", time: novoTime })
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Erro no Servidor');
+    console.error("Erro ao criar time:", err)
+    res.status(500).json({ msg: "Erro interno ao criar time." })
   }
-});
+})
 
-// @route   GET /api/times
-// @desc    Listar todos os times (apenas Admin)
-// @access  Private (Admin)
-router.get('/', auth, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    // Um usuário normal deve ver apenas o próprio time, o Admin vê todos
-    return res.status(403).json({ msg: 'Acesso negado: Requer papel de admin.' });
-  }
+router.get("/", auth, async (req, res) => {
   try {
-    const times = await Time.find().sort({ nome: 1 });
-    res.json(times);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Erro no Servidor');
-  }
-});
+    if (req.user.role === "admin") {
+      const times = await Time.find().sort({ nome: 1 })
+      return res.json(times)
+    }
 
-module.exports = router;
+    const meuTime = await Time.find({ nome: req.user.time })
+    res.json(meuTime)
+  } catch (err) {
+    console.error("Erro ao listar times:", err)
+    res.status(500).json({ msg: "Erro interno ao listar times." })
+  }
+})
+
+export default router
+

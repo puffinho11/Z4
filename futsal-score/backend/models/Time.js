@@ -1,8 +1,7 @@
-const mongoose = require('mongoose')
+import mongoose from "mongoose"
 
-const TimeSchema = new mongoose.Schema({
- 
-    nome: {
+const timeSchema = new mongoose.Schema({
+  nome: {
     type: String,
     required: true,
     unique: true,
@@ -12,7 +11,7 @@ const TimeSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-
 })
 
-module.exports = mongoose.model('Time', TimeSchema)
+const Time = mongoose.model("Time", timeSchema)
+export default Time

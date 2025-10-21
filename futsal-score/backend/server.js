@@ -1,39 +1,50 @@
-import dotenv from "dotenv";
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
+import express from "express"
+import dotenv from "dotenv"
+import mongoose from "mongoose"
+import cors from "cors"
 
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import registroRoutes from "./routes/registroRoutes.js";
+import userRoutes from "./routes/userRoutes.js"
+import authRoutes from "./routes/authRoutes.js"
+import registroRoutes from "./routes/registroRoutes.js"
+import exameRoutes from "./routes/exameRoutes.js"
+import calendarioRoutes from "./routes/calendarioRoutes.js"
+import chamadaRoutes from "./routes/chamadaRoutes.js"
+import timeRoutes from "./routes/timeRoutes.js"
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+app.use("/api/users", userRoutes)
+app.use("/api/auth", authRoutes)
+app.use("/api/registros", registroRoutes)
+app.use("/api/exames", exameRoutes)
+app.use("/api/calendario", calendarioRoutes)
+app.use("/api/chamadas", chamadaRoutes)
+app.use("/api/times", timeRoutes)
 
-// Rotas
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/registros", registroRoutes);
-
-// Conexão com o banco MongoDB
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
+app.get("/", (req, res) => {
+  res.send("✅ API do Futsal Score funcionando!")
+})
 
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("✅ Conectado ao MongoDB com sucesso!");
-    app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+    console.log("✅ Conectado ao MongoDB")
+    app.listen(3000, () => console.log("🚀 Servidor rodando na porta 3000"))
   })
-  .catch((err) => console.error("Erro ao conectar ao MongoDB:", err));
+  .catch((error) => console.error("❌ Erro ao conectar ao MongoDB:", error))
+
+
+
+
+
+
+
+
+
 
 
 

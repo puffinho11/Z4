@@ -2,61 +2,12 @@ import express from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../models/User.js"
-import auth from "../middleware/auth.js"
 
 const router = express.Router()
 
-router.post("/login", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const { username, password } = req.body
-
-    const user = await User.findOne({ username })
-    if (!user) {
-      return res.status(404).json({ msg: "Usuário não encontrado." })
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password)
-    if (!isMatch) {
-      return res.status(401).json({ msg: "Senha incorreta." })
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "8h" }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        role: user.role,
-        team: user.team || null,
-      },
-    })
-  } catch (error) {
-    console.error("Erro no login:", error)
-    res.status(500).json({ msg: "Erro no servidor ao fazer login." })
-  }
-})
-
-router.get("/", auth, async (req, res) => {
-  try {
-    const role =
-      req.user.role?.toLowerCase?.() ||
-      req.user.nivel?.toLowerCase?.() ||
-      req.user.tipo?.toLowerCase?.() ||
-      "";
-    const isAdmin = role === "admin" || req.user.isAdmin === true
-
-    if (!isAdmin) {
-      return res
-        .status(403)
-        .json({ msg: "Acesso negado. Apenas administradores." })
-    }
-
-    const users = await User.find({}, "-password")
+    const users = await User.find().select("-password")
     res.json(users)
   } catch (error) {
     console.error("Erro ao buscar usuários:", error)
@@ -64,77 +15,77 @@ router.get("/", auth, async (req, res) => {
   }
 })
 
-router.get("/:id", auth, async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id, "-password");
-    if (!user) {
-      return res.status(404).json({ msg: "Usuário não encontrado." })
-    }
-    res.json(user)
+    const { username, password } = req.body
+
+    const user = await User.findOne({ username })
+    if (!user) return res.status(400).json({ msg: "Usuário não encontrado." })
+
+    const senhaCorreta = await bcrypt.compare(password, user.password)
+    if (!senhaCorreta) return res.status(400).json({ msg: "Senha incorreta." })
+
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role, time: user.time },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    )
+
+    res.json({
+      msg: "Login realizado com sucesso!",
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        time: user.time,
+      },
+    })
   } catch (error) {
-    console.error("Erro ao buscar usuário:", error)
-    res.status(500).json({ msg: "Erro ao buscar usuário." })
+    console.error("Erro ao fazer login:", error)
+    res.status(500).json({ msg: "Erro interno no servidor." })
   }
 })
 
-router.put("/:id", auth, async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const role =
-      req.user.role?.toLowerCase?.() ||
-      req.user.nivel?.toLowerCase?.() ||
-      req.user.tipo?.toLowerCase?.() ||
-      "";
-    const isAdmin = role === "admin" || req.user.isAdmin === true;
+    const { username, password, role, time } = req.body
 
-    if (!isAdmin && req.user.id !== req.params.id) {
-      return res
-        .status(403)
-        .json({ msg: "Sem permissão para editar este usuário." })
-    }
+    const existente = await User.findOne({ username })
+    if (existente) return res.status(400).json({ msg: "Usuário já existe." })
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      select: "-password",
+    const senhaCriptografada = await bcrypt.hash(password, 10)
+
+    const novoUser = new User({
+      username,
+      password: senhaCriptografada,
+      role: role || "user",
+      time: time || null,
     })
 
-    if (!updatedUser) {
-      return res.status(404).json({ msg: "Usuário não encontrado." })
-    }
-
-    res.json(updatedUser)
+    await novoUser.save()
+    res.status(201).json({ msg: "Usuário criado com sucesso!" })
   } catch (error) {
-    console.error("Erro ao atualizar usuário:", error)
-    res.status(500).json({ msg: "Erro ao atualizar usuário." })
+    console.error("Erro ao registrar usuário:", error)
+    res.status(500).json({ msg: "Erro ao registrar usuário." })
   }
 })
 
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
-    const role =
-      req.user.role?.toLowerCase?.() ||
-      req.user.nivel?.toLowerCase?.() ||
-      req.user.tipo?.toLowerCase?.() ||
-      ""
-    const isAdmin = role === "admin" || req.user.isAdmin === true
-
-    if (!isAdmin) {
-      return res
-        .status(403)
-        .json({ msg: "Apenas administradores podem excluir usuários." })
-    }
-
-    const deletedUser = await User.findByIdAndDelete(req.params.id)
-    if (!deletedUser) {
-      return res.status(404).json({ msg: "Usuário não encontrado." })
-    }
-
-    res.json({ msg: "Usuário removido com sucesso." })
+    const { id } = req.params
+    await User.findByIdAndDelete(id)
+    res.json({ msg: "Usuário removido com sucesso!" })
   } catch (error) {
-    console.error("Erro ao excluir usuário:", error)
-    res.status(500).json({ msg: "Erro ao excluir usuário." })
+    console.error("Erro ao remover usuário:", error)
+    res.status(500).json({ msg: "Erro ao remover usuário." })
   }
 })
 
 export default router
+
+
+
+
 
 

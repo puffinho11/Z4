@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const registroSchema = new mongoose.Schema(
   {
@@ -56,9 +56,9 @@ const registroSchema = new mongoose.Schema(
   {
     collection: "registros",
   }
-);
+)
 
-const Registro = mongoose.model("Registro", registroSchema);
+const Registro = mongoose.model("Registro", registroSchema)
 
-export default Registro;
+export default Registro
 
