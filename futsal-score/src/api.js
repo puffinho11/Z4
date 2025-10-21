@@ -1,5 +1,6 @@
 import axios from "axios"
-import { getCurrentUser } from "./utils/authStorage"
+import { getToken } from "./utils/authStorage";
+
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -7,9 +8,9 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const currentUser = getCurrentUser()
-    if (currentUser && currentUser.token) {
-      config.headers.Authorization = `Bearer ${currentUser.token}`
+    const token = getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
@@ -17,6 +18,9 @@ api.interceptors.request.use(
 )
 
 export default api
+
+
+
 
 
 

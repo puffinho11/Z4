@@ -1,12 +1,49 @@
 import React, { useEffect, useState } from "react"
 import api from "../api"
 import Countdown from "./Countdown"
+import { 
+  MdDashboard, 
+  MdGroup, 
+  MdUpdate, 
+  MdOutlineHealing, 
+  MdSportsSoccer,
+  MdOutlineStyle,
+  MdOutlineEvent 
+} from "react-icons/md"
 
 export default function Dashboard() {
   const [registros, setRegistros] = useState([])
   const [eventos, setEventos] = useState([]) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const Card = ({ title, value, color, icon: Icon }) => {
+    return (
+      <div
+        className={`bg-white p-6 rounded-xl shadow border-t-4 border-${color}-500 hover:shadow-lg transition transform hover:-translate-y-1 flex items-center gap-4`}
+      >
+        <div className={`text-4xl p-2 rounded-full bg-${color}-100 text-${color}-600`}>
+          <Icon />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-3xl font-extrabold text-gray-900 mt-1">{value}</p>
+        </div>
+      </div>
+    )
+  }
+
+  const ResumoItem = ({ label, value, color, icon: Icon }) => {
+    return (
+      <div className="flex justify-between border-b pb-2 mb-2 items-center">
+        <span className="text-sm text-gray-600 flex items-center gap-2">
+          <Icon className={`text-${color}-600`} />
+          {label}
+        </span>
+        <span className={`text-xl font-bold text-${color}-700`}>{value}</span>
+      </div>
+    )
+  }
 
   async function fetchEventos() {
     try {
@@ -43,7 +80,8 @@ export default function Dashboard() {
     const ago = new Date()
     ago.setDate(ago.getDate() - 30)
     return d >= ago
-  }).length;
+  }).length
+
   const emRecuperacao = registros.filter(
     (r) => r.status === "Recuperação" || r.status === "Lesão"
   ).length
@@ -70,7 +108,7 @@ export default function Dashboard() {
     }))
 
     .filter((ev) => ev.dateTime.getTime() > new Date().getTime() - 60000) 
-
+    
     .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime()) 
 
   const proximoEvento = eventosFuturos[0]
@@ -82,8 +120,8 @@ export default function Dashboard() {
 
   return (
     <section className="p-8 ml-64 min-h-screen bg-gray-50">
-      <h2 className="text-3xl font-bold mb-8 text-blue-800">
-        Painel de Gestão de Atletas
+      <h2 className="text-3xl font-bold mb-8 text-blue-800 flex items-center gap-2">
+        <MdDashboard className="text-4xl" /> Painel de Gestão de Atletas
       </h2>
 
       {loading && (
@@ -98,76 +136,99 @@ export default function Dashboard() {
       {!loading && !error && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card title="Atletas Registrados" value={atletasCount} color="blue" />
-            <Card title="Últimos 30 Dias" value={ultimos30} color="purple" />
-            <Card title="Em Recuperação" value={emRecuperacao} color="red" />
+            <Card 
+              title="Atletas Registrados" 
+              value={atletasCount} 
+              color="blue" 
+              icon={MdGroup} 
+            />
+            <Card 
+              title="Últimos Registros (30D)" 
+              value={ultimos30} 
+              color="purple" 
+              icon={MdUpdate} 
+            />
+            <Card 
+              title="Em Recuperação" 
+              value={emRecuperacao} 
+              color="red" 
+              icon={MdOutlineHealing} 
+            />
           </div>
-
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-md lg:col-span-1">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                Resumo de Ocorrências
+            <div className="bg-white p-6 rounded-xl shadow-md lg:col-span-1 border border-gray-100">
+              <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2 border-b pb-2">
+                <MdSportsSoccer className="text-xl" /> Resumo de Ocorrências
               </h3>
-              <ResumoItem label="Lesões" value={totalLesoes} color="red" />
-              <ResumoItem label="Gols" value={totalGols} color="green" />
+              <ResumoItem 
+                label="Lesões" 
+                value={totalLesoes} 
+                color="red" 
+                icon={MdOutlineHealing}
+              />
+              <ResumoItem 
+                label="Gols Marcados" 
+                value={totalGols} 
+                color="green" 
+                icon={MdSportsSoccer} 
+              />
               <ResumoItem
                 label="Cartões Amarelos"
                 value={totalAmarelos}
                 color="yellow"
+                icon={MdOutlineStyle}
               />
               <ResumoItem
                 label="Cartões Vermelhos"
                 value={totalVermelhos}
                 color="red"
+                icon={MdOutlineStyle}
               />
             </div>
             <div className="lg:col-span-2 space-y-4">
-                
-                {proximoEvento ? (
-                    <Countdown
-                      targetDate={proximoEvento.dateTime.toISOString()}
-                      eventTitle={
-                        proximoEvento.titulo +
-                        (proximoEvento.adversario
-                          ? ` vs ${proximoEvento.adversario}`
-                          : "")
-                      }
-                      eventLocal={proximoEvento.local}
-                    />
-                ) : (
-                    <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center text-gray-500">
-                        <p className="italic">
-                            🗓️ Nenhum evento futuro no calendário.
-                        </p>
-                    </div>
-                )}
-                {listaProximosEventos.length > 0 && (
-                    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
-                        <h4 className="text-md font-semibold text-gray-700 mb-3 border-b pb-2">
-                            Outros Próximos Eventos
-                        </h4>
-                        <ul className="space-y-2">
-                            {listaProximosEventos.map((ev, index) => (
-                                <li key={index} className="flex justify-between items-center text-sm text-gray-600 border-l-4 border-blue-200 pl-2">
-                                    <span className="font-medium text-gray-800">
-                                        {ev.titulo}{ev.adversario ? ` vs ${ev.adversario}` : ''}
-                                    </span>
-                                    <span>
-                                        {ev.data} {ev.hora && `às ${ev.hora}`}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-                {!proximoEvento && listaProximosEventos.length === 0 && (
-                    <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center text-gray-500">
-                        <p className="italic">
-                            📊 Gráficos de desempenho e status dos atletas em breve!
-                        </p>
-                    </div>
-                )}
-
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <MdOutlineEvent className="text-2xl text-blue-700" /> Próximo Evento
+              </h3>
+              
+              {proximoEvento ? (
+                <Countdown
+                  targetDate={proximoEvento.dateTime.toISOString()}
+                  eventTitle={
+                    proximoEvento.titulo +
+                    (proximoEvento.adversario
+                      ? ` vs ${proximoEvento.adversario}`
+                      : "")
+                  }
+                  eventLocal={proximoEvento.local}
+                />
+              ) : (
+                <div className="bg-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center text-gray-500 border border-gray-100">
+                  <p className="italic font-semibold">
+                    🗓️ Nenhum evento futuro no calendário.
+                  </p>
+                  <p className="text-sm mt-1">Adicione um novo em "Calendário".</p>
+                </div>
+              )}
+              
+              {listaProximosEventos.length > 0 && (
+                <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+                  <h4 className="text-md font-semibold text-gray-700 mb-3 border-b pb-2 flex items-center gap-2">
+                    <MdOutlineEvent className="text-lg" /> Outros Eventos
+                  </h4>
+                  <ul className="space-y-2">
+                    {listaProximosEventos.map((ev, index) => (
+                      <li key={index} className="flex justify-between items-center text-sm text-gray-600 border-l-4 border-blue-200 pl-2 py-1">
+                        <span className="font-medium text-gray-800">
+                          {ev.titulo}{ev.adversario ? ` vs ${ev.adversario}` : ''}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {ev.dateTime.toLocaleDateString('pt-BR')} {ev.hora && `às ${ev.hora}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -175,27 +236,6 @@ export default function Dashboard() {
     </section>
   )
 }
-
-function Card({ title, value, color }) {
-  return (
-    <div
-      className={`bg-white p-6 rounded-xl shadow border-t-4 border-${color}-500 hover:shadow-lg transition transform hover:-translate-y-1`}
-    >
-      <p className="text-sm font-medium text-gray-500">{title}</p>
-      <p className="text-3xl font-extrabold text-gray-900 mt-1">{value}</p>
-    </div>
-  )
-}
-
-function ResumoItem({ label, value, color }) {
-  return (
-    <div className="flex justify-between border-b pb-2 mb-1">
-      <span className="text-sm text-gray-600">{label}</span>
-      <span className={`text-lg font-bold text-${color}-700`}>{value}</span>
-    </div>
-  )
-}
-
 
 
 

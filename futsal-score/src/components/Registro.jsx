@@ -9,7 +9,7 @@ import {
   MdFitnessCenter, 
   MdHealing, 
   MdOutlineSpeed, 
-  MdSportsScore 
+  MdSportsSoccer 
 } from 'react-icons/md';
 
 export default function Registro() {
@@ -189,7 +189,7 @@ export default function Registro() {
             { id: "treinos", label: "Treinos (Semana)", icon: <MdFitnessCenter /> },
             { id: "lesoes", label: "Lesões", icon: <MdHealing /> },
             { id: "vo2", label: "VO₂ Máx.", icon: <MdOutlineSpeed /> },
-            { id: "gols", label: "Gols", icon: <MdSportsScore /> },
+            { id: "gols", label: "Gols", icon: <MdSportsSoccer /> }, // Ícone alterado
             { id: "amarelos", label: "Cartões Amarelos", icon: <MdOutlineStyle /> },
             { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> },
           ].map((f) => (
@@ -275,7 +275,7 @@ export default function Registro() {
                     </div>
                     <div className="flex gap-4 text-sm text-gray-700">
                       <span className="flex items-center gap-1"><MdOutlineSpeed className="text-lg" /> VO₂: {r.vo2}</span>
-                      <span className="flex items-center gap-1"><MdSportsScore className="text-lg" /> Gols: {r.gols}</span>
+                      <span className="flex items-center gap-1"><MdSportsSoccer className="text-lg" /> Gols: {r.gols}</span> {/* Ícone alterado */}
                       <span className="flex items-center gap-1"><MdHealing className="text-lg" /> Lesões: {r.lesoes}</span>
                       <span className="flex items-center gap-1">
                         <MdOutlineStyle className="text-lg" /> Cts: {r.amarelos}/{r.vermelhos}

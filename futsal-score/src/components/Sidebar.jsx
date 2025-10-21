@@ -1,5 +1,15 @@
 import React from "react"
-import { MdDashboard, MdEvent, MdGroup, MdOutlineAnalytics, MdFitnessCenter, MdAssignment, MdLocalHospital, MdAdminPanelSettings } from 'react-icons/md';
+import { 
+  MdDashboard, 
+  MdEvent, 
+  MdGroup, 
+  MdOutlineAnalytics, 
+  MdFitnessCenter, 
+  MdAssignment, 
+  MdLocalHospital, 
+  MdAdminPanelSettings, 
+  MdAccountCircle 
+} from 'react-icons/md';
 import { FaSignOutAlt } from 'react-icons/fa';
 
 export default function Sidebar({ user, onLogout, setSection }) {
@@ -11,8 +21,10 @@ export default function Sidebar({ user, onLogout, setSection }) {
     { label: "Exames", icon: <MdLocalHospital />, section: "exames" },
     { label: "Calendário", icon: <MdEvent />, section: "calendario" },
     { label: "Chamada", icon: <MdAssignment />, section: "chamada" },
+    { label: "Meu Perfil", icon: <MdAccountCircle />, section: "perfil" }, 
   ];
 
+  // Adiciona item de Admin se o usuário for admin
   if (user?.role === "admin") {
     menuItems.push({
       label: "Administração",
@@ -32,7 +44,12 @@ export default function Sidebar({ user, onLogout, setSection }) {
             <button
               key={item.section}
               onClick={() => setSection(item.section)}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-blue-800 transition-all text-sm font-medium focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              // Adiciona classe 'active' para realçar a seção atual, se desejado
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium focus:ring-2 focus:ring-blue-400 focus:outline-none ${
+                item.section === user?.section // Assume que você está usando 'section' no App.jsx para controle
+                  ? "bg-blue-600 font-bold"
+                  : "hover:bg-blue-800"
+              }`}
             >
               <span className="text-xl">{item.icon}</span>
               <span>{item.label}</span>
@@ -41,22 +58,22 @@ export default function Sidebar({ user, onLogout, setSection }) {
         </nav>
       </div>
       <div className="p-5 border-t border-blue-600">
+        {/* Seção de Perfil no Sidebar, usa 'user?.username' para ser seguro */}
         <div className="text-xs text-gray-300 mb-3">
-          <p className="font-semibold">{user?.username}</p>
-          <p className="text-gray-400">({user?.role})</p>
+          <p className="font-semibold">{user?.username || 'Carregando...'}</p>
+          <p className="text-gray-400">({user?.role || 'Visitante'})</p>
         </div>
         <button
           onClick={onLogout}
-          className="flex items-center justify-center gap-2 w-full text-sm bg-red-600 hover:bg-red-700 py-2 rounded-md font-semibold transition"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
         >
-           <FaSignOutAlt />
-           Sair
+          <FaSignOutAlt />
+          Sair
         </button>
       </div>
     </aside>
   )
 }
-
 
 
 

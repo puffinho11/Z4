@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from "react"
 import Chart from "chart.js/auto"
 import api from "../api"
+import { 
+  MdFitnessCenter, 
+  MdBarChart, 
+  MdTrendingUp, 
+  MdOutlineHealing, 
+  MdOutlineAssignment 
+} from "react-icons/md" 
 
 export default function Desempenho() {
   const [registros, setRegistros] = useState([])
@@ -158,22 +165,22 @@ export default function Desempenho() {
 
   return (
     <section className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-blue-800 mb-2">
-        📈 Desempenho e Monitoramento
+      <h2 className="text-3xl font-bold text-blue-800 mb-2 flex items-center gap-2">
+        <MdFitnessCenter className="text-4xl" /> <span>Desempenho e Monitoramento</span>
       </h2>
       <p className="text-gray-500 mb-6">
         Acompanhe métricas de treino, lesões e desempenho por atleta e categoria.
       </p>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-md lg:col-span-2 border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700">
-            Treinos x Lesões por Categoria
+          <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+            <MdBarChart className="text-xl" /> Treinos x Lesões por Categoria
           </h3>
           <canvas ref={catChartRef} className="h-96 w-full" />
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">
-            Evolução de VO₂ Máx.
+          <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
+            <MdTrendingUp className="text-xl" /> Evolução de VO₂ Máx.
           </h3>
           <select
             className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -188,8 +195,8 @@ export default function Desempenho() {
         </div>
       </div>
       <div className="bg-white p-6 mt-8 rounded-2xl shadow-md border border-gray-100">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700">
-          📋 Dados Brutos ({registros.length})
+        <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
+          <MdOutlineAssignment className="text-xl" /> Dados Brutos ({registros.length})
         </h3>
         <div className="divide-y divide-gray-200">
           {registros.length === 0 ? (
@@ -216,15 +223,15 @@ export default function Desempenho() {
                     </span>
                   </div>
                 </div>
-                <div className="text-right space-x-3">
-                  <span className="text-blue-600 font-medium">
+                <div className="text-right space-x-3 flex flex-wrap gap-2">
+                  <span className="text-blue-600 font-medium flex items-center gap-1">
                     VO₂: {r.vo2}
                   </span>
-                  <span className="text-green-600 font-medium">
+                  <span className="text-green-600 font-medium flex items-center gap-1">
                     Gols: {r.gols || 0}
                   </span>
-                  <span className="text-red-600 font-medium">
-                    Lesões: {r.lesoes || 0}
+                  <span className="text-red-600 font-medium flex items-center gap-1">
+                    <MdOutlineHealing className="text-lg" /> Lesões: {r.lesoes || 0}
                   </span>
                 </div>
               </div>
@@ -235,8 +242,3 @@ export default function Desempenho() {
     </section>
   )
 }
-
-
-
-
-

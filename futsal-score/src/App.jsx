@@ -9,29 +9,32 @@ import Exames from './components/Exames'
 import Calendario from './components/Calendario'
 import Chamada from './components/Chamada'
 import Admin from './components/Admin'
+import PerfilAtleta from './components/PerfilAtleta'
 import { getCurrentUser, saveUser, logoutUser } from './utils/authStorage'
-import './index.css'
+import normalizeUser from './utils/normalizeUser'
 
-export default function App(){
-  const [user, setUser] = useState(getCurrentUser())
+
+export default function App() {
+  const [user, setUser] = useState(normalizeUser(getCurrentUser()))
   const [section, setSection] = useState('dashboard')
 
-  useEffect(()=> {
-    const curr = getCurrentUser()
+  useEffect(() => {
+    const curr = normalizeUser(getCurrentUser())
     setUser(curr)
-  },[])
+  }, [])
 
-  function handleLogin(u){
-    saveUser(u)   
-    setUser(u)
+  function handleLogin(u) {
+    const normalizedUser = normalizeUser(u)
+    saveUser(normalizedUser)
+    setUser(normalizedUser)
   }
 
-  function handleLogout(){
+  function handleLogout() {
     logoutUser()
     setUser(null)
   }
 
-  if(!user){
+  if (!user) {
     return <LoginModal onLogin={handleLogin} />
   }
 
@@ -39,15 +42,17 @@ export default function App(){
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Sidebar user={user} onLogout={handleLogout} setSection={setSection} />
       <main className="ml-56 max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {section === 'dashboard' && <Dashboard /> }
-        {section === 'registro' && <Registro onSectionChange={setSection} /> }
-        {section === 'relatorio' && <Relatorio /> }
-        {section === 'desempenho' && <Desempenho /> }
-        {section === 'exames' && <Exames /> }
-        {section === 'calendario' && <Calendario /> }
-        {section === 'chamada' && <Chamada /> }
-        {user?.role === 'admin' && section === 'admin' && <Admin /> }
+        {section === 'dashboard' && <Dashboard />}
+        {section === 'registro' && <Registro onSectionChange={setSection} />}
+        {section === 'relatorio' && <Relatorio />}
+        {section === 'desempenho' && <Desempenho />}
+        {section === 'exames' && <Exames />}
+        {section === 'calendario' && <Calendario />}
+        {section === 'chamada' && <Chamada />}
+        {section === 'admin' && <Admin />}
+        {section === 'perfil' && <PerfilAtleta user={user} setUser={setUser} />}
       </main>
     </div>
   )
 }
+

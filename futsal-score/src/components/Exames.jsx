@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react"
 import api from "../api"
+import { 
+  MdMedicalServices, 
+  MdSave, 
+  MdCancel, 
+  MdList, 
+  MdSearch, 
+  MdEdit, 
+  MdDelete, 
+  MdLocalPrintshop 
+} from 'react-icons/md';
 
 export default function Exames() {
   const blank = {
@@ -50,8 +60,10 @@ export default function Exames() {
   }
 
   function editar(exame) {
-    setForm(exame)
+    const dataFormatada = new Date(exame.data).toISOString().slice(0, 10)
+    setForm({ ...exame, data: dataFormatada })
     setEditingId(exame._id)
+    window.scrollTo({ top: 0, behavior: "smooth" }) 
   }
 
   async function handleSubmit(e) {
@@ -62,11 +74,12 @@ export default function Exames() {
     const payload = { ...form, id: editingId }
 
     try {
-      const response = await api.post("/exames", payload)
-
+      let response
       if (editingId) {
+        response = await api.put(`/exames/${editingId}`, payload)
         setLista(lista.map((ex) => (ex._id === editingId ? response.data : ex)))
       } else {
+        response = await api.post("/exames", payload)
         setLista([response.data, ...lista])
       }
 
@@ -105,10 +118,10 @@ export default function Exames() {
           <title>Exame de ${exame.atleta}</title>
           <style>
             body { font-family: sans-serif; padding: 20px; }
-            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; }
+            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; display: flex; align-items: center; gap: 10px; }
             .info { margin-bottom: 15px; }
-            .info span { font-weight: bold; }
-            .resultado { margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; }
+            .info span { font-weight: bold; color: #374151; }
+            .resultado { margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color: #f9f9f9; }
           </style>
         </head>
         <body>
@@ -137,16 +150,15 @@ export default function Exames() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-2">
-        🧠 Gerenciamento de Exames
+      <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-3">
+        <MdMedicalServices className="text-4xl" /> Gerenciamento de Exames
       </h2>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-md rounded-xl p-6 space-y-4 border border-gray-100 mb-8"
       >
-        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2">
-          {editingId ? "Editar Exame" : "Novo Exame"}
+        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
+          <MdSave className="text-xl" /> {editingId ? "Editar Exame" : "Novo Exame"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -220,35 +232,37 @@ export default function Exames() {
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition disabled:opacity-50"
+              className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 flex items-center gap-1"
               disabled={loading}
             >
-              Cancelar Edição
+              <MdCancel /> Cancelar Edição
             </button>
           )}
           <button
             type="submit"
-            className="bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+            className="bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition disabled:opacity-50 flex items-center gap-1"
             disabled={loading}
           >
-            {loading ? "Salvando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
+            <MdSave /> {loading ? "Salvando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
           </button>
         </div>
       </form>
-
       <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-blue-800 mb-4">
-          Exames Salvos ({filteredLista.length})
+        <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
+          <MdList className="text-2xl" /> Exames Salvos ({filteredLista.length})
         </h3>
 
         <div className="mb-4">
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Pesquisar por atleta, tipo ou resultado..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type="text"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="Pesquisar por atleta, tipo ou resultado..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
         </div>
 
         {loading && !lista.length ? (
@@ -256,7 +270,9 @@ export default function Exames() {
         ) : (
           <div className="space-y-4">
             {filteredLista.length === 0 && (
-              <div className="text-gray-500">Nenhum exame encontrado.</div>
+              <div className="text-gray-500 text-center py-6 bg-gray-50 rounded-xl border">
+                Nenhum exame encontrado.
+              </div>
             )}
 
             {filteredLista.slice().reverse().map((e) => (
@@ -265,41 +281,47 @@ export default function Exames() {
                 className="p-4 border rounded-lg bg-gray-50 flex justify-between items-start hover:shadow transition"
               >
                 <div>
-                  <div className="font-semibold text-gray-800">{e.atleta}</div>
-                  <div className="text-xs text-gray-500">
-                    {e.tipo} •{" "}
+                  <div className="font-bold text-gray-800">{e.atleta}</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-2">
+                    <span className="text-blue-600 font-medium">{e.tipo}</span> •{" "}
                     {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
                   </div>
-                  <div className="text-sm mt-2 text-gray-700">
+                  <div className="text-sm mt-2 text-gray-700 max-w-xl">
+                    **Resultado:**{" "}
                     {e.resultado
                       ? e.resultado.length > 200
                         ? e.resultado.slice(0, 200) + "..."
                         : e.resultado
                       : <i className="text-gray-400">Sem resultado</i>}
+                    {e.obs && (
+                        <div className="text-xs mt-1 text-yellow-700">
+                            **Obs:** {e.obs}
+                        </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-sm font-medium">
+                <div className="flex items-center gap-3 text-sm font-medium flex-shrink-0">
                   <button
                     onClick={() => imprimir(e)}
-                    className="text-blue-700 hover:underline"
+                    className="text-blue-700 hover:text-blue-900 flex items-center gap-1"
                     disabled={loading}
                   >
-                    Imprimir
+                    <MdLocalPrintshop /> Imprimir
                   </button>
                   <button
                     onClick={() => editar(e)}
-                    className="text-green-700 hover:underline"
+                    className="text-green-700 hover:text-green-900 flex items-center gap-1"
                     disabled={loading}
                   >
-                    Editar
+                    <MdEdit /> Editar
                   </button>
                   <button
                     onClick={() => excluir(e._id)}
-                    className="text-red-700 hover:underline"
+                    className="text-red-700 hover:text-red-900 flex items-center gap-1"
                     disabled={loading}
                   >
-                    Excluir
+                    <MdDelete /> Excluir
                   </button>
                 </div>
               </div>

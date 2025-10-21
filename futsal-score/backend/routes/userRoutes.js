@@ -1,91 +1,95 @@
-import express from "express"
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-import User from "../models/User.js"
+import express from "express";
+import User from "../models/User.js";
+import bcrypt from "bcryptjs";
+import authMiddleware from "../middleware/authMiddleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.get("/", async (req, res) => {
+// 🔹 Buscar todos os usuários (somente admin)
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const users = await User.find().select("-password")
-    res.json(users)
-  } catch (error) {
-    console.error("Erro ao buscar usuários:", error)
-    res.status(500).json({ msg: "Erro ao buscar usuários." })
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("Erro ao buscar usuários:", err);
+    res.status(500).json({ message: "Erro ao buscar usuários" });
   }
-})
+});
 
-router.post("/login", async (req, res) => {
+// 🔹 Criar novo usuário
+router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { username, password } = req.body
+    const { username, password, role, team } = req.body;
 
-    const user = await User.findOne({ username })
-    if (!user) return res.status(400).json({ msg: "Usuário não encontrado." })
+    if (!username || !password) {
+      return res.status(400).json({ message: "Campos obrigatórios ausentes" });
+    }
 
-    const senhaCorreta = await bcrypt.compare(password, user.password)
-    if (!senhaCorreta) return res.status(400).json({ msg: "Senha incorreta." })
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Usuário já existe" });
+    }
 
-    const token = jwt.sign(
-      { id: user._id, username: user.username, role: user.role, time: user.time },
-      process.env.JWT_SECRET,
-      { expiresIn: "8h" }
-    )
-
-    res.json({
-      msg: "Login realizado com sucesso!",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        role: user.role,
-        time: user.time,
-      },
-    })
-  } catch (error) {
-    console.error("Erro ao fazer login:", error)
-    res.status(500).json({ msg: "Erro interno no servidor." })
-  }
-})
-
-router.post("/register", async (req, res) => {
-  try {
-    const { username, password, role, time } = req.body
-
-    const existente = await User.findOne({ username })
-    if (existente) return res.status(400).json({ msg: "Usuário já existe." })
-
-    const senhaCriptografada = await bcrypt.hash(password, 10)
-
-    const novoUser = new User({
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
       username,
-      password: senhaCriptografada,
+      password: hashedPassword,
       role: role || "user",
-      time: time || null,
-    })
+      team: team || "",
+    });
 
-    await novoUser.save()
-    res.status(201).json({ msg: "Usuário criado com sucesso!" })
-  } catch (error) {
-    console.error("Erro ao registrar usuário:", error)
-    res.status(500).json({ msg: "Erro ao registrar usuário." })
+    await newUser.save();
+    res.status(201).json({ message: "Usuário criado com sucesso" });
+  } catch (err) {
+    console.error("Erro ao criar usuário:", err);
+    res.status(500).json({ message: "Erro ao criar usuário" });
   }
-})
+});
 
-router.delete("/:id", async (req, res) => {
+// 🔹 Editar usuário
+router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params
-    await User.findByIdAndDelete(id)
-    res.json({ msg: "Usuário removido com sucesso!" })
-  } catch (error) {
-    console.error("Erro ao remover usuário:", error)
-    res.status(500).json({ msg: "Erro ao remover usuário." })
+    const { username, password, role, team } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        username,
+        ...(password && { password: await bcrypt.hash(password, 10) }),
+        role,
+        team,
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    res.json({ message: "Usuário atualizado com sucesso" });
+  } catch (err) {
+    console.error("Erro ao atualizar usuário:", err);
+    res.status(500).json({ message: "Erro ao atualizar usuário" });
   }
-})
+});
 
-export default router
+// 🔹 Excluir usuário
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
 
+    if (!deletedUser) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
 
+    res.json({ message: "Usuário removido com sucesso" });
+  } catch (err) {
+    console.error("Erro ao remover usuário:", err);
+    res.status(500).json({ message: "Erro ao remover usuário" });
+  }
+});
 
-
-
-
+export default router;

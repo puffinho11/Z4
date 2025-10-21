@@ -1,41 +1,20 @@
 import jwt from "jsonwebtoken"
-import User from "../models/User.js"
 
-const auth = async (req, res, next) => {
-  const authHeader = req.headers.authorization
+export default function authMiddleware(req, res, next) {
+  const authHeader = req.header("Authorization")
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ msg: "Token de autenticação não fornecido." })
+  if (!authHeader) {
+    return res.status(401).json({ msg: "Acesso negado. Token não fornecido." })
   }
 
-  const token = authHeader.split(" ")[1]
+  const token = authHeader.replace("Bearer ", "").trim()
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-    const user = await User.findById(decoded.id).select("-password")
-    if (!user) {
-      return res.status(401).json({ msg: "Usuário não encontrado." })
-    }
-
-    req.user = {
-      id: user._id,
-      username: user.username,
-      role: user.role,
-      time: user.time,
-      isAdmin: user.role === "admin",
-    }
-
-    next();
-  } catch (error) {
-    console.error("Erro na verificação do token:", error)
-    return res.status(403).json({ msg: "Token inválido ou expirado." })
+    req.user = decoded
+    next()
+  } catch (err) {
+    console.error("Erro no middleware de autenticação:", err.message)
+    res.status(401).json({ msg: "Token inválido ou expirado." })
   }
 }
-
-export default auth
-
-
-
-
-
