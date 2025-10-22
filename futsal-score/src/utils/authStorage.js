@@ -1,3 +1,10 @@
+// src/utils/authStorage.js (Ficheiro do Frontend)
+
+/**
+ * Salva o usuário e o token no localStorage.
+ * Espera um objeto com as chaves: { token: string, user: object }
+ * @param {Object} data - Dados retornados do login
+ */
 export const saveUser = (data) => {
   if (!data || typeof data !== "object") {
     console.warn("❌ Nenhum dado fornecido para salvar.")
@@ -12,6 +19,7 @@ export const saveUser = (data) => {
   }
 
   try {
+    // Note: 'user' aqui é o objeto retornado do endpoint /login do backend
     localStorage.setItem("token", token)
     localStorage.setItem("user", JSON.stringify(user))
     console.log("✅ Usuário e token salvos com sucesso.")
@@ -20,6 +28,10 @@ export const saveUser = (data) => {
   }
 }
 
+/**
+ * Retorna o objeto do usuário salvo no localStorage, ou null se não existir.
+ * @returns {Object|null}
+ */
 export const getUser = () => {
   try {
     const storedUser = localStorage.getItem("user")
@@ -30,6 +42,10 @@ export const getUser = () => {
   }
 }
 
+/**
+ * Retorna o token salvo no localStorage, ou null se não existir.
+ * @returns {string|null}
+ */
 export const getToken = () => {
   try {
     return localStorage.getItem("token")
@@ -39,13 +55,15 @@ export const getToken = () => {
   }
 }
 
+/**
+ * Remove o token e o usuário do localStorage.
+ */
 export const clearAuth = () => {
   try {
     localStorage.removeItem("token")
     localStorage.removeItem("user")
     console.log("✅ Autenticação limpa com sucesso.")
   } catch (err) {
-    console.error("❌ Erro ao limpar autenticação:", err)
+    console.error("❌ Erro ao limpar dados de autenticação:", err)
   }
 }
-

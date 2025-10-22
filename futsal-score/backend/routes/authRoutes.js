@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken"
 import multer from "multer"
 import path from "path"
 import fs from "fs"
-import User from "../models/User.js"
-import authMiddleware from "../middleware/auth.js"
+import User from "../models/User.js" 
+import authMiddleware from "../middleware/auth.js" 
 
 const router = express.Router()
 
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif/
     const ext = path.extname(file.originalname).toLowerCase()
@@ -35,59 +35,25 @@ const upload = multer({
 })
 
 router.post("/register", async (req, res) => {
-  try {
-    const { username, nome, password, role } = req.body;
-    if (!username || !password)
-      return res.status(400).json({ message: "Usuário e senha são obrigatórios" })
-
-    const existing = await User.findOne({ username })
-    if (existing)
-      return res.status(400).json({ message: "Usuário já existe" })
-
-    const hashed = await bcrypt.hash(password, 10)
-    const user = new User({
-      username,
-      nome: nome || username,
-      password: hashed,
-      role: role || "user",
-    })
-
-    await user.save()
-
-    res.status(201).json({
-      message: "Usuário criado com sucesso",
-      user: {
-        id: user._id,
-        username: user.username,
-        nome: user.nome,
-        role: user.role,
-      },
-    })
-  } catch (err) {
-    console.error("Erro no /register:", err)
-    res.status(500).json({ message: "Erro interno" })
-  }
+  
 })
 
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body
-    if (!username || !password)
-      return res.status(400).json({ message: "Usuário e senha são obrigatórios" })
 
     const user = await User.findOne({ username })
-    if (!user) return res.status(400).json({ message: "Usuário não encontrado" })
+    if (!user) {
+      return res.status(400).json({ message: "Usuário ou senha inválidos" })
+    }
 
-    const valid = await bcrypt.compare(password, user.password)
-    if (!valid) return res.status(400).json({ message: "Senha incorreta" })
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(400).json({ message: "Usuário ou senha inválidos" })
+    }
 
     const token = jwt.sign(
-      {
-        id: user._id,
-        nome: user.nome,
-        time: user.time || null, 
-        isAdmin: user.role === "admin",
-      },
+      { id: user._id, role: user.role, username: user.username },
       process.env.JWT_SECRET || "segredo123",
       { expiresIn: "8h" }
     )
@@ -110,46 +76,62 @@ router.post("/login", async (req, res) => {
   }
 })
 
-router.get("/me", authMiddleware, async (req, res) => {
+router.get("/me", authMiddleware, async (req, res) => { 
   try {
-    const u = req.user;
-    // ✅ CORREÇÃO: Adicionando os campos que o frontend espera
+    const u = req.user 
+    
     res.json({
-      id: u.id,
+      id: u._id, 
       nome: u.nome,
       time: u.time,
-      isAdmin: u.isAdmin,
-      username: u.username, // <-- ADICIONADO
-      role: u.role,         // <-- ADICIONADO
-      foto: u.foto || null, // <-- ADICIONADO
-    });
+      isAdmin: u.role === 'admin',
+      username: u.username, 
+      role: u.role,        
+      foto: u.foto || null, 
+    })
   } catch (err) {
-    console.error("Erro em /me:", err);
-    res.status(500).json({ message: "Erro interno" });
+    console.error("Erro em /me:", err)
+    res.status(500).json({ message: "Erro interno" })
   }
-});
+})
 
 router.post("/upload/foto", authMiddleware, upload.single("foto"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "Arquivo não enviado" })
+    if (!req.file) return res.status(400).json({ message: "Nenhum arquivo enviado" })
 
-    const fileUrl = `/uploads/foto/${req.file.filename}`
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { foto: fileUrl },
-      { new: true }
-    ).select("-password")
+    const userId = req.user._id
+    const newFotoPath = `/uploads/foto/${req.file.filename}`
 
-    res.json({ message: "Upload concluído", url: fileUrl, user })
+    const user = await User.findById(userId)
+    if (!user) return res.status(404).json({ message: "Usuário não encontrado" })
+
+    if (user.foto) {
+      const oldPath = path.join(uploadDir, path.basename(user.foto))
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath)
+      }
+    }
+
+    user.foto = newFotoPath
+    await user.save()
+
+    const updatedUser = await User.findById(userId).select('-password')
+
+    res.json({ 
+      message: "Foto atualizada com sucesso", 
+      user: {
+        id: updatedUser._id,
+        username: updatedUser.username,
+        nome: updatedUser.nome,
+        role: updatedUser.role,
+        time: updatedUser.time || null,
+        foto: updatedUser.foto || null,
+      }
+    })
   } catch (err) {
-    console.error("Erro no upload:", err)
-    res.status(500).json({ message: "Erro ao enviar arquivo" })
+    console.error("Erro no upload de foto:", err)
+    res.status(500).json({ message: "Erro interno ao processar a foto." })
   }
 })
 
 export default router
-
-
-
-
-

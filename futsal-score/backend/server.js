@@ -19,8 +19,9 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 mongoose
@@ -31,7 +32,7 @@ mongoose
   .then(() => console.log("✅ Conectado ao MongoDB"))
   .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
 
-app.use("/api/auth", authRoutes)
+app.use("/api/auth", authRoutes) 
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)
 app.use("/api/chamadas", chamadaRoutes)
@@ -40,10 +41,12 @@ app.use("/api/exames", exameRoutes)
 app.use("/api/times", timeRoutes)
 
 app.get("/", (req, res) => {
-  res.send("🏆 API do Futsal Score funcionando com sucesso!")
+  res.send("Servidor Futsal Score online!")
 })
 
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`))
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`)
+})
 
 
