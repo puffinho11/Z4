@@ -1,3 +1,4 @@
+// frontend/src/pages/Exames.jsx
 import React, { useEffect, useState } from "react"
 import api from "../api"
 import { 
@@ -16,8 +17,10 @@ export default function Exames() {
     atleta: "",
     tipo: "Avaliação Física",
     resultado: "",
-    data: new Date().toISOString().slice(0, 10),
+    data: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+    time: new Date().toTimeString().slice(0, 5), // HH:MM (Valor padrão para evitar null)
     obs: "",
+    solicitante: "", 
   }
 
   const [lista, setLista] = useState([])
@@ -27,10 +30,12 @@ export default function Exames() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Função que carrega a lista de exames
   async function fetchExames() {
     setLoading(true)
     setError(null)
     try {
+      // Aqui o token é enviado e o auth.js no backend é executado
       const response = await api.get("/exames")
       setLista(response.data)
     } catch (err) {
@@ -60,8 +65,18 @@ export default function Exames() {
   }
 
   function editar(exame) {
+    // Garante que 'solicitante' e 'time' tenham valores válidos ao editar, 
+    // tratando possíveis valores nulos de registros antigos.
+    const solicitanteValue = exame.solicitante || ""; 
+    const timeValue = exame.time || new Date().toTimeString().slice(0, 5); 
     const dataFormatada = new Date(exame.data).toISOString().slice(0, 10)
-    setForm({ ...exame, data: dataFormatada })
+
+    setForm({ 
+      ...exame, 
+      data: dataFormatada, 
+      solicitante: solicitanteValue,
+      time: timeValue
+    })
     setEditingId(exame._id)
     window.scrollTo({ top: 0, behavior: "smooth" }) 
   }
@@ -71,15 +86,43 @@ export default function Exames() {
     setLoading(true)
     setError(null)
 
-    const payload = { ...form, id: editingId }
+    const { 
+      atleta, 
+      tipo, 
+      resultado, 
+      data, 
+      time, 
+      obs,
+      solicitante, 
+      ...rest 
+    } = form;
 
+    const payload = {
+      atleta,
+      tipo,
+      resultado,
+      data,
+      time, // Campo 'time' está sendo enviado!
+      obs,
+      solicitante, // Campo 'solicitante' está sendo enviado!
+      id: editingId,
+    };
+    
+    // Verificação preventiva no frontend
+    if (!payload.time || !payload.solicitante) {
+        setError("Erro: Os campos 'Hora' e 'Solicitante' são obrigatórios.");
+        setLoading(false);
+        return;
+    }
+    
     try {
       let response
+      
+      response = await api.post("/exames", payload)
+
       if (editingId) {
-        response = await api.put(`/exames/${editingId}`, payload)
         setLista(lista.map((ex) => (ex._id === editingId ? response.data : ex)))
       } else {
-        response = await api.post("/exames", payload)
         setLista([response.data, ...lista])
       }
 
@@ -87,7 +130,15 @@ export default function Exames() {
       alert(editingId ? "Exame atualizado com sucesso!" : "Exame salvo com sucesso!")
     } catch (err) {
       console.error("Erro ao salvar exame:", err.response || err)
-      setError("Erro ao salvar exame. Verifique o console ou a conexão com a API.")
+      
+      let errorMessage = "Erro desconhecido ao salvar exame.";
+      if (err.response?.data?.msg) {
+          errorMessage = err.response.data.msg;
+      } else if (err.message) {
+          errorMessage = err.message;
+      }
+
+      setError(`Erro ao salvar exame. Detalhe: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
@@ -110,28 +161,55 @@ export default function Exames() {
       setLoading(false)
     }
   }
-
+  
+  // Função de Impressão (Mantida conforme o código final)
   function imprimir(exame) {
+    const solicitanteInfo = exame.solicitante || "Não informado";
+    const obsInfo = exame.obs || "Nenhuma observação.";
+    const timeInfo = exame.time || "Não informado";
+
     const content = `
       <html>
         <head>
           <title>Exame de ${exame.atleta}</title>
           <style>
-            body { font-family: sans-serif; padding: 20px; }
-            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; display: flex; align-items: center; gap: 10px; }
-            .info { margin-bottom: 15px; }
-            .info span { font-weight: bold; color: #374151; }
-            .resultado { margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color: #f9f9f9; }
+            body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; margin-bottom: 20px; }
+            h2 { margin-top: 25px; color: #1e40af; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+            .info { margin-bottom: 10px; display: flex; }
+            .info span { font-weight: bold; color: #374151; display: inline-block; min-width: 180px; }
+            .resultado { margin-top: 10px; white-space: pre-wrap; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background-color: #f9f9f9; min-height: 100px; }
+            .assinaturas { display: flex; justify-content: space-around; margin-top: 70px; }
+            .assinatura-box { text-align: center; width: 45%; }
+            .linha { border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; }
           </style>
         </head>
         <body>
-          <h1>Relatório de Exame</h1>
+          <h1>Relatório de Exame Médico/Físico</h1>
+          
           <div class="info"><span>Atleta:</span> ${exame.atleta}</div>
-          <div class="info"><span>Tipo:</span> ${exame.tipo}</div>
+          <div class="info"><span>Tipo de Exame:</span> ${exame.tipo}</div>
           <div class="info"><span>Data:</span> ${new Date(exame.data + "T00:00:00").toLocaleDateString("pt-BR")}</div>
-          ${exame.obs ? `<div class="info"><span>Observação:</span> ${exame.obs}</div>` : ""}
-          <h2>Resultado:</h2>
-          <div class="resultado">${exame.resultado || "Nenhum resultado registrado."}</div>
+          <div class="info"><span>Hora:</span> ${timeInfo}</div>
+          
+          <h2>Solicitação</h2>
+          <div class="info"><span>Solicitante (Téc./Prof.):</span> ${solicitanteInfo}</div>
+          <div class="info"><span>Observação do Solicitante:</span> ${obsInfo}</div>
+          
+          <h2>Resultado Médico</h2>
+          <div class="resultado">${exame.resultado || "Aguardando preenchimento do profissional de saúde..."}</div>
+          
+          <div class="assinaturas">
+            <div class="assinatura-box">
+              <div class="linha"></div>
+              Assinatura do Solicitante (Professor/Técnico)
+            </div>
+            <div class="assinatura-box">
+              <div class="linha"></div>
+              Assinatura do Médico/Profissional Responsável
+            </div>
+          </div>
+
           <script>window.print()</script>
         </body>
       </html>
@@ -145,7 +223,8 @@ export default function Exames() {
     (e) =>
       e.atleta.toLowerCase().includes(q.toLowerCase()) ||
       e.tipo.toLowerCase().includes(q.toLowerCase()) ||
-      e.resultado.toLowerCase().includes(q.toLowerCase())
+      e.resultado.toLowerCase().includes(q.toLowerCase()) ||
+      e.solicitante.toLowerCase().includes(q.toLowerCase())
   )
 
   return (
@@ -161,8 +240,8 @@ export default function Exames() {
           <MdSave className="text-xl" /> {editingId ? "Editar Exame" : "Novo Exame"}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4"> 
+          <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-gray-700">Atleta</label>
             <input
               type="text"
@@ -173,7 +252,7 @@ export default function Exames() {
               disabled={loading}
             />
           </div>
-
+          
           <div>
             <label className="block text-sm font-semibold text-gray-700">Tipo de Exame</label>
             <select
@@ -189,7 +268,7 @@ export default function Exames() {
               <option>Outro</option>
             </select>
           </div>
-
+          
           <div>
             <label className="block text-sm font-semibold text-gray-700">Data</label>
             <input
@@ -201,10 +280,46 @@ export default function Exames() {
               disabled={loading}
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Hora</label>
+            <input
+              type="time"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              value={form.time}
+              onChange={(e) => handleChange("time", e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-semibold text-gray-700">Solicitante (Técnico/Prof.)</label>
+                <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value={form.solicitante}
+                onChange={(e) => handleChange("solicitante", e.target.value)}
+                required
+                disabled={loading}
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-semibold text-gray-700">Observações (Solicitante)</label>
+                <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value={form.obs}
+                onChange={(e) => handleChange("obs", e.target.value)}
+                disabled={loading}
+                />
+            </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700">Resultado</label>
+          <label className="block text-sm font-semibold text-gray-700">Resultado (Preenchido pelo Médico/Profissional)</label>
           <textarea
             className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             rows="4"
@@ -214,16 +329,6 @@ export default function Exames() {
           ></textarea>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700">Observações</label>
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            value={form.obs}
-            onChange={(e) => handleChange("obs", e.target.value)}
-            disabled={loading}
-          />
-        </div>
 
         {error && <div className="text-red-600 font-medium">{error}</div>}
 
@@ -240,7 +345,7 @@ export default function Exames() {
           )}
           <button
             type="submit"
-            className="bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition disabled:opacity-50 flex items-center gap-1"
+            className="w-full md:w-auto bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-1"
             disabled={loading}
           >
             <MdSave /> {loading ? "Salvando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
@@ -257,7 +362,7 @@ export default function Exames() {
             <input
               type="text"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Pesquisar por atleta, tipo ou resultado..."
+              placeholder="Pesquisar por atleta, tipo, resultado ou solicitante..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -284,9 +389,11 @@ export default function Exames() {
                   <div className="font-bold text-gray-800">{e.atleta}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-2">
                     <span className="text-blue-600 font-medium">{e.tipo}</span> •{" "}
-                    {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")}
+                    {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")} às {e.time || "Não informado"}
                   </div>
                   <div className="text-sm mt-2 text-gray-700 max-w-xl">
+                    **Solicitante:** {e.solicitante || "Não informado"}
+                    <br/>
                     **Resultado:**{" "}
                     {e.resultado
                       ? e.resultado.length > 200
@@ -295,7 +402,7 @@ export default function Exames() {
                       : <i className="text-gray-400">Sem resultado</i>}
                     {e.obs && (
                         <div className="text-xs mt-1 text-yellow-700">
-                            **Obs:** {e.obs}
+                            **Obs. Solicitante:** {e.obs}
                         </div>
                     )}
                   </div>
@@ -332,6 +439,3 @@ export default function Exames() {
     </div>
   )
 }
-
-
-

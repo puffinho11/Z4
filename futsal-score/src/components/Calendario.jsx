@@ -6,7 +6,6 @@ function formatarData(dataString) {
   if (!dataString) return 'Data Indefinida'
   try {
     const date = new Date(dataString)
-
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'long',
@@ -22,15 +21,15 @@ export default function Calendario() {
   const blank = {
     titulo: "",
     adversario: "",
-    data: new Date().toISOString().slice(0, 10), 
+    data: new Date().toISOString().slice(0, 10),
     hora: "18:00",
     local: "",
-    id: null, 
+    id: null,
   }
 
   const user = JSON.parse(localStorage.getItem("user")) || {}
-  const [time] = useState(user.time || user.idTime || "Time Padrão") 
-  const isAdminOrCoach = user.role === 'admin' || user.role === 'coach' 
+  const [time] = useState(user.time || user.idTime || "Time Padrão")
+  const isAdminOrCoach = user.role === 'admin' || user.role === 'coach'
 
   const [lista, setLista] = useState([])
   const [form, setForm] = useState(blank)
@@ -56,7 +55,7 @@ export default function Calendario() {
   useEffect(() => {
     fetchEventos()
   }, [])
-  
+
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
@@ -65,14 +64,14 @@ export default function Calendario() {
     const payload = { ...form, time: time }
 
     try {
-      const method = form.id ? 'put' : 'post' 
-      const url = form.id ? `/calendario` : '/calendario' 
+      const method = form.id ? 'put' : 'post'
+      const url = form.id ? `/calendario/${form.id}` : '/calendario'
 
       const response = await api[method](url, payload)
-      
+
       setMensagem(`Evento ${form.id ? 'atualizado' : 'criado'} com sucesso!`)
-      setForm(blank) 
-      fetchEventos() 
+      setForm(blank)
+      fetchEventos()
     } catch (err) {
       console.error("Erro ao salvar evento:", err.response || err)
       setError(
@@ -85,50 +84,50 @@ export default function Calendario() {
       setTimeout(() => setMensagem(''), 5000)
     }
   }
-  
+
   async function excluir(id) {
     if (!window.confirm("Tem certeza que deseja excluir este evento?")) return
-    
+
     setLoading(true)
     setMensagem('')
     setError(null)
 
     try {
-        await api.delete(`/calendario/${id}`)
-        setMensagem('Evento excluído com sucesso!')
-        fetchEventos()
+      await api.delete(`/calendario/${id}`)
+      setMensagem('Evento excluído com sucesso!')
+      fetchEventos()
     } catch (err) {
-        console.error("Erro ao excluir evento:", err.response || err)
-        setError(
-            `Falha ao excluir evento: ${
-              err.response?.data?.msg || 'Verifique as permissões.'
-            }`
-        )
+      console.error("Erro ao excluir evento:", err.response || err)
+      setError(
+        `Falha ao excluir evento: ${
+          err.response?.data?.msg || 'Verifique as permissões.'
+        }`
+      )
     } finally {
-        setLoading(false)
-        setTimeout(() => setMensagem(''), 5000)
+      setLoading(false)
+      setTimeout(() => setMensagem(''), 5000)
     }
   }
 
   function editar(evento) {
-      const dataFormatada = new Date(evento.data).toISOString().slice(0, 10)
-      
-      setForm({
-          id: evento._id,
-          titulo: evento.titulo,
-          adversario: evento.adversario || '',
-          data: dataFormatada,
-          hora: evento.hora,
-          local: evento.local || '',
-          time: evento.time
-      })
+    const dataFormatada = new Date(evento.data).toISOString().slice(0, 10)
+    setForm({
+      id: evento._id,
+      titulo: evento.titulo,
+      adversario: evento.adversario || '',
+      data: dataFormatada,
+      hora: evento.hora,
+      local: evento.local || '',
+      time: evento.time
+    })
   }
+
   function cancelarEdicao() {
-      setForm(blank)
-      setError(null)
-      setMensagem('')
+    setForm(blank)
+    setError(null)
+    setMensagem('')
   }
-  
+
   if (loading && lista.length === 0) {
     return (
       <div className="text-center p-8">
@@ -136,7 +135,7 @@ export default function Calendario() {
       </div>
     )
   }
-  
+
   const showList = lista.length > 0 || loading === false
 
   return (
@@ -147,7 +146,7 @@ export default function Calendario() {
       </h1>
 
       {mensagem && (
-        <div 
+        <div
           className={`p-3 mb-4 rounded-lg ${
             mensagem.startsWith('Erro')
               ? 'bg-red-100 text-red-700'
@@ -161,10 +160,11 @@ export default function Calendario() {
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong className="font-bold">Erro: </strong>
-            <span className="block sm:inline">{error}</span>
+          <strong className="font-bold">Erro: </strong>
+          <span className="block sm:inline">{error}</span>
         </div>
       )}
+
       {isAdminOrCoach && (
         <div className="mb-8 border p-4 rounded-lg bg-gray-50">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
@@ -211,7 +211,7 @@ export default function Calendario() {
               onChange={(e) => setForm({ ...form, local: e.target.value })}
               disabled={loading}
             />
-            
+
             <div className="flex justify-end gap-2 pt-2">
               {form.id && (
                 <button
@@ -236,6 +236,7 @@ export default function Calendario() {
           </form>
         </div>
       )}
+
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">
           Próximos Eventos ({time})
@@ -243,12 +244,12 @@ export default function Calendario() {
         {showList && lista.length === 0 && (
           <p className="text-gray-600">Nenhum evento futuro encontrado para {time}.</p>
         )}
-        
+
         {lista.length > 0 && (
           <div className="space-y-4">
             {lista.map((ev) => (
-              <div 
-                key={ev._id} 
+              <div
+                key={ev._id}
                 className="flex justify-between items-start border-b pb-4 pt-2 hover:bg-gray-50 p-2 rounded-lg transition"
               >
                 <div className="flex-1 min-w-0 pr-4">
@@ -291,5 +292,6 @@ export default function Calendario() {
     </section>
   )
 }
+
 
 

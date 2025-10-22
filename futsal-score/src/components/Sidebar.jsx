@@ -10,7 +10,8 @@ import {
   MdAdminPanelSettings, 
   MdAccountCircle 
 } from 'react-icons/md';
-import { FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt } from 'react-icons/fa'
+import LogoFutsalScore from './logo.png'
 
 export default function Sidebar({ user, onLogout, setSection }) {
   const menuItems = [
@@ -33,10 +34,15 @@ export default function Sidebar({ user, onLogout, setSection }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col justify-between z-50">
+
+    <aside className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white shadow-2xl flex flex-col justify-between z-50">
       <div>
-        <div className="p-6 border-b border-blue-600 text-center">
-          <h1 className="text-2xl font-extrabold tracking-tight"> Futsal Score</h1>
+        <div className="p-6 border-b border-blue-700 text-center">
+          <img
+            src={LogoFutsalScore}
+            alt="Futsal Score Logo"
+            className="mx-auto max-h-24 w-auto" 
+          />
         </div>
         <nav className="flex flex-col mt-6 space-y-1 px-3">
           {menuItems.map((item) => (
@@ -45,8 +51,8 @@ export default function Sidebar({ user, onLogout, setSection }) {
               onClick={() => setSection(item.section)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium focus:ring-2 focus:ring-blue-400 focus:outline-none ${
                 item.section === user?.section 
-                  ? "bg-blue-600 font-bold"
-                  : "hover:bg-blue-800"
+                  ? "bg-blue-700 font-bold" 
+                  : "hover:bg-blue-700"     
               }`}
             >
               <span className="text-xl">{item.icon}</span>
@@ -55,7 +61,7 @@ export default function Sidebar({ user, onLogout, setSection }) {
           ))}
         </nav>
       </div>
-      <div className="p-5 border-t border-blue-600">
+      <div className="p-5 border-t border-blue-700">
         <div className="text-xs text-gray-300 mb-3">
           <p className="font-semibold">{user?.username || 'Carregando...'}</p>
           <p className="text-gray-400">({user?.role || 'Visitante'})</p>

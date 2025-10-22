@@ -1,3 +1,4 @@
+// frontend/src/api.js
 import axios from "axios"
 import { getToken } from "./utils/authStorage" 
 
@@ -40,18 +41,24 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response
-      console.error(`❌ Erro ${status}:`, data?.message || data)
+      console.error(`❌ Erro ${status}:`, data?.message || data?.error || error.message)
 
-      if (status === 401) {
-        console.warn("🔒 Não autorizado - O token pode ter expirado.")
+      if (status === 401 || status === 403) {
+        // Lógica de deslogar em caso de token inválido ou expirado
+        // A sua aplicação deve ter essa lógica no componente App principal
       }
+
+    } else if (error.request) {
+        console.error("❌ Sem resposta do servidor. Verifique se o backend está rodando.")
+    } else {
+        console.error("❌ Erro ao configurar a requisição:", error.message)
     }
+
     return Promise.reject(error)
   }
 )
 
 export default api
-
 
 
 
