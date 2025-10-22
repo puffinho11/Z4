@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+    },
+    nome: {
+      type: String,
+      required: false,
+      trim: true,
+      default: "",
     },
     password: {
       type: String,
@@ -22,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    foto: {
+      type: String,
+      default: null,
+    },
     criadoEm: {
       type: Date,
       default: Date.now,
@@ -32,6 +42,15 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const User = mongoose.model("User", userSchema)
+// 🔒 Remove a senha automaticamente das respostas JSON
+userSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.password;
+    return ret;
+  },
+});
 
-export default User
+const User = mongoose.model("User", userSchema);
+
+export default User;
+

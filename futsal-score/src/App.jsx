@@ -10,17 +10,18 @@ import Calendario from './components/Calendario'
 import Chamada from './components/Chamada'
 import Admin from './components/Admin'
 import PerfilAtleta from './components/PerfilAtleta'
-import { getCurrentUser, saveUser, logoutUser } from './utils/authStorage'
+import { getUser, saveUser, clearAuth } from './utils/authStorage'
 import normalizeUser from './utils/normalizeUser'
 
-
 export default function App() {
-  const [user, setUser] = useState(normalizeUser(getCurrentUser()))
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [section, setSection] = useState('dashboard')
 
   useEffect(() => {
-    const curr = normalizeUser(getCurrentUser())
+    const curr = normalizeUser(getUser())
     setUser(curr)
+    setLoading(false)
   }, [])
 
   function handleLogin(u) {
@@ -30,9 +31,11 @@ export default function App() {
   }
 
   function handleLogout() {
-    logoutUser()
+    clearAuth()
     setUser(null)
   }
+
+  if (loading) return null
 
   if (!user) {
     return <LoginModal onLogin={handleLogin} />
@@ -55,4 +58,6 @@ export default function App() {
     </div>
   )
 }
+
+
 

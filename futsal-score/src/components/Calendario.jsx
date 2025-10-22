@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import api from "../api"
-import { MdEvent } from 'react-icons/md'
+import { MdEvent } from "react-icons/md"
 
 export default function Calendario() {
   const blank = {
@@ -10,6 +10,10 @@ export default function Calendario() {
     hora: "18:00",
     local: "",
   }
+
+  // Pega o time do usuário logado (ou usa padrão)
+  const user = JSON.parse(localStorage.getItem("user"))
+  const [time] = useState(user?.time || user?.idTime || "Time Padrão")
 
   const [lista, setLista] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -55,11 +59,18 @@ export default function Calendario() {
 
     setLoading(true)
     try {
-      if (editingId) {
-        await api.put(`/calendario/${editingId}`, form)
-      } else {
-        await api.post("/calendario", form)
+      // Envia o time junto com o evento
+      const payload = {
+        ...form,
+        time: user?.time || user?.idTime || "Time Padrão"
       }
+
+      if (editingId) {
+        await api.put(`/calendario/${editingId}`, payload)
+      } else {
+        await api.post("/calendario", payload)
+      }
+
       await fetchEventos()
       setForm(blank)
       setEditingId(null)
@@ -188,8 +199,8 @@ export default function Calendario() {
             <button
               type="button"
               onClick={() => {
-                setForm(blank);
-                setEditingId(null);
+                setForm(blank)
+                setEditingId(null)
               }}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
             >
@@ -205,6 +216,7 @@ export default function Calendario() {
           </button>
         </div>
       </form>
+
       <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
         <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">
           Próximos Eventos ({lista.length})
@@ -246,8 +258,8 @@ export default function Calendario() {
                         `${ev.titulo} ${
                           ev.adversario ? "• vs " + ev.adversario : ""
                         } • ${ev.data} ${ev.hora || ""} ${ev.local ? "• " + ev.local : ""}`
-                      );
-                      alert("Evento copiado para a área de transferência!");
+                      )
+                      alert("Evento copiado para a área de transferência!")
                     }}
                     className="text-gray-600 hover:text-gray-900"
                     disabled={loading}
@@ -280,3 +292,5 @@ export default function Calendario() {
     </section>
   )
 }
+
+

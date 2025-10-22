@@ -87,7 +87,9 @@ export default function Registro() {
       alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!")
     } catch (err) {
       console.error(err)
-      setError("Erro ao salvar registro.")
+      // CORREÇÃO: Captura a mensagem de erro específica do backend
+      const errorMessage = err.response?.data?.msg || "Erro ao salvar registro. Verifique o console para detalhes.";
+      setError(errorMessage);
     } finally {
       setLoading(false)
     }
@@ -125,7 +127,7 @@ export default function Registro() {
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
-          {error}
+          {error} {/* Agora exibe a mensagem do Backend */}
         </div>
       )}
 
@@ -189,7 +191,7 @@ export default function Registro() {
             { id: "treinos", label: "Treinos (Semana)", icon: <MdFitnessCenter /> },
             { id: "lesoes", label: "Lesões", icon: <MdHealing /> },
             { id: "vo2", label: "VO₂ Máx.", icon: <MdOutlineSpeed /> },
-            { id: "gols", label: "Gols", icon: <MdSportsSoccer /> }, // Ícone alterado
+            { id: "gols", label: "Gols", icon: <MdSportsSoccer /> },
             { id: "amarelos", label: "Cartões Amarelos", icon: <MdOutlineStyle /> },
             { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> },
           ].map((f) => (
@@ -275,7 +277,7 @@ export default function Registro() {
                     </div>
                     <div className="flex gap-4 text-sm text-gray-700">
                       <span className="flex items-center gap-1"><MdOutlineSpeed className="text-lg" /> VO₂: {r.vo2}</span>
-                      <span className="flex items-center gap-1"><MdSportsSoccer className="text-lg" /> Gols: {r.gols}</span> {/* Ícone alterado */}
+                      <span className="flex items-center gap-1"><MdSportsSoccer className="text-lg" /> Gols: {r.gols}</span>
                       <span className="flex items-center gap-1"><MdHealing className="text-lg" /> Lesões: {r.lesoes}</span>
                       <span className="flex items-center gap-1">
                         <MdOutlineStyle className="text-lg" /> Cts: {r.amarelos}/{r.vermelhos}

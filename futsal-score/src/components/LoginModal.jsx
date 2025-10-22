@@ -1,39 +1,36 @@
-import React, { useState } from "react"
-import { saveUser } from "../utils/authStorage"
-import api from "../api"
+import React, { useState } from "react";
+import { saveUser } from "../utils/authStorage";
+import api from "../api";
 
 export default function LoginModal({ onLogin }) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await api.post("/auth/login", { username, password })
-      const { token, user: userData } = response.data
-      const userToSave = {
-        username: userData.username,
-        role: userData.role,
-        token: token
-      }
+      const response = await api.post("/auth/login", { username, password });
+      const { token, user } = response.data;
 
-      localStorage.setItem("user", JSON.stringify(userToSave))
-      saveUser(userToSave)
-      onLogin(userToSave)
+      // ✅ Salva corretamente: token + user separados
+      saveUser({ token, user });
+
+      // ✅ Informa o app que o login foi bem-sucedido
+      onLogin(user);
     } catch (err) {
-      console.error("Erro no login:", err.response || err)
-      if (err.response?.status === 400) {
-        setError("Usuário ou senha inválidos. Tente novamente.")
+      console.error("Erro no login:", err.response || err);
+      if (err.response?.status === 400 || err.response?.status === 401) {
+        setError("Usuário ou senha inválidos. Tente novamente.");
       } else {
-        setError("Erro ao conectar ao servidor. Verifique se o backend está rodando.")
+        setError("Erro ao conectar ao servidor. Verifique se o backend está rodando.");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -61,17 +58,23 @@ export default function LoginModal({ onLogin }) {
             disabled={loading}
           />
           <button
+            type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition"
             disabled={loading}
           >
             {loading ? "Conectando..." : "Entrar"}
           </button>
-          {error && <p className="text-sm text-red-500 mt-2 text-center">{error}</p>}
+
+          {error && (
+            <p className="text-sm text-red-500 mt-2 text-center">{error}</p>
+          )}
         </form>
       </div>
     </div>
-  )
+  );
 }
+
+
 
 
 

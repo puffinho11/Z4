@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import api from '../api'
-import { saveUser } from '../utils/authStorage'
+import { saveUser, getToken } from '../utils/authStorage' 
 import { 
   MdAccountCircle, 
   MdPhotoCamera, 
@@ -10,7 +10,6 @@ import {
   MdFileUpload 
 } from 'react-icons/md'
 
-// ✅ Função segura e única de normalização de usuário
 const normalizeUser = (u) => {
   if (!u) return null
   return {
@@ -30,7 +29,6 @@ export default function PerfilAtleta({ user, setUser }) {
   const [loading, setLoading] = useState(false)
   const [mensagem, setMensagem] = useState('')
 
-  // ✅ Avatar local (sem depender da internet)
   const defaultAvatar = `data:image/svg+xml;utf8,
   <svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'>
     <circle cx='75' cy='75' r='70' fill='%23007bff'/>
@@ -42,22 +40,30 @@ export default function PerfilAtleta({ user, setUser }) {
     setNovoNome(user.username || '')
   }, [user])
 
-  // ✅ Buscar perfil atualizado do servidor
   useEffect(() => {
     const fetchPerfil = async () => {
+      let currentToken = getToken()
+      
       try {
-        const res = await api.get('/auth/me')
+
+        const res = await api.get('/auth/me') 
         const userData = normalizeUser(res.data)
-        setUser(userData)
-        saveUser(userData)
+        
+        setUser(userData) 
+
+        if (!currentToken || currentToken.toLowerCase() === 'null' || currentToken === '') {
+             console.warn("⚠️ Não foi possível persistir o usuário no localStorage, pois o token está ausente ou inválido. O estado do React foi atualizado.");
+        } else {
+             saveUser({ token: currentToken, user: userData }) 
+        }
+        
       } catch (err) {
-        console.error('Erro ao carregar perfil:', err)
+        console.error('❌ Erro ao carregar perfil (API /auth/me):', err.response?.statusText || err.message)
       }
     }
     fetchPerfil()
   }, [setUser])
 
-  // ✅ Atualizar nome de usuário
   async function handleNomeChange() {
     if (novoNome.trim() === user.username || novoNome.trim() === '') {
       setEditandoNome(false)
@@ -69,8 +75,20 @@ export default function PerfilAtleta({ user, setUser }) {
     try {
       const response = await api.put('/auth/me', { nome: novoNome.trim() })
       const updatedUser = normalizeUser(response.data)
+      
+      let currentToken = getToken() 
+
+      if (!currentToken || currentToken.toLowerCase() === 'null' || currentToken === '') {
+           console.warn("⚠️ Token inválido. Não foi possível salvar o perfil atualizado no localStorage.");
+           currentToken = null;
+      }
+      
       setUser(updatedUser)
-      saveUser(updatedUser)
+
+      if (currentToken) { 
+        saveUser({ token: currentToken, user: updatedUser })
+      }
+      
       setEditandoNome(false)
       setMensagem('Nome de usuário atualizado com sucesso!')
     } catch (error) {
@@ -81,7 +99,6 @@ export default function PerfilAtleta({ user, setUser }) {
     }
   }
 
-  // ✅ Atualizar foto de perfil
   async function handleSaveFoto() {
     if (!novaFoto) return
 
@@ -97,8 +114,20 @@ export default function PerfilAtleta({ user, setUser }) {
 
       const novaFotoUrl = uploadResponse.data.url
       const updatedUser = normalizeUser({ ...user, fotoUrl: novaFotoUrl })
+      
+      let currentToken = getToken() 
+
+      if (!currentToken || currentToken.toLowerCase() === 'null' || currentToken === '') {
+           console.warn("⚠️ Token inválido. Não foi possível salvar o perfil atualizado no localStorage.");
+           currentToken = null;
+      }
+      
       setUser(updatedUser)
-      saveUser(updatedUser)
+
+      if (currentToken) {
+        saveUser({ token: currentToken, user: updatedUser })
+      }
+      
       setNovaFoto(null)
       setMensagem('Foto de perfil atualizada com sucesso!')
     } catch (error) {
@@ -109,7 +138,6 @@ export default function PerfilAtleta({ user, setUser }) {
     }
   }
 
-  // ✅ Pré-visualização da nova foto
   function handleFotoUpload(e) {
     const file = e.target.files[0]
     if (file) {
@@ -135,9 +163,7 @@ export default function PerfilAtleta({ user, setUser }) {
           {mensagem}
         </div>
       )}
-
       <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100 space-y-6">
-        {/* Foto de perfil */}
         <div className="flex flex-col items-center gap-4 border-b pb-6 mb-6">
           <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg">
             <img
@@ -162,7 +188,6 @@ export default function PerfilAtleta({ user, setUser }) {
               />
             </label>
           </div>
-
           {novaFoto && (
             <div className="flex gap-3">
               <button
@@ -185,8 +210,6 @@ export default function PerfilAtleta({ user, setUser }) {
             </div>
           )}
         </div>
-
-        {/* Informações do usuário */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <label className="text-lg font-semibold text-gray-700">Nome:</label>
@@ -244,5 +267,3 @@ export default function PerfilAtleta({ user, setUser }) {
     </div>
   )
 }
-
-

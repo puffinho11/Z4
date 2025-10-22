@@ -1,20 +1,38 @@
 import mongoose from "mongoose"
 
-const CalendarioSchema = new mongoose.Schema(
-  {
-    titulo: { type: String, required: true },
-    adversario: { type: String },
-    data: { type: String, required: true },
-    hora: { type: String },
-    local: { type: String },
-    time: {
-      type: String,
-      required: true,
-    },
+const CalendarioSchema = new mongoose.Schema({
+  titulo: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { timestamps: true }
-)
+  adversario: {
+    type: String,
+    trim: true, // agora opcional
+  },
+  data: {
+    type: Date,
+    required: true,
+  },
+  hora: {
+    type: String,
+    required: true,
+  },
+  local: {
+    type: String,
+    trim: true,
+  },
+  time: {
+    type: String,
+    required: true,
+  },
+}, {
+  timestamps: true,
+})
 
 const Calendario = mongoose.model("Calendario", CalendarioSchema)
 
 export default Calendario
+
+
+

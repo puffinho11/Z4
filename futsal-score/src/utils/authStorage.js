@@ -1,64 +1,51 @@
-const STORAGE_KEY = "futsal_user";
+export const saveUser = (data) => {
+  if (!data || typeof data !== "object") {
+    console.warn("❌ Nenhum dado fornecido para salvar.")
+    return
+  }
 
-export function saveUser(user) {
+  const { token, user } = data
+
+  if (!token || !user) {
+    console.warn("❌ Token ou usuário ausente:", data)
+    return
+  }
+
   try {
-    if (!user) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  } catch (error) {
-    console.error("Erro ao salvar usuário no localStorage:", error);
+    localStorage.setItem("token", token)
+    localStorage.setItem("user", JSON.stringify(user))
+    console.log("✅ Usuário e token salvos com sucesso.")
+  } catch (err) {
+    console.error("❌ Erro ao salvar dados de autenticação:", err)
   }
 }
 
-export function getCurrentUser() {
+export const getUser = () => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch (error) {
-    console.error("Erro ao recuperar usuário do localStorage:", error);
-    return null;
+    const storedUser = localStorage.getItem("user")
+    return storedUser ? JSON.parse(storedUser) : null
+  } catch (err) {
+    console.error("❌ Erro ao recuperar usuário:", err)
+    return null
   }
 }
 
-export function getToken() {
+export const getToken = () => {
   try {
-    const user = getCurrentUser();
-    return user?.token || null;
-  } catch (error) {
-    console.error("Erro ao recuperar token do usuário:", error);
-    return null;
+    return localStorage.getItem("token")
+  } catch (err) {
+    console.error("❌ Erro ao recuperar token:", err)
+    return null
   }
 }
 
-export function updateToken(newToken) {
+export const clearAuth = () => {
   try {
-    const user = getCurrentUser();
-    if (!user) return;
-    user.token = newToken;
-    saveUser(user);
-  } catch (error) {
-    console.error("Erro ao atualizar token:", error);
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    console.log("✅ Autenticação limpa com sucesso.")
+  } catch (err) {
+    console.error("❌ Erro ao limpar autenticação:", err)
   }
 }
-
-export function isAuthenticated() {
-  const token = getToken();
-  return !!token;
-}
-
-export function logoutUser() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch (error) {
-    console.error("Erro ao remover usuário:", error);
-  }
-}
-
-export function debugUser() {
-  const user = getCurrentUser();
-  console.log("👤 Usuário atual:", user || "nenhum usuário logado");
-}
-
-
-
-
 
