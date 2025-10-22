@@ -1,33 +1,24 @@
-// routes/calendarioRoutes.js (BACKEND CORRIGIDO)
-
 import express from "express"
 import Calendario from "../models/Calendario.js"
-// ⚠️ CORREÇÃO: Usando 'authMiddleware' - verifique se o seu ficheiro é authMiddleware.js ou auth.js
 import authMiddleware from "../middleware/authMiddleware.js" 
 
 const router = express.Router()
 
-// Função robusta de verificação de admin (mantida)
 const checkIsAdmin = (user) => {
     const role =
       user.role?.toLowerCase?.() ||
       user.nivel?.toLowerCase?.() ||
       user.tipo?.toLowerCase?.() ||
-      "";
-    return role === "admin" || user.isAdmin === true;
-};
+      ""
+    return role === "admin" || user.isAdmin === true
+}
 
-
-// ✅ Criar ou atualizar evento (POST /api/calendario)
-// Usando o authMiddleware corrigido
 router.post("/", authMiddleware, async (req, res) => {
   const { id, titulo, adversario, data, hora, local, time } = req.body
 
   try {
     const user = req.user
     const isAdmin = checkIsAdmin(user)
-    
-    // Se admin, usa o time do payload ou 'Todos'. Se não, usa o time do usuário.
     const eventoTime = isAdmin 
       ? (time || "Todos") 
       : user.time
@@ -38,12 +29,11 @@ router.post("/", authMiddleware, async (req, res) => {
       })
     }
 
-    // Lógica de atualização (PUT)
     if (id) {
       const evento = await Calendario.findByIdAndUpdate(
         id, 
         { titulo, adversario, data, hora, local, time: eventoTime },
-        { new: true } // Retorna o documento atualizado
+        { new: true } 
       )
       if (!evento) {
         return res.status(404).json({ msg: "Evento não encontrado para atualização." })
@@ -51,7 +41,6 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.json(evento)
     }
 
-    // Lógica de criação (POST)
     const novoEvento = new Calendario({ 
       titulo, adversario, data, hora, local, time: eventoTime 
     })
@@ -64,8 +53,6 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Buscar Próximos Eventos (GET /api/calendario)
-// Usando o authMiddleware corrigido
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const user = req.user
@@ -73,12 +60,10 @@ router.get("/", authMiddleware, async (req, res) => {
 
     const query = {}
     
-    // 1. FILTRO DE TIME (CORRIGIDO)
     if (!isAdmin && user.time) {
-      query.time = user.time // Filtra por time se não for admin e o usuário tiver um time
+      query.time = user.time 
     }
 
-    // 2. FILTRO DE DATA: Busca eventos a partir de hoje
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
     query.data = { $gte: today } 
@@ -91,8 +76,6 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Deletar evento (DELETE /api/calendario/:id)
-// Usando o authMiddleware corrigido
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const evento = await Calendario.findById(req.params.id)
@@ -104,7 +87,6 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     const user = req.user
     const isAdmin = checkIsAdmin(user)
     
-    // Regra de segurança: só admin/coach/criador pode deletar
     if (!isAdmin && evento.time !== user.time) {
       return res.status(403).json({ msg: "Acesso negado." })
     }

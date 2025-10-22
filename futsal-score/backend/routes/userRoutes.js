@@ -1,58 +1,54 @@
-import express from "express";
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
-import authMiddleware from "../middleware/authMiddleware.js";
+import express from "express"
+import User from "../models/User.js"
+import bcrypt from "bcryptjs"
+import authMiddleware from "../middleware/authMiddleware.js"
 
-const router = express.Router();
-
-// 🔹 Buscar todos os usuários (somente admin)
+const router = express.Router()
 router.get("/", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Acesso negado" });
+      return res.status(403).json({ message: "Acesso negado" })
     }
-    const users = await User.find().select("-password");
-    res.json(users);
+    const users = await User.find().select("-password")
+    res.json(users)
   } catch (err) {
-    console.error("Erro ao buscar usuários:", err);
-    res.status(500).json({ message: "Erro ao buscar usuários" });
+    console.error("Erro ao buscar usuários:", err)
+    res.status(500).json({ message: "Erro ao buscar usuários" })
   }
-});
+})
 
-// 🔹 Criar novo usuário
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { username, password, role, team } = req.body;
+    const { username, password, role, team } = req.body
 
     if (!username || !password) {
-      return res.status(400).json({ message: "Campos obrigatórios ausentes" });
+      return res.status(400).json({ message: "Campos obrigatórios ausentes" })
     }
 
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username })
     if (existingUser) {
-      return res.status(400).json({ message: "Usuário já existe" });
+      return res.status(400).json({ message: "Usuário já existe" })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10)
     const newUser = new User({
       username,
       password: hashedPassword,
       role: role || "user",
       team: team || "",
-    });
+    })
 
-    await newUser.save();
-    res.status(201).json({ message: "Usuário criado com sucesso" });
+    await newUser.save()
+    res.status(201).json({ message: "Usuário criado com sucesso" })
   } catch (err) {
-    console.error("Erro ao criar usuário:", err);
-    res.status(500).json({ message: "Erro ao criar usuário" });
+    console.error("Erro ao criar usuário:", err)
+    res.status(500).json({ message: "Erro ao criar usuário" })
   }
-});
+})
 
-// 🔹 Editar usuário
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { username, password, role, team } = req.body;
+    const { username, password, role, team } = req.body
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
@@ -63,7 +59,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
         team,
       },
       { new: true }
-    );
+    )
 
     if (!updatedUser) {
       return res.status(404).json({ message: "Usuário não encontrado" });
@@ -76,20 +72,19 @@ router.put("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// 🔹 Excluir usuário
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const deletedUser = await User.findByIdAndDelete(req.params.id)
 
     if (!deletedUser) {
-      return res.status(404).json({ message: "Usuário não encontrado" });
+      return res.status(404).json({ message: "Usuário não encontrado" })
     }
 
-    res.json({ message: "Usuário removido com sucesso" });
+    res.json({ message: "Usuário removido com sucesso" })
   } catch (err) {
-    console.error("Erro ao remover usuário:", err);
-    res.status(500).json({ message: "Erro ao remover usuário" });
+    console.error("Erro ao remover usuário:", err)
+    res.status(500).json({ message: "Erro ao remover usuário" })
   }
-});
+})
 
-export default router;
+export default router

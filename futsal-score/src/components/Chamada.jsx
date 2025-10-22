@@ -201,8 +201,6 @@ export default function Chamada() {
               className="mt-1 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
-
-          {/* Professor */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdSupervisorAccount className="text-lg text-blue-600" /> Professor
@@ -286,7 +284,7 @@ export default function Chamada() {
                             setPresencas({});
                             setEditandoId(null);
                             setProfessor("");
-                            setMensagem(""); // Limpa mensagem
+                            setMensagem(""); 
                         }}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition flex items-center gap-1"
                         >

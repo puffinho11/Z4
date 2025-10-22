@@ -147,7 +147,7 @@ export default function PerfilAtleta({ user, setUser }) {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 border-b pb-2">Meu Perfil de Atleta</h1>
+      <h1 className="text-2xl font-bold mb-6 border-b pb-2">Meu Perfil</h1>
       {mensagem && (
         <div 
           className={`p-3 mb-4 rounded-lg text-white font-medium ${

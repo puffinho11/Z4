@@ -8,7 +8,7 @@ const CalendarioSchema = new mongoose.Schema({
   },
   adversario: {
     type: String,
-    trim: true, // agora opcional
+    trim: true, 
   },
   data: {
     type: Date,

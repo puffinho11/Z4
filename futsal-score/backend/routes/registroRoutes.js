@@ -15,7 +15,6 @@ router.post("/", auth, async (req, res) => {
       "";
     const isAdmin = role === "admin" || user.isAdmin === true
 
-    // Bloco que gera o erro 403 se o usuário não é Admin E não tem um time associado.
     if (!isAdmin && !user.time) {
       return res.status(403).json({
         msg: "Seu usuário não está associado a um time. Não é possível registrar.",
@@ -25,7 +24,6 @@ router.post("/", auth, async (req, res) => {
     const novoRegistro = new Registro({
       ...req.body,
       criadoPor: user._id,
-      // Se for admin, usa o time do corpo da requisição (para registrar para qualquer time), senão usa o time do usuário.
       time: isAdmin ? req.body.time || "Todos" : user.time,
     })
 
@@ -50,7 +48,6 @@ router.get("/", auth, async (req, res) => {
 
     let query = {}
 
-    // Admins veem todos os registros. Não-admins veem apenas os registros do seu time.
     if (!isAdmin) query.time = user.time
 
     const registros = await Registro.find(query).sort({ data: -1 })
@@ -78,7 +75,6 @@ router.put("/:id", auth, async (req, res) => {
       "";
     const isAdmin = role === "admin" || user.isAdmin === true
 
-    // Permissão para editar: Admin ou proprietário do time.
     if (!isAdmin && registro.time !== user.time) {
       return res.status(403).json({ msg: "Sem permissão para editar este registro." })
     }
@@ -108,7 +104,6 @@ router.delete("/:id", auth, async (req, res) => {
       "";
     const isAdmin = role === "admin" || user.isAdmin === true
 
-    // Permissão para excluir: Admin ou proprietário do time.
     if (!isAdmin && registro.time !== user.time) {
       return res.status(403).json({ msg: "Sem permissão para excluir este registro." })
     }

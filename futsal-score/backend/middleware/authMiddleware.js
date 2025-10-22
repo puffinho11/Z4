@@ -1,33 +1,33 @@
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import jwt from "jsonwebtoken"
+import User from "../models/User.js"
 
 const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Token não fornecido" });
+    return res.status(401).json({ message: "Token não fornecido" })
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1]
 
   try {
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "segredo123");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "segredo123")
 
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id).select("-password")
     if (!user) {
-      return res.status(401).json({ message: "Usuário não encontrado" });
+      return res.status(401).json({ message: "Usuário não encontrado" })
     }
 
-    req.user = user;
-    next();
+    req.user = user
+    next()
   } catch (error) {
-    console.error("Erro no authMiddleware:", error);
-    return res.status(401).json({ message: "Token inválido ou expirado" });
+    console.error("Erro no authMiddleware:", error)
+    return res.status(401).json({ message: "Token inválido ou expirado" })
   }
-};
+}
 
-export default authMiddleware;
+export default authMiddleware
 
 
 

@@ -10,7 +10,7 @@ import {
   MdHealing, 
   MdOutlineSpeed, 
   MdSportsSoccer 
-} from 'react-icons/md';
+} from 'react-icons/md'
 
 export default function Registro() {
   const blank = {
@@ -87,7 +87,6 @@ export default function Registro() {
       alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!")
     } catch (err) {
       console.error(err)
-      // CORREÇÃO: Captura a mensagem de erro específica do backend
       const errorMessage = err.response?.data?.msg || "Erro ao salvar registro. Verifique o console para detalhes.";
       setError(errorMessage);
     } finally {
@@ -127,7 +126,7 @@ export default function Registro() {
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
-          {error} {/* Agora exibe a mensagem do Backend */}
+          {error}
         </div>
       )}
 

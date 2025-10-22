@@ -1,11 +1,9 @@
-// backend/routes/chamadaRoutes.js
 import express from "express"
 import Chamada from "../models/Chamada.js"
 import authMiddleware from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// ✅ Criar nova chamada
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { categoria, data, professor, atletas } = req.body
@@ -24,7 +22,6 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Buscar todas as chamadas
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const chamadas = await Chamada.find().sort({ data: -1 })
@@ -35,7 +32,6 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Buscar chamada por ID
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const chamada = await Chamada.findById(req.params.id)
@@ -48,7 +44,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Atualizar chamada
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const { categoria, data, professor, atletas } = req.body
@@ -68,7 +63,6 @@ router.put("/:id", authMiddleware, async (req, res) => {
   }
 })
 
-// ✅ Excluir chamada
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const chamadaRemovida = await Chamada.findByIdAndDelete(req.params.id)

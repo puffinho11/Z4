@@ -72,7 +72,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRegistros()
-  }, []);
+  }, [])
 
   const atletasCount = [...new Set(registros.map((r) => r.nome))].length
   const ultimos30 = registros.filter((r) => {
@@ -102,22 +102,19 @@ export default function Dashboard() {
 
   const eventosFuturos = eventos
     .map((ev) => {
-      // ✅ CORREÇÃO CRÍTICA DE FUSO HORÁRIO (se o backend retornar a data como string YYYY-MM-DD)
-      // Se o backend retorna data como string ISO (YYYY-MM-DDTHH:mm:ssZ), a linha abaixo ainda é crucial
-      const dataString = ev.data.slice(0, 10); // Ex: "2025-10-22"
-      const [year, month, day] = dataString.split('-').map(Number);
-      const [hour, minute] = (ev.hora || '00:00').split(':').map(Number);
+
+      const dataString = ev.data.slice(0, 10)
+      const [year, month, day] = dataString.split('-').map(Number)
+      const [hour, minute] = (ev.hora || '00:00').split(':').map(Number)
       
-      // month - 1 porque o Date usa 0-11 para os meses. Cria a data no fuso horário local.
       const dateTime = new Date(year, month - 1, day, hour, minute);
 
       return {
         ...ev,
         dateTime,
-      };
+      }
     })
 
-    // Filtra para garantir que o evento não tenha acabado há mais de 1 minuto
     .filter((ev) => ev.dateTime.getTime() >= new Date().getTime() - 60000) 
     
     .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime()) 
