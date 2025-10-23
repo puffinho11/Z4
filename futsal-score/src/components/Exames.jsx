@@ -1,4 +1,3 @@
-// frontend/src/pages/Exames.jsx
 import React, { useEffect, useState } from "react"
 import api from "../api"
 import { 
@@ -17,8 +16,8 @@ export default function Exames() {
     atleta: "",
     tipo: "Avaliação Física",
     resultado: "",
-    data: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
-    time: new Date().toTimeString().slice(0, 5), // HH:MM (Valor padrão para evitar null)
+    data: new Date().toISOString().slice(0, 10), 
+    time: new Date().toTimeString().slice(0, 5), 
     obs: "",
     solicitante: "", 
   }
@@ -30,12 +29,10 @@ export default function Exames() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Função que carrega a lista de exames
   async function fetchExames() {
     setLoading(true)
     setError(null)
     try {
-      // Aqui o token é enviado e o auth.js no backend é executado
       const response = await api.get("/exames")
       setLista(response.data)
     } catch (err) {
@@ -65,8 +62,7 @@ export default function Exames() {
   }
 
   function editar(exame) {
-    // Garante que 'solicitante' e 'time' tenham valores válidos ao editar, 
-    // tratando possíveis valores nulos de registros antigos.
+
     const solicitanteValue = exame.solicitante || ""; 
     const timeValue = exame.time || new Date().toTimeString().slice(0, 5); 
     const dataFormatada = new Date(exame.data).toISOString().slice(0, 10)
@@ -102,13 +98,12 @@ export default function Exames() {
       tipo,
       resultado,
       data,
-      time, // Campo 'time' está sendo enviado!
+      time, 
       obs,
-      solicitante, // Campo 'solicitante' está sendo enviado!
+      solicitante, 
       id: editingId,
-    };
+    }
     
-    // Verificação preventiva no frontend
     if (!payload.time || !payload.solicitante) {
         setError("Erro: Os campos 'Hora' e 'Solicitante' são obrigatórios.");
         setLoading(false);
@@ -162,7 +157,6 @@ export default function Exames() {
     }
   }
   
-  // Função de Impressão (Mantida conforme o código final)
   function imprimir(exame) {
     const solicitanteInfo = exame.solicitante || "Não informado";
     const obsInfo = exame.obs || "Nenhuma observação.";

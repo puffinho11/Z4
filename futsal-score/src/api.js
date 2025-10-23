@@ -1,4 +1,3 @@
-// frontend/src/api.js
 import axios from "axios"
 import { getToken } from "./utils/authStorage" 
 
@@ -17,9 +16,9 @@ api.interceptors.request.use(
     const token = getToken()
 
     if (config.data instanceof FormData) {
-        delete config.headers["Content-Type"]
+      delete config.headers["Content-Type"]
     } else if (!config.headers["Content-Type"]) {
-        config.headers["Content-Type"] = "application/json"
+      config.headers["Content-Type"] = "application/json"
     }
 
     if (token) {
@@ -41,17 +40,29 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response
-      console.error(`❌ Erro ${status}:`, data?.message || data?.error || error.message)
+      const msg = data?.message || data?.msg || error.message
+      console.error(`❌ Erro ${status}:`, msg)
 
       if (status === 401 || status === 403) {
-        // Lógica de deslogar em caso de token inválido ou expirado
-        // A sua aplicação deve ter essa lógica no componente App principal
+        const isExpired = msg?.toLowerCase().includes("expired") || msg?.toLowerCase().includes("inválido")
+
+        if (isExpired) {
+          alert("⚠️ Sua sessão expirou. Faça login novamente.")
+        } else {
+          alert("⚠️ Acesso negado. Faça login novamente.")
+        }
+
+        localStorage.removeItem("currentUser")
+        localStorage.removeItem("token")
+
+        window.location.href = "/login"
       }
 
     } else if (error.request) {
-        console.error("❌ Sem resposta do servidor. Verifique se o backend está rodando.")
+      console.error("❌ Sem resposta do servidor. Verifique se o backend está rodando.")
+      alert("Servidor offline. Tente novamente em alguns minutos.")
     } else {
-        console.error("❌ Erro ao configurar a requisição:", error.message)
+      console.error("❌ Erro ao configurar a requisição:", error.message)
     }
 
     return Promise.reject(error)
@@ -59,15 +70,3 @@ api.interceptors.response.use(
 )
 
 export default api
-
-
-
-
-
-
-
-
-
-
-
-

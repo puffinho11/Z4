@@ -1,4 +1,3 @@
-// backend/models/Exame.js
 import mongoose from "mongoose"
 
 const ExameSchema = new mongoose.Schema(
@@ -10,11 +9,11 @@ const ExameSchema = new mongoose.Schema(
     obs: { type: String },
     time: {
       type: String,
-      required: true, // OBRIGATÓRIO: Garante que a equipe seja salva
+      required: true, 
     },
     solicitante: {
         type: String, 
-        required: true, // OBRIGATÓRIO: Garante que o solicitante seja salvo
+        required: true, 
     }, 
   },
   { timestamps: true }

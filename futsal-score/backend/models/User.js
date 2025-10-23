@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema(
   {
@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema(
     },
     nome: {
       type: String,
-      required: false,
       trim: true,
       default: "",
     },
@@ -26,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     time: {
       type: String,
-      default: null,
+      default: "",
     },
     foto: {
       type: String,
@@ -40,17 +39,19 @@ const userSchema = new mongoose.Schema(
   {
     collection: "users",
   }
-);
+)
 
-// 🔒 Remove a senha automaticamente das respostas JSON
+userSchema.virtual("isAdmin").get(function () {
+  return this.role === "admin"
+})
+
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
-    delete ret.password;
-    return ret;
+    delete ret.password
+    return ret
   },
-});
+  virtuals: true, 
+})
 
-const User = mongoose.model("User", userSchema);
-
-export default User;
-
+const User = mongoose.model("User", userSchema)
+export default User
