@@ -119,17 +119,20 @@ export default function Admin() {
   }
 
   return (
-    <section className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Administração de Usuários</h2>
+    <section className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">
+        Administração de Usuários
+      </h2>
 
       {error && (
-        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
+        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-300">
           {error}
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-xl shadow mb-8">
-        <h3 className="text-xl font-semibold mb-4">
+      {/* Formulário */}
+      <div className="bg-white p-6 rounded-xl shadow mb-8 border border-gray-200">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
           {editingUsername
             ? `Editar Usuário: ${editingUsername}`
             : "Novo Usuário"}
@@ -140,15 +143,11 @@ export default function Admin() {
           className="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Usuário
             </label>
             <input
-              id="username"
-              className="w-full border rounded-lg px-3 py-2 mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Nome de Usuário"
               value={form.username}
               onChange={(e) => handleChange("username", e.target.value)}
@@ -158,15 +157,11 @@ export default function Admin() {
           </div>
 
           <div>
-            <label
-              htmlFor="time"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Nome do Time
             </label>
             <input
-              id="time"
-              className="w-full border rounded-lg px-3 py-2 mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Ex: Futsal Mania"
               value={form.time}
               onChange={(e) => handleChange("time", e.target.value)}
@@ -176,17 +171,13 @@ export default function Admin() {
           </div>
 
           <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Papel
             </label>
             <select
-              id="role"
               value={form.role}
               onChange={(e) => handleChange("role", e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={loading}
             >
@@ -196,15 +187,11 @@ export default function Admin() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Senha
             </label>
             <input
-              id="password"
-              className="w-full border rounded-lg px-3 py-2 mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder={
                 editingUsername ? "Nova senha (opcional)" : "Senha"
               }
@@ -216,10 +203,10 @@ export default function Admin() {
             />
           </div>
 
-          <div className="md:col-span-4 flex gap-4 pt-2">
+          <div className="md:col-span-4 flex gap-4 pt-3">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
               disabled={loading}
             >
               {loading
@@ -236,17 +223,18 @@ export default function Admin() {
                 setEditingUsername(null)
                 setError(null)
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:bg-gray-200"
+              className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-200 transition"
               disabled={loading}
             >
-              Limpar/Cancelar
+              Limpar / Cancelar
             </button>
           </div>
         </form>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
-        <h3 className="text-xl font-semibold mb-4">
+      {/* Tabela de usuários */}
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-200 overflow-x-auto">
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">
           Lista de Usuários ({users.length})
         </h3>
 
@@ -255,18 +243,18 @@ export default function Admin() {
         )}
 
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Usuário
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Time
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Papel
               </th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Ações
               </th>
             </tr>
@@ -282,20 +270,20 @@ export default function Admin() {
             ) : (
               users.map((u) => (
                 <tr key={u.username}>
-                  <td className="px-3 py-2">{u.username}</td>
-                  <td className="px-3 py-2">{u.time}</td>
-                  <td className="px-3 py-2">{u.role}</td>
+                  <td className="px-3 py-2 text-gray-800">{u.username}</td>
+                  <td className="px-3 py-2 text-gray-800">{u.time}</td>
+                  <td className="px-3 py-2 text-gray-800">{u.role}</td>
                   <td className="px-3 py-2 text-center flex gap-3 justify-center">
                     <button
                       onClick={() => editUser(u)}
-                      className="text-blue-600 hover:underline"
+                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
                       disabled={loading}
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => deleteUser(u.username)}
-                      className="text-red-600 hover:underline"
+                      className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 transition"
                       disabled={loading}
                     >
                       Remover
@@ -310,4 +298,6 @@ export default function Admin() {
     </section>
   )
 }
+
+
 

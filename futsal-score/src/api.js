@@ -1,7 +1,7 @@
 import axios from "axios"
 import { getToken, clearAuth } from "./utils/authStorage"
 
-export const SERVER_URL = "http://localhost:3000"
+export const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 const api = axios.create({
   baseURL: `${SERVER_URL}/api`,
@@ -36,9 +36,11 @@ api.interceptors.response.use(
           msg?.toLowerCase().includes("expired") ||
           msg?.toLowerCase().includes("inválido")
 
-        alert(isExpired
-          ? "⚠️ Sua sessão expirou. Faça login novamente."
-          : "⚠️ Acesso negado. Faça login novamente.")
+        alert(
+          isExpired
+            ? "⚠️ Sua sessão expirou. Faça login novamente."
+            : "⚠️ Acesso negado. Faça login novamente."
+        )
 
         clearAuth()
         window.location.href = "/login"

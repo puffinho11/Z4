@@ -36,9 +36,7 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  {
-    collection: "users",
-  }
+  { collection: "users" }
 )
 
 userSchema.virtual("isAdmin").get(function () {
@@ -50,7 +48,7 @@ userSchema.set("toJSON", {
     delete ret.password
     return ret
   },
-  virtuals: true, 
+  virtuals: true,
 })
 
 const User = mongoose.model("User", userSchema)
