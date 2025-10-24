@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react"
-import api from "../api"
+import React, { useEffect, useState } from "react";
+import api from "../api";
 import {
   MdPersonSearch,
   MdSave,
@@ -14,7 +14,7 @@ import {
   MdDelete,
   MdEdit,
   MdEmojiEvents,
-} from "react-icons/md"
+} from "react-icons/md";
 
 export default function Registro() {
   const blank = {
@@ -30,74 +30,74 @@ export default function Registro() {
     vermelhos: 0,
     foto: "",
     previewUrl: "",
-  }
+  };
 
-  const [form, setForm] = useState(blank)
-  const [editingId, setEditingId] = useState(null)
-  const [lista, setLista] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [form, setForm] = useState(blank);
+  const [editingId, setEditingId] = useState(null);
+  const [lista, setLista] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function fetchRegistros() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { data } = await api.get("/registros")
-      setLista(Array.isArray(data) ? data : [])
+      const { data } = await api.get("/registros");
+      setLista(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Erro ao carregar registros:", err)
-      setError("Erro ao carregar registros. Verifique o console.")
+      console.error("Erro ao carregar registros:", err);
+      setError("Erro ao carregar registros. Verifique o console.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchRegistros()
-  }, [])
+    fetchRegistros();
+  }, []);
 
   function handleChange(k, v) {
-    setForm((p) => ({ ...p, [k]: v }))
+    setForm((p) => ({ ...p, [k]: v }));
   }
 
   function resetForm() {
-    setForm(blank)
-    setEditingId(null)
-    setError(null)
+    setForm(blank);
+    setEditingId(null);
+    setError(null);
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    const dataToSend = new FormData()
+    const dataToSend = new FormData();
     Object.entries(form).forEach(([key, value]) => {
-      if (key !== "previewUrl") dataToSend.append(key, value)
-    })
+      if (key !== "previewUrl") dataToSend.append(key, value);
+    });
 
     try {
-      let res
+      let res;
       if (editingId) {
         res = await api.put(`/registros/${editingId}`, dataToSend, {
           headers: { "Content-Type": "multipart/form-data" },
-        })
-        setLista(lista.map((r) => (r._id === editingId ? res.data : r)))
+        });
+        setLista(lista.map((r) => (r._id === editingId ? res.data : r)));
       } else {
         res = await api.post("/registros", dataToSend, {
           headers: { "Content-Type": "multipart/form-data" },
-        })
-        setLista([...lista, res.data])
+        });
+        setLista([...lista, res.data]);
       }
 
-      resetForm()
-      alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!")
+      resetForm();
+      alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!");
     } catch (err) {
-      console.error(err)
+      console.error(err);
       const errorMessage =
-        err.response?.data?.msg || "Erro ao salvar registro. Verifique o console."
-      setError(errorMessage)
+        err.response?.data?.msg || "Erro ao salvar registro. Verifique o console.";
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -106,52 +106,53 @@ export default function Registro() {
       ...registro,
       data: new Date(registro.data).toISOString().slice(0, 10),
       previewUrl: registro.foto ? `http://localhost:3000${registro.foto}` : "",
-    })
-    setEditingId(registro._id)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    });
+    setEditingId(registro._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function excluir(id) {
-    if (!window.confirm("Tem certeza que deseja remover este registro?")) return
-    setLoading(true)
+    if (!window.confirm("Tem certeza que deseja remover este registro?")) return;
+    setLoading(true);
     try {
-      await api.delete(`/registros/${id}`)
-      setLista(lista.filter((r) => r._id !== id))
-      alert("Registro excluído com sucesso!")
+      await api.delete(`/registros/${id}`);
+      setLista(lista.filter((r) => r._id !== id));
+      alert("Registro excluído com sucesso!");
     } catch {
-      setError("Erro ao excluir registro.")
+      setError("Erro ao excluir registro.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const registrosPorCategoria = lista.reduce((acc, reg) => {
-    if (!acc[reg.categoria]) acc[reg.categoria] = []
-    acc[reg.categoria].push(reg)
-    return acc
-  }, {})
+    if (!acc[reg.categoria]) acc[reg.categoria] = [];
+    acc[reg.categoria].push(reg);
+    return acc;
+  }, {});
 
   return (
-    <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-      <h2 className="text-4xl font-bold text-blue-800 mb-3 flex items-center gap-3">
-        <MdPersonSearch className="text-5xl text-blue-700" /> Monitoramento de Atletas
+    <div className="p-8 bg-gradient-to-br from-emerald-50 to-emerald-100 min-h-screen">
+      <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
+        <MdPersonSearch className="text-5xl text-emerald-600" /> Monitoramento de Atletas
       </h2>
       <p className="text-gray-500 mb-8 text-lg">
         Gerencie e acompanhe os indicadores de desempenho dos jogadores.
       </p>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 shadow">
           {error}
         </div>
       )}
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100 space-y-6 mb-12 transition hover:shadow-xl"
+        className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12 transition hover:shadow-emerald-300/40 hover:scale-[1.01]"
       >
-        <h3 className="text-xl font-bold text-blue-800 border-b-2 border-blue-100 pb-3 flex items-center gap-2">
-          <MdSave className="text-2xl" /> {editingId ? "Editar Registro" : "Novo Registro"}
+        <h3 className="text-xl font-bold text-emerald-800 border-b-2 border-emerald-100 pb-3 flex items-center gap-2">
+          <MdSave className="text-2xl text-emerald-600" />{" "}
+          {editingId ? "Editar Registro" : "Novo Registro"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -161,7 +162,7 @@ export default function Registro() {
               type="text"
               value={form.nome}
               onChange={(e) => handleChange("nome", e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="Ex: João Silva"
               required
             />
@@ -172,7 +173,7 @@ export default function Registro() {
             <select
               value={form.categoria}
               onChange={(e) => handleChange("categoria", e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             >
               <option value="">Selecione</option>
@@ -190,7 +191,7 @@ export default function Registro() {
               type="date"
               value={form.data}
               onChange={(e) => handleChange("data", e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             />
           </div>
@@ -200,7 +201,7 @@ export default function Registro() {
             <select
               value={form.status}
               onChange={(e) => handleChange("status", e.target.value)}
-              className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
               <option value="OK">OK</option>
               <option value="Recuperação">Recuperação</option>
@@ -214,20 +215,20 @@ export default function Registro() {
               type="file"
               accept="image/*"
               onChange={(e) => {
-                const file = e.target.files[0]
+                const file = e.target.files[0];
                 if (file) {
-                  handleChange("foto", file)
-                  const previewUrl = URL.createObjectURL(file)
-                  setForm((prev) => ({ ...prev, previewUrl }))
+                  handleChange("foto", file);
+                  const previewUrl = URL.createObjectURL(file);
+                  setForm((prev) => ({ ...prev, previewUrl }));
                 }
               }}
-              className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
             />
             {form.previewUrl && (
               <img
                 src={form.previewUrl}
                 alt="Pré-visualização"
-                className="mt-3 w-24 h-24 rounded-full object-cover border-2 border-blue-400 shadow-md"
+                className="mt-3 w-24 h-24 rounded-full object-cover border-2 border-emerald-400 shadow-md"
               />
             )}
           </div>
@@ -248,7 +249,7 @@ export default function Registro() {
                 type="number"
                 value={form[f.id]}
                 onChange={(e) => handleChange(f.id, e.target.value)}
-                className="w-full border border-gray-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 min="0"
               />
             </div>
@@ -267,7 +268,7 @@ export default function Registro() {
           )}
           <button
             type="submit"
-            className="bg-blue-700 text-white py-2 px-6 rounded-xl hover:bg-blue-800 transition flex items-center gap-2"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:shadow-emerald-300/50 hover:scale-[1.02] transition flex items-center gap-2"
             disabled={loading}
           >
             {loading ? "Salvando..." : editingId ? "Atualizar Registro" : "Salvar Registro"}
@@ -275,19 +276,19 @@ export default function Registro() {
         </div>
       </form>
 
-      <div className="bg-white shadow-md rounded-2xl p-8 border border-gray-100">
-        <h3 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-2">
-          <MdList className="text-3xl" /> Registros por Categoria
+      <div className="bg-white shadow-md rounded-2xl p-8 border border-emerald-100">
+        <h3 className="text-2xl font-bold text-emerald-800 mb-6 flex items-center gap-2">
+          <MdList className="text-3xl text-emerald-600" /> Registros por Categoria
         </h3>
 
         {Object.keys(registrosPorCategoria).length === 0 ? (
-          <p className="text-gray-500 text-center py-10 bg-gray-50 rounded-2xl border">
+          <p className="text-gray-500 text-center py-10 bg-emerald-50 rounded-2xl border">
             Nenhum registro encontrado.
           </p>
         ) : (
           Object.entries(registrosPorCategoria).map(([categoria, registros]) => (
             <div key={categoria} className="mb-10">
-              <h4 className="text-xl font-bold text-blue-700 border-b-2 border-blue-100 pb-3 mb-4 flex items-center gap-2">
+              <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
                 <MdEmojiEvents className="text-yellow-500 text-2xl" /> {categoria}
               </h4>
 
@@ -298,13 +299,13 @@ export default function Registro() {
                   .map((r) => (
                     <div
                       key={r._id}
-                      className="bg-gradient-to-br from-white to-blue-50 border border-gray-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                      className="bg-gradient-to-br from-white to-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                     >
                       {r.foto ? (
                         <img
                           src={`http://localhost:3000${r.foto}`}
                           alt={r.nome}
-                          className="w-20 h-20 object-cover rounded-full border-2 border-blue-400 shadow-md"
+                          className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
                         />
                       ) : (
                         <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-3xl">
@@ -351,7 +352,7 @@ export default function Registro() {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => editar(r)}
-                          className="text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1"
+                          className="text-emerald-600 font-medium hover:text-emerald-800 flex items-center gap-1"
                         >
                           <MdEdit /> Editar
                         </button>
@@ -370,5 +371,6 @@ export default function Registro() {
         )}
       </div>
     </div>
-  )
+  );
 }
+

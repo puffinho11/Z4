@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { saveUser } from "../utils/authStorage"
 import api from "../api"
-import LogoFutsalScore from './logo.png'; 
+import LogoFutsalScore from "./logo.png"
 
 export default function LoginModal({ onLogin }) {
   const [username, setUsername] = useState("")
@@ -33,26 +33,26 @@ export default function LoginModal({ onLogin }) {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-50 px-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
-        <div className="flex justify-center mb-8"> 
+    <div className="fixed inset-0 flex items-center justify-center bg-emerald-900/70 backdrop-blur-md z-50 px-4">
+      <div className="bg-gradient-to-br from-emerald-100 via-white to-emerald-50 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-emerald-200/50 relative">
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-emerald-700/10"></div>
+        <div className="flex justify-center mb-8 relative">
           <img
             src={LogoFutsalScore}
             alt="Futsal Score Logo"
-            className="h-32 w-auto" 
+            className="h-28 w-auto drop-shadow-lg hover:scale-105 transition-transform"
           />
         </div>
-        
         {error && (
-          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 text-center">
+          <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 text-center shadow-sm">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 relative">
           <div>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full border border-emerald-300 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
               placeholder="Usuário"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -65,7 +65,7 @@ export default function LoginModal({ onLogin }) {
           <div>
             <input
               type="password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full border border-emerald-300 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -78,7 +78,7 @@ export default function LoginModal({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg shadow-md transition-colors duration-200"
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl shadow-lg shadow-emerald-900/40 hover:scale-[1.02] transition-all duration-300"
           >
             {loading ? "Conectando..." : "Entrar"}
           </button>
@@ -87,6 +87,7 @@ export default function LoginModal({ onLogin }) {
     </div>
   )
 }
+
 
 
 
