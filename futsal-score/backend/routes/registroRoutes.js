@@ -1,10 +1,26 @@
 import express from "express"
+import multer from "multer"
+import path from "path"
+import fs from "fs"
 import Registro from "../models/Registro.js"
 import auth from "../middleware/auth.js"
 
 const router = express.Router()
 
-router.post("/", auth, async (req, res) => {
+const uploadDir = "uploads/registros"
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
+  },
+})
+
+const upload = multer({ storage })
+
+router.post("/", auth, upload.single("foto"), async (req, res) => {
   try {
     const user = req.user
 
@@ -12,7 +28,7 @@ router.post("/", auth, async (req, res) => {
       user.role?.toLowerCase?.() ||
       user.nivel?.toLowerCase?.() ||
       user.tipo?.toLowerCase?.() ||
-      "";
+      ""
     const isAdmin = role === "admin" || user.isAdmin === true
 
     if (!isAdmin && !user.time) {
@@ -23,6 +39,7 @@ router.post("/", auth, async (req, res) => {
 
     const novoRegistro = new Registro({
       ...req.body,
+      foto: req.file ? `/uploads/registros/${req.file.filename}` : "",
       criadoPor: user._id,
       time: isAdmin ? req.body.time || "Todos" : user.time,
     })
@@ -43,7 +60,7 @@ router.get("/", auth, async (req, res) => {
       user.role?.toLowerCase?.() ||
       user.nivel?.toLowerCase?.() ||
       user.tipo?.toLowerCase?.() ||
-      "";
+      ""
     const isAdmin = role === "admin" || user.isAdmin === true
 
     let query = {}
@@ -58,7 +75,7 @@ router.get("/", auth, async (req, res) => {
   }
 })
 
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", auth, upload.single("foto"), async (req, res) => {
   try {
     const user = req.user
     const { id } = req.params
@@ -72,14 +89,17 @@ router.put("/:id", auth, async (req, res) => {
       user.role?.toLowerCase?.() ||
       user.nivel?.toLowerCase?.() ||
       user.tipo?.toLowerCase?.() ||
-      "";
+      ""
     const isAdmin = role === "admin" || user.isAdmin === true
 
     if (!isAdmin && registro.time !== user.time) {
       return res.status(403).json({ msg: "Sem permissão para editar este registro." })
     }
 
-    const atualizado = await Registro.findByIdAndUpdate(id, req.body, { new: true })
+    const dadosAtualizados = { ...req.body }
+    if (req.file) dadosAtualizados.foto = `/uploads/registros/${req.file.filename}`
+
+    const atualizado = await Registro.findByIdAndUpdate(id, dadosAtualizados, { new: true })
     res.json(atualizado)
   } catch (error) {
     console.error("Erro ao atualizar registro:", error)
@@ -101,11 +121,16 @@ router.delete("/:id", auth, async (req, res) => {
       user.role?.toLowerCase?.() ||
       user.nivel?.toLowerCase?.() ||
       user.tipo?.toLowerCase?.() ||
-      "";
+      ""
     const isAdmin = role === "admin" || user.isAdmin === true
 
     if (!isAdmin && registro.time !== user.time) {
       return res.status(403).json({ msg: "Sem permissão para excluir este registro." })
+    }
+
+    if (registro.foto) {
+      const fotoPath = path.join(process.cwd(), registro.foto)
+      if (fs.existsSync(fotoPath)) fs.unlinkSync(fotoPath)
     }
 
     await Registro.findByIdAndDelete(id)

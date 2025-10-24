@@ -44,6 +44,12 @@ const registroSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    foto: {
+      type: String,
+      default: "",
+    },
+
     criadoPor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -61,4 +67,3 @@ const registroSchema = new mongoose.Schema(
 const Registro = mongoose.model("Registro", registroSchema)
 
 export default Registro
-
