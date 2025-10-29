@@ -1,21 +1,22 @@
-# Usa uma imagem oficial do Node.js
+# Usa Node 18 como base
 FROM node:18
 
-# Define o diretório de trabalho
+# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia os arquivos de dependências do backend
-COPY ./backend/package*.json ./
+# Copia os arquivos de dependências
+COPY package*.json ./
 
 # Instala as dependências
 RUN npm install
 
-# Copia todo o conteúdo do backend para dentro da imagem
-COPY ./backend .
+# Copia o restante do código do backend
+COPY . .
 
 # Expõe a porta do servidor
 EXPOSE 3000
 
-# Comando para iniciar o backend
+# Comando para iniciar o servidor
 CMD ["npm", "start"]
+
 
