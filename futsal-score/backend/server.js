@@ -17,22 +17,32 @@ dotenv.config()
 const app = express()
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+  origin: "*", // permite o front de qualquer origem (como Vercel)
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}))
 
+// Diretório atual
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// Pasta de uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
+// Conexão MongoDB
+const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/futsal"
+
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/futsal", {
+  .connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ Conectado ao MongoDB"))
-  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
+  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err.message))
 
-app.use("/api/auth", authRoutes) 
+// Rotas
+app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)
 app.use("/api/chamadas", chamadaRoutes)
@@ -40,13 +50,16 @@ app.use("/api/calendario", calendarioRoutes)
 app.use("/api/exames", exameRoutes)
 app.use("/api/times", timeRoutes)
 
+// Rota raiz
 app.get("/", (req, res) => {
-  res.send("Servidor Futsal Score online!")
+  res.send("🚀 Servidor Z4 está online e rodando no Railway!")
 })
 
+// Porta dinâmica (Railway define automaticamente)
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${PORT}`)
 })
+
 
 
