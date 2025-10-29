@@ -24,7 +24,7 @@ export default function Desempenho() {
     const fetchRegistros = async () => {
       setLoading(true)
       try {
-        const response = await api.get("/registros");
+        const response = await api.get("/registros")
         const data = Array.isArray(response.data) ? response.data : []
         setRegistros(data)
 
@@ -68,7 +68,7 @@ export default function Desempenho() {
           {
             label: "Treinos",
             data: totals.map((t) => t.treinos),
-            backgroundColor: "rgba(37, 99, 235, 0.8)",
+            backgroundColor: "rgba(16, 185, 129, 0.8)", // esmeralda
             borderRadius: 8,
           },
           {
@@ -153,7 +153,7 @@ export default function Desempenho() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen text-blue-700 text-lg font-semibold">
+      <div className="flex justify-center items-center h-screen text-emerald-600 text-lg font-semibold">
         Carregando dados...
       </div>
     )
@@ -164,26 +164,29 @@ export default function Desempenho() {
     )
 
   return (
-    <section className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-blue-800 mb-2 flex items-center gap-2">
-        <MdFitnessCenter className="text-4xl" /> <span>Desempenho e Monitoramento</span>
+    <section className="p-6 bg-white min-h-screen">
+      <h2 className="text-3xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+        <MdFitnessCenter className="text-4xl text-emerald-600" />{" "}
+        <span>Desempenho e Monitoramento</span>
       </h2>
-      <p className="text-gray-500 mb-6">
+      <p className="text-gray-600 mb-6">
         Acompanhe métricas de treino, lesões e desempenho por atleta e categoria.
       </p>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-md lg:col-span-2 border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
-            <MdBarChart className="text-xl" /> Treinos x Lesões por Categoria
+        <div className="bg-white p-6 rounded-2xl shadow-lg lg:col-span-2 border border-emerald-100">
+          <h3 className="text-lg font-semibold mb-4 text-emerald-800 flex items-center gap-2">
+            <MdBarChart className="text-xl text-emerald-600" /> Treinos x Lesões por Categoria
           </h3>
           <canvas ref={catChartRef} className="h-96 w-full" />
         </div>
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
-            <MdTrendingUp className="text-xl" /> Evolução de VO₂ Máx.
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100">
+          <h3 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2">
+            <MdTrendingUp className="text-xl text-emerald-600" /> Evolução de VO₂ Máx.
           </h3>
           <select
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full border border-emerald-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-emerald-500"
             value={atletaSelecionado}
             onChange={(e) => setAtletaSelecionado(e.target.value)}
           >
@@ -194,28 +197,29 @@ export default function Desempenho() {
           <canvas ref={atletaChartRef} className="h-64 w-full" />
         </div>
       </div>
-      <div className="bg-white p-6 mt-8 rounded-2xl shadow-md border border-gray-100">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
-          <MdOutlineAssignment className="text-xl" /> Dados Brutos ({registros.length})
+
+      <div className="bg-white p-6 mt-8 rounded-2xl shadow-lg border border-emerald-100">
+        <h3 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2">
+          <MdOutlineAssignment className="text-xl text-emerald-600" /> Dados Brutos ({registros.length})
         </h3>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-emerald-100">
           {registros.length === 0 ? (
             <p className="text-gray-500">Nenhum registro encontrado.</p>
           ) : (
             registros.map((r) => (
               <div
                 key={r._id}
-                className="py-3 flex justify-between items-center flex-wrap text-sm text-gray-700 hover:bg-gray-50 transition"
+                className="py-3 flex justify-between items-center flex-wrap text-sm text-gray-700 hover:bg-emerald-50 transition"
               >
                 <div>
-                  <span className="font-semibold text-gray-800">{r.nome}</span>{" "}
+                  <span className="font-semibold text-emerald-800">{r.nome}</span>{" "}
                   <span className="text-gray-500">({r.categoria})</span>
                   <div className="text-xs text-gray-500">
                     {new Date(r.data).toLocaleDateString("pt-BR")} —{" "}
                     <span
                       className={`font-medium ${
                         r.status === "OK"
-                          ? "text-green-600"
+                          ? "text-emerald-700"
                           : "text-yellow-600"
                       }`}
                     >
@@ -224,10 +228,10 @@ export default function Desempenho() {
                   </div>
                 </div>
                 <div className="text-right space-x-3 flex flex-wrap gap-2">
-                  <span className="text-blue-600 font-medium flex items-center gap-1">
+                  <span className="text-emerald-700 font-medium flex items-center gap-1">
                     VO₂: {r.vo2}
                   </span>
-                  <span className="text-green-600 font-medium flex items-center gap-1">
+                  <span className="text-emerald-600 font-medium flex items-center gap-1">
                     Gols: {r.gols || 0}
                   </span>
                   <span className="text-red-600 font-medium flex items-center gap-1">

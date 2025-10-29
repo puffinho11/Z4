@@ -23,10 +23,8 @@ const normalizeUser = (u) => {
 
 const getFullPhotoUrl = (relativePath) => {
   if (!relativePath) return null
-
   return `${SERVER_URL}${relativePath}` 
 }
-
 
 export default function PerfilAtleta({ user, setUser }) {
   const [novoNome, setNovoNome] = useState(user.username || '')
@@ -58,7 +56,7 @@ export default function PerfilAtleta({ user, setUser }) {
     if (file) {
       setNovaFoto(file)
       setPreviewFoto(URL.createObjectURL(file))
-      setMensagem('Ficheiro pronto para upload.')
+      setMensagem('Arquivo pronto para upload.')
     }
   }
 
@@ -69,34 +67,30 @@ export default function PerfilAtleta({ user, setUser }) {
     }
 
     setLoading(true)
-    setMensagem('A carregar foto...')
+    setMensagem('Enviando foto...')
     const formData = new FormData()
     formData.append('foto', novaFoto) 
 
     try {
-
       const response = await api.post('/auth/upload/foto', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
-   
+      const { user: updatedUser, message } = response.data
       const token = getToken()
 
       if (!token || !updatedUser) {
-        setMensagem('Erro: Não foi possível obter o token ou dados do usuário após a atualização.')
+        setMensagem('Erro: Não foi possível atualizar a foto.')
         setLoading(false)
         return
       }
 
       const normalizedUser = normalizeUser(updatedUser)
-
       saveUser({ token, user: normalizedUser })
-
       setUser(normalizedUser)
       setMensagem(message || 'Foto atualizada com sucesso!')
       setNovaFoto(null)
-      setPreviewFoto('') 
-
+      setPreviewFoto('')
     } catch (error) {
       const msg = error.response?.data?.message || 'Erro ao carregar a foto.'
       setMensagem(msg)
@@ -113,29 +107,24 @@ export default function PerfilAtleta({ user, setUser }) {
     }
 
     setLoading(true)
-    setMensagem('A atualizar nome...')
+    setMensagem('Atualizando nome...')
 
     try {
-
       const response = await api.put(`/users/${user.id}`, { username: novoNome }) 
       const { user: updatedUser, message } = response.data 
-
       const token = getToken() 
 
       if (!token || !updatedUser) {
-        setMensagem('Erro: Não foi possível obter o token ou dados do usuário após a atualização.')
+        setMensagem('Erro: Não foi possível atualizar o nome.')
         setLoading(false)
         return
       }
       
       const normalizedUser = normalizeUser(updatedUser)
-
       saveUser({ token, user: normalizedUser }) 
-
       setUser(normalizedUser)
       setMensagem(message || 'Nome atualizado com sucesso!')
       setEditandoNome(false)
-
     } catch (error) {
       const msg = error.response?.data?.message || 'Erro ao atualizar o nome.'
       setMensagem(msg)
@@ -146,27 +135,33 @@ export default function PerfilAtleta({ user, setUser }) {
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 border-b pb-2">Meu Perfil</h1>
+    <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto border border-emerald-100">
+      <h1 className="text-3xl font-bold mb-6 text-emerald-800 border-b pb-2 flex items-center gap-2">
+        <MdAccountCircle className="text-emerald-600 text-4xl" /> Meu Perfil
+      </h1>
+
       {mensagem && (
         <div 
           className={`p-3 mb-4 rounded-lg text-white font-medium ${
-            mensagem.includes('Erro') ? 'bg-red-500' : 'bg-green-500'
+            mensagem.includes('Erro') ? 'bg-red-500' : 'bg-emerald-600'
           }`}
         >
           {mensagem}
         </div>
       )}
+
       <div className="flex flex-col md:flex-row gap-6 items-start">
         <div className="flex flex-col items-center gap-3">
           <div className="relative w-40 h-40">
             <img
               src={fotoSrc || defaultAvatar}
               alt="Foto de Perfil"
-              className="w-full h-full object-cover rounded-full border-4 border-blue-500 shadow-md"
+              className="w-full h-full object-cover rounded-full border-4 border-emerald-500 shadow-md"
             />
             <label 
-              className={`absolute bottom-0 right-0 p-2 rounded-full cursor-pointer transition ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+              className={`absolute bottom-0 right-0 p-2 rounded-full cursor-pointer transition ${
+                loading ? 'bg-gray-400' : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
               title="Mudar Foto"
             >
               <MdPhotoCamera className="text-white text-xl" />
@@ -182,15 +177,15 @@ export default function PerfilAtleta({ user, setUser }) {
           {novaFoto && (
             <button
               onClick={handleFotoChange}
-              className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition disabled:bg-gray-400"
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-4 py-2 rounded-lg hover:scale-[1.03] transition disabled:bg-gray-400"
               disabled={loading}
             >
               <MdFileUpload /> 
-              {loading ? 'A Carregar...' : 'Carregar Nova Foto'}
+              {loading ? 'Enviando...' : 'Carregar Nova Foto'}
             </button>
           )}
-
         </div>
+
         <div className="space-y-4 flex-1 w-full">
           <div className="flex items-center gap-3">
             <label className="text-lg font-semibold text-gray-700">Usuário:</label>
@@ -200,12 +195,12 @@ export default function PerfilAtleta({ user, setUser }) {
                   type="text"
                   value={novoNome}
                   onChange={(e) => setNovoNome(e.target.value)}
-                  className="border rounded-lg px-3 py-2 flex-1"
+                  className="border border-emerald-300 rounded-lg px-3 py-2 flex-1 focus:ring-2 focus:ring-emerald-500"
                   disabled={loading}
                 />
                 <button
                   onClick={handleNomeChange}
-                  className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition"
+                  className="bg-emerald-600 text-white p-2 rounded-full hover:bg-emerald-700 transition"
                   title="Salvar nome"
                   disabled={loading}
                 >
@@ -237,21 +232,23 @@ export default function PerfilAtleta({ user, setUser }) {
               </div>
             )}
           </div>
+
           <div className="flex items-center gap-3">
             <label className="text-lg font-semibold text-gray-700">Nome:</label>
             <span className="text-xl text-gray-800">{user.nome}</span>
           </div>
+
           <div className="flex items-center gap-3">
             <label className="text-lg font-semibold text-gray-700">Função:</label>
             <span className="text-xl text-gray-800 capitalize">{user.role}</span>
           </div>
+
           {user.time && (
             <div className="flex items-center gap-3">
               <label className="text-lg font-semibold text-gray-700">Time:</label>
               <span className="text-xl text-gray-800">{user.time.nome || user.time}</span>
             </div>
           )}
-
         </div>
       </div>
     </div>

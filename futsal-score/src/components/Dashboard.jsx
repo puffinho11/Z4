@@ -78,7 +78,7 @@ export default function Dashboard() {
   )
 
   return (
-    <section className="p-8 ml-64 min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+    <section className="p-8 ml-64 min-h-screen bg-white">
       <h2 className="text-3xl font-bold mb-8 text-emerald-800 flex items-center gap-2 drop-shadow-sm">
         <MdDashboard className="text-4xl text-emerald-600" /> Painel de Gestão de Atletas
       </h2>
@@ -218,5 +218,6 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
     </div>
   )
 }
+
 
 

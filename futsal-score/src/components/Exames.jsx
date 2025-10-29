@@ -62,7 +62,6 @@ export default function Exames() {
   }
 
   function editar(exame) {
-
     const solicitanteValue = exame.solicitante || ""; 
     const timeValue = exame.time || new Date().toTimeString().slice(0, 5); 
     const dataFormatada = new Date(exame.data).toISOString().slice(0, 10)
@@ -112,7 +111,6 @@ export default function Exames() {
     
     try {
       let response
-      
       response = await api.post("/exames", payload)
 
       if (editingId) {
@@ -168,8 +166,8 @@ export default function Exames() {
           <title>Exame de ${exame.atleta}</title>
           <style>
             body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-            h1 { color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 5px; margin-bottom: 20px; }
-            h2 { margin-top: 25px; color: #1e40af; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+            h1 { color: #047857; border-bottom: 2px solid #047857; padding-bottom: 5px; margin-bottom: 20px; }
+            h2 { margin-top: 25px; color: #047857; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
             .info { margin-bottom: 10px; display: flex; }
             .info span { font-weight: bold; color: #374151; display: inline-block; min-width: 180px; }
             .resultado { margin-top: 10px; white-space: pre-wrap; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background-color: #f9f9f9; min-height: 100px; }
@@ -222,16 +220,17 @@ export default function Exames() {
   )
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-3">
-        <MdMedicalServices className="text-4xl" /> Gerenciamento de Exames
+    <div className="p-6 bg-white min-h-screen">
+      <h2 className="text-3xl font-bold text-emerald-800 mb-6 flex items-center gap-3">
+        <MdMedicalServices className="text-4xl text-emerald-600" /> Gerenciamento de Exames
       </h2>
+
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-xl p-6 space-y-4 border border-gray-100 mb-8"
+        className="bg-white shadow-lg rounded-xl p-6 space-y-4 border border-emerald-100 mb-8"
       >
-        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-          <MdSave className="text-xl" /> {editingId ? "Editar Exame" : "Novo Exame"}
+        <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 flex items-center gap-2">
+          <MdSave className="text-xl text-emerald-600" /> {editingId ? "Editar Exame" : "Novo Exame"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4"> 
@@ -239,7 +238,7 @@ export default function Exames() {
             <label className="block text-sm font-semibold text-gray-700">Atleta</label>
             <input
               type="text"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               value={form.atleta}
               onChange={(e) => handleChange("atleta", e.target.value)}
               required
@@ -250,7 +249,7 @@ export default function Exames() {
           <div>
             <label className="block text-sm font-semibold text-gray-700">Tipo de Exame</label>
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               value={form.tipo}
               onChange={(e) => handleChange("tipo", e.target.value)}
               required
@@ -267,7 +266,7 @@ export default function Exames() {
             <label className="block text-sm font-semibold text-gray-700">Data</label>
             <input
               type="date"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               value={form.data}
               onChange={(e) => handleChange("data", e.target.value)}
               required
@@ -279,7 +278,7 @@ export default function Exames() {
             <label className="block text-sm font-semibold text-gray-700">Hora</label>
             <input
               type="time"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               value={form.time}
               onChange={(e) => handleChange("time", e.target.value)}
               required
@@ -293,7 +292,7 @@ export default function Exames() {
                 <label className="block text-sm font-semibold text-gray-700">Solicitante (Técnico/Prof.)</label>
                 <input
                 type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 value={form.solicitante}
                 onChange={(e) => handleChange("solicitante", e.target.value)}
                 required
@@ -304,7 +303,7 @@ export default function Exames() {
                 <label className="block text-sm font-semibold text-gray-700">Observações (Solicitante)</label>
                 <input
                 type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 value={form.obs}
                 onChange={(e) => handleChange("obs", e.target.value)}
                 disabled={loading}
@@ -315,14 +314,13 @@ export default function Exames() {
         <div>
           <label className="block text-sm font-semibold text-gray-700">Resultado (Preenchido pelo Médico/Profissional)</label>
           <textarea
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             rows="4"
             value={form.resultado}
             onChange={(e) => handleChange("resultado", e.target.value)}
             disabled={loading}
           ></textarea>
         </div>
-
 
         {error && <div className="text-red-600 font-medium">{error}</div>}
 
@@ -331,7 +329,7 @@ export default function Exames() {
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 flex items-center gap-1"
+              className="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 flex items-center gap-1"
               disabled={loading}
             >
               <MdCancel /> Cancelar Edição
@@ -339,23 +337,24 @@ export default function Exames() {
           )}
           <button
             type="submit"
-            className="w-full md:w-auto bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-1"
+            className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-4 rounded-lg hover:scale-[1.03] transition disabled:opacity-50 flex items-center justify-center gap-1"
             disabled={loading}
           >
             <MdSave /> {loading ? "Salvando..." : editingId ? "Atualizar Exame" : "Salvar Exame"}
           </button>
         </div>
       </form>
-      <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
-          <MdList className="text-2xl" /> Exames Salvos ({filteredLista.length})
+
+      <div className="bg-white shadow-lg rounded-xl p-6 border border-emerald-100">
+        <h3 className="text-xl font-semibold text-emerald-800 mb-4 flex items-center gap-2">
+          <MdList className="text-2xl text-emerald-600" /> Exames Salvos ({filteredLista.length})
         </h3>
 
         <div className="mb-4">
           <div className="relative">
             <input
               type="text"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="Pesquisar por atleta, tipo, resultado ou solicitante..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -365,11 +364,11 @@ export default function Exames() {
         </div>
 
         {loading && !lista.length ? (
-          <div className="text-blue-600">Carregando exames...</div>
+          <div className="text-emerald-600">Carregando exames...</div>
         ) : (
           <div className="space-y-4">
             {filteredLista.length === 0 && (
-              <div className="text-gray-500 text-center py-6 bg-gray-50 rounded-xl border">
+              <div className="text-gray-500 text-center py-6 bg-emerald-50 rounded-xl border border-emerald-100">
                 Nenhum exame encontrado.
               </div>
             )}
@@ -377,12 +376,12 @@ export default function Exames() {
             {filteredLista.slice().reverse().map((e) => (
               <div
                 key={e._id}
-                className="p-4 border rounded-lg bg-gray-50 flex justify-between items-start hover:shadow transition"
+                className="p-4 border border-emerald-100 rounded-lg bg-emerald-50 flex justify-between items-start hover:bg-emerald-100 transition"
               >
                 <div>
-                  <div className="font-bold text-gray-800">{e.atleta}</div>
-                  <div className="text-xs text-gray-500 flex items-center gap-2">
-                    <span className="text-blue-600 font-medium">{e.tipo}</span> •{" "}
+                  <div className="font-bold text-emerald-900">{e.atleta}</div>
+                  <div className="text-xs text-gray-600 flex items-center gap-2">
+                    <span className="text-emerald-700 font-medium">{e.tipo}</span> •{" "}
                     {new Date(e.data + "T00:00:00").toLocaleDateString("pt-BR")} às {e.time || "Não informado"}
                   </div>
                   <div className="text-sm mt-2 text-gray-700 max-w-xl">
@@ -395,7 +394,7 @@ export default function Exames() {
                         : e.resultado
                       : <i className="text-gray-400">Sem resultado</i>}
                     {e.obs && (
-                        <div className="text-xs mt-1 text-yellow-700">
+                        <div className="text-xs mt-1 text-emerald-700">
                             **Obs. Solicitante:** {e.obs}
                         </div>
                     )}
@@ -405,14 +404,14 @@ export default function Exames() {
                 <div className="flex items-center gap-3 text-sm font-medium flex-shrink-0">
                   <button
                     onClick={() => imprimir(e)}
-                    className="text-blue-700 hover:text-blue-900 flex items-center gap-1"
+                    className="text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
                     disabled={loading}
                   >
                     <MdLocalPrintshop /> Imprimir
                   </button>
                   <button
                     onClick={() => editar(e)}
-                    className="text-green-700 hover:text-green-900 flex items-center gap-1"
+                    className="text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
                     disabled={loading}
                   >
                     <MdEdit /> Editar

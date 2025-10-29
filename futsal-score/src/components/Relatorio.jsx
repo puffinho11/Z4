@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from "react"
 import Chart from "chart.js/auto"
 import api from "../api"
 import * as XLSX from "xlsx"
-import { 
-  MdInsertChart, 
-  MdFilterList, 
-  MdBarChart, 
-  MdOutlineTableChart, 
-  MdFileDownload 
-} from "react-icons/md" 
+import {
+  MdInsertChart,
+  MdFilterList,
+  MdBarChart,
+  MdOutlineTableChart,
+  MdFileDownload,
+} from "react-icons/md"
 
 export default function Relatorio() {
   const [registros, setRegistros] = useState([])
@@ -75,10 +75,10 @@ export default function Relatorio() {
         )
 
     const groupedData = chartDataFiltered.reduce((acc, r) => {
-      const key = r.nome;
-      if (!acc[key]) acc[key] = { soma: 0, contagem: 0 };
+      const key = r.nome
+      if (!acc[key]) acc[key] = { soma: 0, contagem: 0 }
       acc[key].soma += r[metricaSelecionada] || 0
-      acc[key].contagem += 1;
+      acc[key].contagem += 1
       return acc
     }, {})
 
@@ -95,6 +95,10 @@ export default function Relatorio() {
     const ctx = chartRef.current?.getContext("2d")
     if (!ctx) return
 
+    // Cores ajustadas para o tema esmeralda em qualquer métrica
+    const fill = "rgba(16, 185, 129, 0.8)" // emerald-500 ~ 0.8
+    const stroke = "rgb(5, 150, 105)" // emerald-600
+
     chartInst.current = new Chart(ctx, {
       type: "bar",
       data: {
@@ -103,14 +107,8 @@ export default function Relatorio() {
           {
             label: `Média/Total de ${metricaSelecionada.toUpperCase()}`,
             data: finalData.map((d) => d.valor),
-            backgroundColor:
-              metricaSelecionada === "vo2"
-                ? "rgba(16, 185, 129, 0.8)"
-                : "rgba(37, 99, 235, 0.8)",
-            borderColor:
-              metricaSelecionada === "vo2"
-                ? "rgb(16, 185, 129)"
-                : "rgb(37, 99, 235)",
+            backgroundColor: fill,
+            borderColor: stroke,
             borderWidth: 1,
           },
         ],
@@ -124,7 +122,9 @@ export default function Relatorio() {
               display: true,
               text: metricaSelecionada.toUpperCase(),
             },
+            grid: { color: "#E5E7EB" }, // gray-200
           },
+          x: { grid: { display: false } },
         },
         plugins: {
           legend: { display: true },
@@ -162,7 +162,7 @@ export default function Relatorio() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen text-blue-600 text-lg font-semibold">
+      <div className="flex justify-center items-center h-screen text-emerald-600 text-lg font-semibold">
         Carregando dados...
       </div>
     )
@@ -173,16 +173,18 @@ export default function Relatorio() {
     )
 
   return (
-    <section className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold text-blue-800 mb-2 flex items-center gap-2">
-        <MdInsertChart className="text-4xl" /> <span>Relatórios e Análise de Dados</span>
+    <section className="p-6 bg-white min-h-screen">
+      <h2 className="text-3xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
+        <MdInsertChart className="text-4xl text-emerald-600" />{" "}
+        <span>Relatórios e Análise de Dados</span>
       </h2>
-      <p className="text-gray-500 mb-6">
+      <p className="text-gray-600 mb-6">
         Gere relatórios visuais e exporte estatísticas dos atletas.
       </p>
-      <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100 mb-8">
-        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 mb-4 flex items-center gap-2">
-          <MdFilterList className="text-xl" /> Filtros e Exportação
+
+      <div className="bg-white shadow-md rounded-2xl p-6 border border-emerald-100 mb-8">
+        <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
+          <MdFilterList className="text-xl text-emerald-600" /> Filtros e Exportação
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
@@ -190,7 +192,7 @@ export default function Relatorio() {
               Categoria
             </label>
             <select
-              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none border-emerald-300"
               value={filtroCat}
               onChange={(e) => setFiltroCat(e.target.value)}
             >
@@ -205,7 +207,7 @@ export default function Relatorio() {
               Status
             </label>
             <select
-              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none border-emerald-300"
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
             >
@@ -219,7 +221,7 @@ export default function Relatorio() {
               Atleta
             </label>
             <select
-              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none border-emerald-300"
               value={selAtleta}
               onChange={(e) => setSelAtleta(e.target.value)}
             >
@@ -232,23 +234,24 @@ export default function Relatorio() {
           <div className="flex items-end">
             <button
               onClick={exportarXLSX}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-semibold"
+              className="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2 font-semibold"
             >
               <MdFileDownload className="text-xl" /> Exportar Excel (.xlsx)
             </button>
           </div>
         </div>
       </div>
-      <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100 mb-8">
-        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 mb-4 flex items-center gap-2">
-          <MdBarChart className="text-xl" /> Gráfico Comparativo
+
+      <div className="bg-white shadow-md rounded-2xl p-6 border border-emerald-100 mb-8">
+        <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
+          <MdBarChart className="text-xl text-emerald-600" /> Gráfico Comparativo
         </h3>
         <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Métrica para análise
           </label>
           <select
-            className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none md:w-1/3"
+            className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none md:w-1/3 border-emerald-300"
             value={metrica}
             onChange={(e) => setMetrica(e.target.value)}
           >
@@ -270,17 +273,18 @@ export default function Relatorio() {
           )}
         </div>
       </div>
-      <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100 overflow-x-auto">
-        <h3 className="text-lg font-semibold text-blue-800 border-b pb-2 mb-4 flex items-center gap-2">
-          <MdOutlineTableChart className="text-xl" /> Tabela de Registros ({registros.length})
+
+      <div className="bg-white shadow-md rounded-2xl p-6 border border-emerald-100 overflow-x-auto">
+        <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
+          <MdOutlineTableChart className="text-xl text-emerald-600" /> Tabela de Registros ({registros.length})
         </h3>
         {registros.length === 0 ? (
           <p className="text-gray-500 text-center py-6">
             Nenhum registro encontrado.
           </p>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-emerald-100">
+            <thead className="bg-emerald-50">
               <tr>
                 {[
                   "Nome",
@@ -296,16 +300,16 @@ export default function Relatorio() {
                 ].map((head) => (
                   <th
                     key={head}
-                    className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase"
+                    className="px-3 py-2 text-left text-xs font-semibold text-emerald-800 uppercase tracking-wide"
                   >
                     {head}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-emerald-100">
               {registros.map((r) => (
-                <tr key={r._id} className="hover:bg-gray-50 transition">
+                <tr key={r._id} className="hover:bg-emerald-50 transition">
                   <td className="px-3 py-2">{r.nome}</td>
                   <td className="px-3 py-2">{r.categoria}</td>
                   <td className="px-3 py-2">
@@ -321,7 +325,7 @@ export default function Relatorio() {
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         r.status === "OK"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-emerald-100 text-emerald-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
@@ -337,3 +341,5 @@ export default function Relatorio() {
     </section>
   )
 }
+
+

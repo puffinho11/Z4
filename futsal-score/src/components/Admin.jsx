@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import api from "../api"
+import { MdAdminPanelSettings, MdEdit, MdDelete, MdPersonAdd } from "react-icons/md"
 
 export default function Admin() {
   const [users, setUsers] = useState([])
@@ -68,12 +69,7 @@ export default function Admin() {
     setLoading(true)
 
     try {
-      const data = {
-        username,
-        password: password || undefined,
-        role,
-        time,
-      }
+      const data = { username, password: password || undefined, role, time }
 
       if (editingUsername) {
         const response = await api.put(`/users/${editingUsername}`, data)
@@ -119,20 +115,22 @@ export default function Admin() {
   }
 
   return (
-    <section className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">
-        Administração de Usuários
+    <section className="p-8 ml-64 min-h-screen bg-white">
+      <h2 className="text-3xl font-bold mb-8 text-emerald-800 flex items-center gap-2">
+        <MdAdminPanelSettings className="text-4xl text-emerald-600" />
+        Gestão de Usuários
       </h2>
 
       {error && (
-        <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-300">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 shadow">
           {error}
         </div>
       )}
 
       {/* Formulário */}
-      <div className="bg-white p-6 rounded-xl shadow mb-8 border border-gray-200">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100 mb-10">
+        <h3 className="text-xl font-semibold mb-4 text-emerald-800 flex items-center gap-2">
+          <MdPersonAdd className="text-2xl text-emerald-600" />
           {editingUsername
             ? `Editar Usuário: ${editingUsername}`
             : "Novo Usuário"}
@@ -143,11 +141,11 @@ export default function Admin() {
           className="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700">
               Usuário
             </label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500"
               placeholder="Nome de Usuário"
               value={form.username}
               onChange={(e) => handleChange("username", e.target.value)}
@@ -157,11 +155,11 @@ export default function Admin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700">
               Nome do Time
             </label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500"
               placeholder="Ex: Futsal Mania"
               value={form.time}
               onChange={(e) => handleChange("time", e.target.value)}
@@ -171,13 +169,13 @@ export default function Admin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700">
               Papel
             </label>
             <select
               value={form.role}
               onChange={(e) => handleChange("role", e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500"
               required
               disabled={loading}
             >
@@ -187,11 +185,11 @@ export default function Admin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700">
               Senha
             </label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-emerald-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-500"
               placeholder={
                 editingUsername ? "Nova senha (opcional)" : "Senha"
               }
@@ -203,10 +201,10 @@ export default function Admin() {
             />
           </div>
 
-          <div className="md:col-span-4 flex gap-4 pt-3">
+          <div className="md:col-span-4 flex gap-3 pt-4">
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-5 py-2 rounded-lg font-semibold hover:scale-[1.03] transition"
               disabled={loading}
             >
               {loading
@@ -223,7 +221,7 @@ export default function Admin() {
                 setEditingUsername(null)
                 setError(null)
               }}
-              className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-200 transition"
+              className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-300 transition"
               disabled={loading}
             >
               Limpar / Cancelar
@@ -233,60 +231,68 @@ export default function Admin() {
       </div>
 
       {/* Tabela de usuários */}
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-200 overflow-x-auto">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100 overflow-x-auto">
+        <h3 className="text-xl font-semibold mb-4 text-emerald-800">
           Lista de Usuários ({users.length})
         </h3>
 
         {loading && users.length === 0 && (
-          <p className="text-blue-600">Carregando usuários...</p>
+          <p className="text-emerald-600">Carregando usuários...</p>
         )}
 
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
+        <table className="min-w-full divide-y divide-emerald-100">
+          <thead className="bg-emerald-50">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-sm font-semibold text-emerald-800 uppercase tracking-wider">
                 Usuário
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-sm font-semibold text-emerald-800 uppercase tracking-wider">
                 Time
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-sm font-semibold text-emerald-800 uppercase tracking-wider">
                 Papel
               </th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-2 text-center text-sm font-semibold text-emerald-800 uppercase tracking-wider">
                 Ações
               </th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-emerald-100">
             {users.length === 0 && !loading ? (
               <tr>
-                <td colSpan="4" className="px-3 py-4 text-center text-gray-500">
+                <td
+                  colSpan="4"
+                  className="px-3 py-4 text-center text-gray-500 italic"
+                >
                   Nenhum usuário cadastrado.
                 </td>
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.username}>
+                <tr
+                  key={u.username}
+                  className="hover:bg-emerald-50 transition"
+                >
                   <td className="px-3 py-2 text-gray-800">{u.username}</td>
                   <td className="px-3 py-2 text-gray-800">{u.time}</td>
-                  <td className="px-3 py-2 text-gray-800">{u.role}</td>
+                  <td className="px-3 py-2 text-gray-800 capitalize">
+                    {u.role}
+                  </td>
                   <td className="px-3 py-2 text-center flex gap-3 justify-center">
                     <button
                       onClick={() => editUser(u)}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition"
+                      className="bg-emerald-500 text-white px-3 py-1 rounded-lg hover:bg-emerald-600 transition flex items-center gap-1"
                       disabled={loading}
                     >
-                      Editar
+                      <MdEdit /> Editar
                     </button>
                     <button
                       onClick={() => deleteUser(u.username)}
-                      className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 transition"
+                      className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition flex items-center gap-1"
                       disabled={loading}
                     >
-                      Remover
+                      <MdDelete /> Remover
                     </button>
                   </td>
                 </tr>
@@ -298,6 +304,7 @@ export default function Admin() {
     </section>
   )
 }
+
 
 
 
