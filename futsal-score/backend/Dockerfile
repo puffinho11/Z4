@@ -1,25 +1,22 @@
-# Etapa 1: usar Node
+# Usa imagem base do Node
 FROM node:18
 
-# Define o diretório de trabalho
+# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia apenas o backend (porque ele está dentro de futsal-score/backend)
-COPY ./backend/package*.json ./
+# Copia apenas os arquivos necessários para instalar dependências
+COPY package*.json ./
 
-# Instala dependências do backend
+# Instala as dependências
 RUN npm install
 
-# Copia o resto do código do backend
-COPY ./backend .
+# Copia o restante do código do backend
+COPY . .
 
-# Define a variável de ambiente para produção
-ENV NODE_ENV=production
-
-# Expõe a porta usada no backend
+# Expõe a porta que o servidor usa
 EXPOSE 3000
 
-# Comando para iniciar o servidor
+# Define o comando padrão
 CMD ["node", "server.js"]
 
 
