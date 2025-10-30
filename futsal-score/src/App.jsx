@@ -12,6 +12,7 @@ import Admin from './components/Admin'
 import PerfilAtleta from './components/PerfilAtleta'
 import { getUser, clearAuth } from './utils/authStorage' 
 import normalizeUser from './utils/normalizeUser' 
+import { Analytics } from "@vercel/analytics/react"
 
 const sections = {
   dashboard: <Dashboard />,

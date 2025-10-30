@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
-import api from "../api"
-import Countdown from "./Countdown"
+import React, { useEffect, useState } from "react";
+import api from "../api";
+import Countdown from "./Countdown";
 import {
   MdDashboard,
   MdGroup,
@@ -9,79 +9,88 @@ import {
   MdSportsSoccer,
   MdOutlineStyle,
   MdOutlineEvent,
-} from "react-icons/md"
+} from "react-icons/md";
+import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
-  const [registros, setRegistros] = useState([])
-  const [eventos, setEventos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { t } = useTranslation();
+  const [registros, setRegistros] = useState([]);
+  const [eventos, setEventos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   async function fetchEventos() {
     try {
-      const { data } = await api.get("/calendario")
-      setEventos(Array.isArray(data) ? data : [])
+      const { data } = await api.get("/calendario");
+      setEventos(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Erro ao carregar eventos:", err)
+      console.error("Erro ao carregar eventos:", err);
     }
   }
 
   async function fetchRegistros() {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const { data } = await api.get("/registros")
-      setRegistros(Array.isArray(data) ? data : [])
-      await fetchEventos()
+      const { data } = await api.get("/registros");
+      setRegistros(Array.isArray(data) ? data : []);
+      await fetchEventos();
     } catch (err) {
-      console.error("Erro ao carregar registros:", err)
-      setError("Erro ao carregar dados. Verifique o servidor ou login.")
-      setRegistros([])
+      console.error("Erro ao carregar registros:", err);
+      setError("Erro ao carregar dados. Verifique o servidor ou login.");
+      setRegistros([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchRegistros()
-  }, [])
+    fetchRegistros();
+  }, []);
 
-  const atletasCount = [...new Set(registros.map((r) => r.nome))].length
+  const atletasCount = [...new Set(registros.map((r) => r.nome))].length;
   const ultimos30 = registros.filter((r) => {
-    const d = new Date(r.data)
-    const ago = new Date()
-    ago.setDate(ago.getDate() - 30)
-    return d >= ago
-  }).length
+    const d = new Date(r.data);
+    const ago = new Date();
+    ago.setDate(ago.getDate() - 30);
+    return d >= ago;
+  }).length;
   const emRecuperacao = registros.filter(
     (r) => r.status === "Recuperação" || r.status === "Lesão"
-  ).length
-  const totalLesoes = registros.reduce((s, r) => s + (+r.lesoes || 0), 0)
-  const totalGols = registros.reduce((s, r) => s + (+r.gols || 0), 0)
-  const totalAmarelos = registros.reduce((s, r) => s + (+r.amarelos || 0), 0)
-  const totalVermelhos = registros.reduce((s, r) => s + (+r.vermelhos || 0), 0)
+  ).length;
+  const totalLesoes = registros.reduce((s, r) => s + (+r.lesoes || 0), 0);
+  const totalGols = registros.reduce((s, r) => s + (+r.gols || 0), 0);
+  const totalAmarelos = registros.reduce((s, r) => s + (+r.amarelos || 0), 0);
+  const totalVermelhos = registros.reduce((s, r) => s + (+r.vermelhos || 0), 0);
 
   const eventosFuturos = eventos
     .map((ev) => {
-      const dataString = ev.data.slice(0, 10)
-      const [y, m, d] = dataString.split("-").map(Number)
-      const [h, min] = (ev.hora || "00:00").split(":").map(Number)
-      return { ...ev, dateTime: new Date(y, m - 1, d, h, min) }
+      const dataString = ev.data.slice(0, 10);
+      const [y, m, d] = dataString.split("-").map(Number);
+      const [h, min] = (ev.hora || "00:00").split(":").map(Number);
+      return { ...ev, dateTime: new Date(y, m - 1, d, h, min) };
     })
     .filter((ev) => ev.dateTime.getTime() >= Date.now() - 60000)
-    .sort((a, b) => a.dateTime - b.dateTime)
+    .sort((a, b) => a.dateTime - b.dateTime);
 
-  const proximoEvento = eventosFuturos[0]
+  const proximoEvento = eventosFuturos[0];
   const listaProximosEventos = eventosFuturos.slice(
     proximoEvento ? 1 : 0,
     6
-  )
+  );
 
   return (
     <section className="p-8 ml-64 min-h-screen bg-white">
-      <h2 className="text-3xl font-bold mb-8 text-emerald-800 flex items-center gap-2 drop-shadow-sm">
-        <MdDashboard className="text-4xl text-emerald-600" /> Painel de Gestão de Atletas
-      </h2>
+      {/* 🔰 Cabeçalho do Painel + Seletor de Idioma */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-emerald-800 flex items-center gap-2 drop-shadow-sm">
+          <MdDashboard className="text-4xl text-emerald-600" /> {t("dashboard_title")}
+        </h2>
+        <div className="shadow-sm border border-emerald-100 rounded-md bg-white px-2 py-1">
+          <LanguageSelector />
+        </div>
+      </div>
 
       {loading && <p className="text-emerald-600 animate-pulse">Carregando...</p>}
       {error && (
@@ -94,24 +103,25 @@ export default function Dashboard() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <ResumoCard
-              title="Atletas"
+              title={t("athletes")}
               value={atletasCount}
               gradient="from-emerald-500 to-emerald-600"
               icon={MdGroup}
             />
             <ResumoCard
-              title="Últimos 30 dias"
+              title={t("last_30_days")}
               value={ultimos30}
               gradient="from-emerald-400 to-emerald-500"
               icon={MdUpdate}
             />
             <ResumoCard
-              title="Em Recuperação"
+              title={t("in_recovery")}
               value={emRecuperacao}
               gradient="from-rose-500 to-red-600"
               icon={MdOutlineHealing}
             />
           </div>
+
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ResumoOcorrencias
               {...{ totalLesoes, totalGols, totalAmarelos, totalVermelhos }}
@@ -124,7 +134,7 @@ export default function Dashboard() {
         </>
       )}
     </section>
-  )
+  );
 }
 
 function ResumoCard({ title, value, icon: Icon, gradient }) {
@@ -140,7 +150,7 @@ function ResumoCard({ title, value, icon: Icon, gradient }) {
         <p className="text-3xl font-extrabold drop-shadow-sm">{value}</p>
       </div>
     </div>
-  )
+  );
 }
 
 function ResumoOcorrencias({
@@ -149,17 +159,18 @@ function ResumoOcorrencias({
   totalAmarelos,
   totalVermelhos,
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-emerald-100 hover:shadow-lg transition">
       <h3 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2 border-b pb-2">
-        <MdSportsSoccer className="text-xl text-emerald-600" /> Resumo de Ocorrências
+        <MdSportsSoccer className="text-xl text-emerald-600" /> {t("summary_title")}
       </h3>
-      <ResumoItem label="Lesões" value={totalLesoes} color="red" icon={MdOutlineHealing} />
-      <ResumoItem label="Gols" value={totalGols} color="emerald" icon={MdSportsSoccer} />
-      <ResumoItem label="Amarelos" value={totalAmarelos} color="yellow" icon={MdOutlineStyle} />
-      <ResumoItem label="Vermelhos" value={totalVermelhos} color="red" icon={MdOutlineStyle} />
+      <ResumoItem label={t("injuries")} value={totalLesoes} color="red" icon={MdOutlineHealing} />
+      <ResumoItem label={t("goals")} value={totalGols} color="emerald" icon={MdSportsSoccer} />
+      <ResumoItem label={t("yellow_cards")} value={totalAmarelos} color="yellow" icon={MdOutlineStyle} />
+      <ResumoItem label={t("red_cards")} value={totalVermelhos} color="red" icon={MdOutlineStyle} />
     </div>
-  )
+  );
 }
 
 function ResumoItem({ label, value, color, icon: Icon }) {
@@ -170,14 +181,15 @@ function ResumoItem({ label, value, color, icon: Icon }) {
       </span>
       <span className={`text-xl font-bold text-${color}-700`}>{value}</span>
     </div>
-  )
+  );
 }
 
 function Eventos({ proximoEvento, listaProximosEventos }) {
+  const { t } = useTranslation();
   return (
     <div className="lg:col-span-2 space-y-4">
       <h3 className="text-xl font-bold text-emerald-800 flex items-center gap-2">
-        <MdOutlineEvent className="text-2xl text-emerald-700" /> Próximo Evento
+        <MdOutlineEvent className="text-2xl text-emerald-700" /> {t("next_event")}
       </h3>
       {proximoEvento ? (
         <Countdown
@@ -189,13 +201,13 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
         />
       ) : (
         <div className="bg-white p-6 rounded-xl shadow-md text-gray-500 border border-emerald-100 flex flex-col items-center">
-          <p className="italic font-semibold">🗓️ Nenhum evento futuro.</p>
+          <p className="italic font-semibold">{t("no_future_events")}</p>
         </div>
       )}
       {listaProximosEventos.length > 0 && (
         <div className="bg-white p-4 rounded-xl shadow-md border border-emerald-100">
           <h4 className="text-md font-semibold text-emerald-700 mb-3 border-b pb-2 flex items-center gap-2">
-            <MdOutlineEvent className="text-lg" /> Outros Eventos
+            <MdOutlineEvent className="text-lg" /> {t("other_events")}
           </h4>
           <ul className="space-y-2">
             {listaProximosEventos.map((ev, i) => (
@@ -218,6 +230,8 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
     </div>
   )
 }
+
+
 
 
 

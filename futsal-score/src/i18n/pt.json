@@ -1,0 +1,76 @@
+{
+  "dashboard_title": "Painel de Gestão de Atletas",
+  "athletes": "Atletas",
+  "last_30_days": "Últimos 30 dias",
+  "in_recovery": "Em Recuperação",
+  "summary_title": "Resumo de Ocorrências",
+  "injuries": "Lesões",
+  "goals": "Gols",
+  "yellow_cards": "Amarelos",
+  "red_cards": "Vermelhos",
+  "next_event": "Próximo Evento",
+  "no_future_events": "🗓️ Nenhum evento futuro.",
+  "other_events": "Outros Eventos",
+
+  "admin_title": "Área Administrativa",
+  "admin_description": "Gerencie usuários, permissões e configurações do sistema.",
+
+  "calendar_title": "Calendário de Eventos",
+  "no_events": "Nenhum evento cadastrado.",
+  "location": "Local",
+  "unspecified": "Não especificado",
+
+  "attendance_title": "Controle de Presença",
+  "no_athletes": "Nenhum atleta encontrado.",
+  "athlete_name": "Nome do Atleta",
+  "attendance": "Presença",
+  "present": "Presente",
+  "absent": "Ausente",
+
+  "performance_title": "Desempenho dos Atletas",
+  "no_data": "Nenhum dado de desempenho disponível.",
+  "category": "Categoria",
+  "vo2max": "VO₂ Máx",
+  "speed": "Velocidade",
+  "stamina": "Resistência",
+
+  "medical_exams_title": "Exames Médicos",
+  "no_exams": "Nenhum exame encontrado.",
+  "exam_type": "Tipo de Exame",
+  "exam_date": "Data do Exame",
+  "status": "Status",
+
+  "profile_title": "Perfil do Atleta",
+  "loading_profile": "Carregando perfil...",
+  "team": "Time",
+  "email": "E-mail",
+
+  "register_title": "Registro de Atletas",
+  "register_button": "Salvar Registro",
+  "register_success": "Atleta registrado com sucesso!",
+  "register_error": "Erro ao registrar o atleta.",
+
+  "reports_title": "Relatórios e Análises",
+  "reports_description": "Visualize estatísticas e relatórios de desempenho.",
+
+  "sidebar_dashboard": "Dashboard",
+  "sidebar_register": "Registro",
+  "sidebar_reports": "Relatórios",
+  "sidebar_performance": "Desempenho",
+  "sidebar_exams": "Exames",
+  "sidebar_calendar": "Calendário",
+  "sidebar_attendance": "Chamada",
+  "sidebar_profile": "Meu Perfil",
+  "sidebar_admin": "Administração",
+  "sidebar_logout": "Sair",
+
+  "save": "Salvar",
+  "cancel": "Cancelar",
+  "edit": "Editar",
+  "delete": "Excluir",
+  "loading": "Carregando..."
+}
+
+
+
+

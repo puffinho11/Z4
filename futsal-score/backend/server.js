@@ -4,6 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
+import client from 'prom-client'
 
 import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
@@ -47,6 +48,14 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`)
+})
+
+const register = new client.Registry()
+client.collectDefaultMetrics({ register })
+
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', register.contentType)
+  res.end(await register.metrics())
 })
 
 
