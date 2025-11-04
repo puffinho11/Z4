@@ -1,55 +1,78 @@
-import express from "express"
-import Calendario from "../models/Calendario.js"
+import express from "express";
+import Calendario from "../models/Calendario.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.post("/", async (req, res) => {
+// 🔹 Criar evento vinculado ao time e usuário logado
+router.post("/", authMiddleware, async (req, res) => {
   try {
-    const novoEvento = new Calendario(req.body)
-    await novoEvento.save()
-    res.status(201).json(novoEvento)
-  } catch (err) {
-    console.error("Erro ao criar evento:", err)
-    res.status(500).json({ msg: "Erro ao criar evento." })
-  }
-})
+    const novoEvento = new Calendario({
+      ...req.body,
+      time: req.user.time,
+      criadoPor: req.user.username, // ✅ registra o criador
+    });
 
-router.get("/", async (req, res) => {
+    await novoEvento.save();
+    res.status(201).json(novoEvento);
+  } catch (err) {
+    console.error("Erro ao criar evento:", err);
+    res.status(500).json({ msg: "Erro ao criar evento." });
+  }
+});
+
+// 🔹 Buscar eventos apenas do time do usuário
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const eventos = await Calendario.find().sort({ data: 1 })
-    res.json(eventos)
+    const eventos = await Calendario.find({ time: req.user.time }).sort({ data: 1 });
+    res.json(eventos);
   } catch (err) {
-    console.error("Erro ao buscar eventos:", err)
-    res.status(500).json({ msg: "Erro ao buscar eventos." })
+    console.error("Erro ao buscar eventos:", err);
+    res.status(500).json({ msg: "Erro ao buscar eventos." });
   }
-})
+});
 
-router.put("/:id", async (req, res) => {
+// 🔹 Atualizar evento (somente se for criador, ou admin/coach do time)
+router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const eventoAtualizado = await Calendario.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    )
-    if (!eventoAtualizado)
-      return res.status(404).json({ msg: "Evento não encontrado." })
-    res.json(eventoAtualizado)
-  } catch (err) {
-    console.error("Erro ao atualizar evento:", err)
-    res.status(500).json({ msg: "Erro ao atualizar evento." })
-  }
-})
+    const filtro =
+      req.user.role === "admin"
+        ? { _id: req.params.id }
+        : req.user.role === "coach"
+        ? { _id: req.params.id, time: req.user.time }
+        : { _id: req.params.id, criadoPor: req.user.username };
 
-router.delete("/:id", async (req, res) => {
+    const evento = await Calendario.findOneAndUpdate(filtro, req.body, { new: true });
+    if (!evento)
+      return res.status(403).json({ msg: "Sem permissão para editar este evento." });
+
+    res.json(evento);
+  } catch (err) {
+    console.error("Erro ao atualizar evento:", err);
+    res.status(500).json({ msg: "Erro ao atualizar evento." });
+  }
+});
+
+// 🔹 Excluir evento (somente se for criador, ou admin/coach do time)
+router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    const eventoRemovido = await Calendario.findByIdAndDelete(req.params.id)
-    if (!eventoRemovido)
-      return res.status(404).json({ msg: "Evento não encontrado." })
-    res.json({ msg: "Evento removido com sucesso!" })
-  } catch (err) {
-    console.error("Erro ao excluir evento:", err)
-    res.status(500).json({ msg: "Erro ao excluir evento." })
-  }
-})
+    const filtro =
+      req.user.role === "admin"
+        ? { _id: req.params.id }
+        : req.user.role === "coach"
+        ? { _id: req.params.id, time: req.user.time }
+        : { _id: req.params.id, criadoPor: req.user.username };
 
-export default router
+    const evento = await Calendario.findOneAndDelete(filtro);
+    if (!evento)
+      return res.status(403).json({ msg: "Sem permissão para excluir este evento." });
+
+    res.json({ msg: "Evento removido com sucesso!" });
+  } catch (err) {
+    console.error("Erro ao excluir evento:", err);
+    res.status(500).json({ msg: "Erro ao excluir evento." });
+  }
+});
+
+export default router;
+

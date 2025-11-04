@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react"
-import api from "../api"
-import { MdEvent, MdEdit, MdSave, MdCancel, MdDelete } from "react-icons/md"
+import React, { useEffect, useState } from "react";
+import api from "../api";
+import { MdEvent, MdEdit, MdSave, MdCancel, MdDelete } from "react-icons/md";
 
 function formatarData(dataString) {
-  if (!dataString) return "Data Indefinida"
+  if (!dataString) return "Data indefinida";
   try {
-    const date = new Date(dataString)
+    const date = new Date(dataString);
     return date.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "long",
       year: "numeric",
-    })
+    });
   } catch (e) {
-    console.error("Erro ao formatar data:", e)
-    return dataString.split("T")[0]
+    console.error("Erro ao formatar data:", e);
+    return dataString.split("T")[0];
   }
 }
 
@@ -25,92 +25,89 @@ export default function Calendario() {
     hora: "18:00",
     local: "",
     id: null,
-  }
+  };
 
-  const user = JSON.parse(localStorage.getItem("user")) || {}
-  const [time] = useState(user.time || user.idTime || "Time Padrão")
-  const isAdminOrCoach = user.role === "admin" || user.role === "coach"
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [time] = useState(user.time || user.idTime || "Time Padrão");
 
-  const [lista, setLista] = useState([])
-  const [form, setForm] = useState(blank)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [mensagem, setMensagem] = useState("")
+  const canCreate = ["admin", "coach", "user"].includes(user.role);
+  const [lista, setLista] = useState([]);
+  const [form, setForm] = useState(blank);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mensagem, setMensagem] = useState("");
 
   async function fetchEventos() {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const response = await api.get("/calendario")
-      setLista(response.data || [])
+      const response = await api.get("/calendario");
+      setLista(response.data || []);
     } catch (err) {
-      console.error("Erro ao carregar eventos:", err.response || err)
-      setError("Erro ao carregar eventos. Tente novamente mais tarde.")
-      setLista([])
+      console.error("Erro ao carregar eventos:", err.response || err);
+      setError("Erro ao carregar eventos. Tente novamente mais tarde.");
+      setLista([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchEventos()
-  }, [])
+    fetchEventos();
+  }, []);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setMensagem("")
-    setError(null)
-    const payload = { ...form, time: time }
+    e.preventDefault();
+    setLoading(true);
+    setMensagem("");
+    setError(null);
 
     try {
-      const method = form.id ? "put" : "post"
-      const url = form.id ? `/calendario/${form.id}` : "/calendario"
+      const method = form.id ? "put" : "post";
+      const url = form.id ? `/calendario/${form.id}` : "/calendario";
 
-      const response = await api[method](url, payload)
-
-      setMensagem(`Evento ${form.id ? "atualizado" : "criado"} com sucesso!`)
-      setForm(blank)
-      fetchEventos()
+      await api[method](url, form);
+      setMensagem(`Evento ${form.id ? "atualizado" : "criado"} com sucesso!`);
+      setForm(blank);
+      fetchEventos();
     } catch (err) {
-      console.error("Erro ao salvar evento:", err.response || err)
+      console.error("Erro ao salvar evento:", err.response || err);
       setError(
         `Falha ao salvar evento: ${
           err.response?.data?.msg || "Verifique se o backend está ativo."
         }`
-      )
+      );
     } finally {
-      setLoading(false)
-      setTimeout(() => setMensagem(""), 5000)
+      setLoading(false);
+      setTimeout(() => setMensagem(""), 4000);
     }
   }
 
   async function excluir(id) {
-    if (!window.confirm("Tem certeza que deseja excluir este evento?")) return
-
-    setLoading(true)
-    setMensagem("")
-    setError(null)
+    if (!window.confirm("Tem certeza que deseja excluir este evento?")) return;
+    setLoading(true);
+    setMensagem("");
+    setError(null);
 
     try {
-      await api.delete(`/calendario/${id}`)
-      setMensagem("Evento excluído com sucesso!")
-      fetchEventos()
+      await api.delete(`/calendario/${id}`);
+      setMensagem("Evento excluído com sucesso!");
+      fetchEventos();
     } catch (err) {
-      console.error("Erro ao excluir evento:", err.response || err)
+      console.error("Erro ao excluir evento:", err.response || err);
       setError(
         `Falha ao excluir evento: ${
           err.response?.data?.msg || "Verifique as permissões."
         }`
-      )
+      );
     } finally {
-      setLoading(false)
-      setTimeout(() => setMensagem(""), 5000)
+      setLoading(false);
+      setTimeout(() => setMensagem(""), 4000);
     }
   }
 
   function editar(evento) {
-    const dataFormatada = new Date(evento.data).toISOString().slice(0, 10)
+    const dataFormatada = new Date(evento.data).toISOString().slice(0, 10);
     setForm({
       id: evento._id,
       titulo: evento.titulo,
@@ -118,25 +115,32 @@ export default function Calendario() {
       data: dataFormatada,
       hora: evento.hora,
       local: evento.local || "",
-      time: evento.time,
-    })
+    });
   }
 
   function cancelarEdicao() {
-    setForm(blank)
-    setError(null)
-    setMensagem("")
+    setForm(blank);
+    setError(null);
+    setMensagem("");
   }
+
+  // 🔹 Define quem pode editar/excluir cada evento
+  const canEditEvento = (evento) => {
+    if (user.role === "admin") return true;
+    if (user.role === "coach" && evento.time === user.time) return true;
+    if (user.role === "user" && evento.criadoPor === user.username) return true;
+    return false;
+  };
 
   if (loading && lista.length === 0) {
     return (
       <div className="text-center p-8">
         <p className="text-lg text-emerald-600">Carregando eventos...</p>
       </div>
-    )
+    );
   }
 
-  const showList = lista.length > 0 || loading === false
+  const showList = lista.length > 0 || loading === false;
 
   return (
     <section className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
@@ -168,7 +172,7 @@ export default function Calendario() {
         </div>
       )}
 
-      {isAdminOrCoach && (
+      {canCreate && (
         <div className="mb-8 border p-4 rounded-lg bg-emerald-50">
           <h2 className="text-xl font-semibold mb-4 text-emerald-800">
             {form.id ? "Editar Evento" : "Novo Evento"}
@@ -272,14 +276,10 @@ export default function Calendario() {
                     {ev.local && (
                       <span className="block">Local: {ev.local}</span>
                     )}
-                    {isAdminOrCoach && ev.time && (
-                      <span className="text-xs text-gray-400">
-                        Time: {ev.time}
-                      </span>
-                    )}
                   </p>
                 </div>
-                {isAdminOrCoach && (
+
+                {canEditEvento(ev) && (
                   <div className="flex flex-col items-end gap-2 text-sm">
                     <div className="flex gap-3">
                       <button
@@ -305,9 +305,7 @@ export default function Calendario() {
         )}
       </div>
     </section>
-  )
+  );
 }
-
-
 
 
