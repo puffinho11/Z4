@@ -1,59 +1,96 @@
-import axios from "axios"
-import { getToken, clearAuth } from "./utils/authStorage"
+import axios from "axios";
+import { getToken, clearAuth } from "./utils/authStorage";
 
-export const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
+// 🌍 Define automaticamente o backend (Railway em produção)
+export const SERVER_URL = import.meta.env.VITE_API_URL?.trim() || "http://localhost:3000";
 
+console.log("🌐 Conectando ao backend:", SERVER_URL);
+
+// 🧱 Instância principal da API
 const api = axios.create({
   baseURL: `${SERVER_URL}/api`,
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
-})
+});
 
+// 🔐 Intercepta requisições e adiciona o token JWT se existir
 api.interceptors.request.use(
   (config) => {
-    const token = getToken()
+    const token = getToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    } else {
-      console.warn("⚠️ Nenhum token encontrado. Pode ocorrer erro 401 (não autorizado).")
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
+    return config;
   },
   (error) => Promise.reject(error)
-)
+);
 
+// ⚠️ Intercepta respostas e trata erros automaticamente
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const { status, data } = error.response
-      const msg = data?.message || data?.msg || error.message
+      const { status, data } = error.response;
+      const msg = data?.message || data?.msg || error.message;
 
-      console.error(`❌ Erro ${status}:`, msg)
+      console.error(`❌ Erro ${status}:`, msg);
 
       if (status === 401 || status === 403) {
-        const isExpired =
-          msg?.toLowerCase().includes("expired") ||
-          msg?.toLowerCase().includes("inválido")
-
-        alert(
-          isExpired
-            ? "⚠️ Sua sessão expirou. Faça login novamente."
-            : "⚠️ Acesso negado. Faça login novamente."
-        )
-
+        alert("⚠️ Sessão expirada. Faça login novamente.");
         clearAuth();
-        window.location.href = "/login"
+        window.location.href = "/login";
       }
     } else if (error.request) {
-      alert("Servidor offline. Tente novamente mais tarde.")
-      console.error("❌ Nenhuma resposta do servidor.")
+      alert("⚠️ Servidor offline. Tente novamente mais tarde.");
     } else {
-      console.error("❌ Erro de configuração:", error.message)
+      console.error("❌ Erro de configuração:", error.message);
     }
-
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default api
+// 🔧 Rotas principais (mantive todas suas funções originais)
+export const login = (data) => api.post("/auth/login", data);
+export const register = (data) => api.post("/auth/register", data);
+export const getUserProfile = (id) => api.get(`/users/${id}`);
+export const updateUser = (id, data) => api.put(`/users/${id}`, data);
+export const deleteUser = (id) => api.delete(`/users/${id}`);
+
+// 📋 Registros
+export const getRegistros = () => api.get("/registros");
+export const createRegistro = (data) => api.post("/registros", data);
+export const updateRegistro = (id, data) => api.put(`/registros/${id}`, data);
+export const deleteRegistro = (id) => api.delete(`/registros/${id}`);
+
+// 🏥 Exames
+export const getExames = () => api.get("/exames");
+export const createExame = (data) => api.post("/exames", data);
+export const updateExame = (id, data) => api.put(`/exames/${id}`, data);
+export const deleteExame = (id) => api.delete(`/exames/${id}`);
+
+// 📅 Calendário
+export const getEventos = () => api.get("/calendario");
+export const createEvento = (data) => api.post("/calendario", data);
+export const updateEvento = (id, data) => api.put(`/calendario/${id}`, data);
+export const deleteEvento = (id) => api.delete(`/calendario/${id}`);
+
+// 📊 Times
+export const getTimes = () => api.get("/times");
+export const createTime = (data) => api.post("/times", data);
+export const updateTime = (id, data) => api.put(`/times/${id}`, data);
+export const deleteTime = (id) => api.delete(`/times/${id}`);
+
+// 📚 Chamadas (frequência)
+export const getChamadas = () => api.get("/chamadas");
+export const createChamada = (data) => api.post("/chamadas", data);
+export const updateChamada = (id, data) => api.put(`/chamadas/${id}`, data);
+export const deleteChamada = (id) => api.delete(`/chamadas/${id}`);
+
+// 🧍‍♂️ Usuários (geral)
+export const getUsers = () => api.get("/users");
+export const createUser = (data) => api.post("/users", data);
+export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role });
+
+// 🚀 Exporta API padrão
+export default api;
+

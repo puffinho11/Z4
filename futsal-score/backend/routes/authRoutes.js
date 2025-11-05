@@ -9,17 +9,19 @@ import authMiddleware from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
+// Diretório para uploads de fotos
 const uploadDir = path.resolve("uploads", "foto")
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true })
 }
 
+// Configuração do multer (upload de imagens)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname)
     const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`
-    cb(null, name);
+    cb(null, name)
   },
 })
 
@@ -27,18 +29,24 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif/;
+    const allowed = /jpeg|jpg|png|gif/
     const ext = path.extname(file.originalname).toLowerCase()
     if (!allowed.test(ext)) {
       return cb(new Error("Tipo de arquivo não permitido"))
     }
-    cb(null, true);
+    cb(null, true)
   },
 })
 
+/* ===============================
+   🔑 ROTA DE LOGIN
+================================= */
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ message: "Preencha todos os campos." })
+    }
 
     const user = await User.findOne({ username })
     if (!user) {
@@ -79,9 +87,56 @@ router.post("/login", async (req, res) => {
   }
 })
 
+/* ===============================
+   🆕 ROTA DE REGISTRO
+================================= */
+router.post("/register", async (req, res) => {
+  try {
+    const { username, nome, password, role, time } = req.body
+
+    if (!username || !password || !time) {
+      return res.status(400).json({ message: "Preencha todos os campos obrigatórios." })
+    }
+
+    const existingUser = await User.findOne({ username })
+    if (existingUser) {
+      return res.status(400).json({ message: "Usuário já existe." })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const newUser = new User({
+      username,
+      nome,
+      password: hashedPassword,
+      role: role || "user",
+      time,
+    })
+
+    await newUser.save()
+
+    res.status(201).json({
+      message: "Usuário registrado com sucesso!",
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        nome: newUser.nome,
+        role: newUser.role,
+        time: newUser.time,
+      },
+    })
+  } catch (err) {
+    console.error("Erro no /register:", err)
+    res.status(500).json({ message: "Erro ao registrar usuário." })
+  }
+})
+
+/* ===============================
+   👤 PERFIL DO USUÁRIO (autenticado)
+================================= */
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const u = req.user;
+    const u = req.user
     res.json({
       id: u._id,
       nome: u.nome,
@@ -96,6 +151,9 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 })
 
+/* ===============================
+   🖼️ UPLOAD DE FOTO
+================================= */
 router.post(
   "/upload/foto",
   authMiddleware,

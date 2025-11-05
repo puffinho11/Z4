@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "coach", "user"], 
+      enum: ["admin", "coach", "user"],
       default: "user",
     },
     time: {
@@ -51,8 +51,8 @@ userSchema.virtual("isCoach").get(function () {
 
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
-    delete ret.password;
-    return ret;
+    delete ret.password
+    return ret
   },
   virtuals: true,
 })
