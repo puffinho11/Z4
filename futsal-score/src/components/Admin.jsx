@@ -120,14 +120,11 @@ export default function Admin() {
         <MdAdminPanelSettings className="text-4xl text-emerald-600" />
         Gestão de Usuários
       </h2>
-
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 shadow">
           {error}
         </div>
       )}
-
-      {/* Formulário */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100 mb-10">
         <h3 className="text-xl font-semibold mb-4 text-emerald-800 flex items-center gap-2">
           <MdPersonAdd className="text-2xl text-emerald-600" />
@@ -135,7 +132,6 @@ export default function Admin() {
             ? `Editar Usuário: ${editingUsername}`
             : "Novo Usuário"}
         </h3>
-
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-4 gap-4"
@@ -153,7 +149,6 @@ export default function Admin() {
               disabled={loading || !!editingUsername}
             />
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">
               Nome do Time
@@ -167,7 +162,6 @@ export default function Admin() {
               disabled={loading}
             />
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">
               Papel
@@ -183,7 +177,6 @@ export default function Admin() {
               <option value="admin">Admin</option>
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">
               Senha
@@ -229,8 +222,6 @@ export default function Admin() {
           </div>
         </form>
       </div>
-
-      {/* Tabela de usuários */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-emerald-100 overflow-x-auto">
         <h3 className="text-xl font-semibold mb-4 text-emerald-800">
           Lista de Usuários ({users.length})

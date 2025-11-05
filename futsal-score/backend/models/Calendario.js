@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const CalendarioSchema = new mongoose.Schema(
   {
@@ -30,17 +30,17 @@ const CalendarioSchema = new mongoose.Schema(
     },
     criadoPor: {
       type: String,
-      required: true, // 🔹 Novo campo obrigatório
+      required: true, 
       trim: true,
     },
   },
   {
     timestamps: true,
   }
-);
+)
 
-const Calendario = mongoose.model("Calendario", CalendarioSchema);
-export default Calendario;
+const Calendario = mongoose.model("Calendario", CalendarioSchema)
+export default Calendario
 
 
 

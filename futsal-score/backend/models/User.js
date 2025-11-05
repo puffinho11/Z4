@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema(
   {
@@ -20,13 +20,14 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "coach", "user"], // ✅ Adicionado “coach”
+      enum: ["admin", "coach", "user"], 
       default: "user",
     },
     time: {
       type: String,
-      required: true, // ✅ Agora é obrigatório
+      required: true,
       trim: true,
+      default: "SemTime",
     },
     foto: {
       type: String,
@@ -38,15 +39,15 @@ const userSchema = new mongoose.Schema(
     },
   },
   { collection: "users" }
-);
+)
 
 userSchema.virtual("isAdmin").get(function () {
-  return this.role === "admin";
-});
+  return this.role === "admin"
+})
 
 userSchema.virtual("isCoach").get(function () {
-  return this.role === "coach";
-});
+  return this.role === "coach"
+})
 
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
@@ -54,7 +55,7 @@ userSchema.set("toJSON", {
     return ret;
   },
   virtuals: true,
-});
+})
 
-const User = mongoose.model("User", userSchema);
-export default User;
+const User = mongoose.model("User", userSchema)
+export default User

@@ -1,87 +1,84 @@
-import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-import User from "../models/User.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import express from "express"
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import multer from "multer"
+import path from "path"
+import fs from "fs"
+import User from "../models/User.js"
+import authMiddleware from "../middleware/authMiddleware.js"
 
-const router = express.Router();
+const router = express.Router()
 
-// 🔹 Upload de foto
-const uploadDir = path.resolve("uploads", "foto");
+const uploadDir = path.resolve("uploads", "foto")
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, { recursive: true })
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    const ext = path.extname(file.originalname)
+    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`
     cb(null, name);
   },
-});
+})
 
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif/;
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.test(ext))
-      return cb(new Error("Tipo de arquivo não permitido"));
+    const ext = path.extname(file.originalname).toLowerCase()
+    if (!allowed.test(ext)) {
+      return cb(new Error("Tipo de arquivo não permitido"))
+    }
     cb(null, true);
   },
-});
+})
 
-// 🔹 LOGIN
 router.post("/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username })
     if (!user) {
-      return res.status(400).json({ message: "Usuário ou senha inválidos" });
+      return res.status(400).json({ message: "Usuário ou senha inválidos" })
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      return res.status(400).json({ message: "Usuário ou senha inválidos" });
+      return res.status(400).json({ message: "Usuário ou senha inválidos" })
     }
 
-    // 🔥 Token com campo time incluído
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
         username: user.username,
-        time: user.time || user.equipe || user.categoria || "SemTime",
+        time: user.time || "SemTime",
       },
       process.env.JWT_SECRET || "segredo123",
       { expiresIn: "8h" }
-    );
+    )
 
     res.json({
-      message: "Autenticado com sucesso",
+      message: "Login realizado com sucesso!",
       token,
       user: {
         id: user._id,
         username: user.username,
         nome: user.nome,
         role: user.role,
-        time: user.time || "SemTime",
+        time: user.time,
         foto: user.foto || null,
       },
-    });
+    })
   } catch (err) {
-    console.error("Erro no /login:", err);
-    res.status(500).json({ message: "Erro interno no servidor." });
+    console.error("Erro no /login:", err)
+    res.status(500).json({ message: "Erro interno no servidor." })
   }
-});
+})
 
-// 🔹 Retorna o usuário logado
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const u = req.user;
@@ -89,58 +86,57 @@ router.get("/me", authMiddleware, async (req, res) => {
       id: u._id,
       nome: u.nome,
       time: u.time,
-      isAdmin: u.role === "admin",
       username: u.username,
       role: u.role,
       foto: u.foto || null,
-    });
+    })
   } catch (err) {
-    console.error("Erro em /me:", err);
-    res.status(500).json({ message: "Erro interno" });
+    console.error("Erro em /me:", err)
+    res.status(500).json({ message: "Erro interno." })
   }
-});
+})
 
-// 🔹 Upload de foto
 router.post(
   "/upload/foto",
   authMiddleware,
   upload.single("foto"),
   async (req, res) => {
     try {
-      if (!req.file) return res.status(400).json({ message: "Nenhum arquivo enviado" });
-
-      const userId = req.user._id;
-      const newFotoPath = `/uploads/foto/${req.file.filename}`;
-
-      const user = await User.findById(userId);
-      if (!user) return res.status(404).json({ message: "Usuário não encontrado" });
-
-      if (user.foto) {
-        const oldPath = path.join(uploadDir, path.basename(user.foto));
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      if (!req.file) {
+        return res.status(400).json({ message: "Nenhum arquivo enviado" })
       }
 
-      user.foto = newFotoPath;
-      await user.save();
+      const userId = req.user._id
+      const newFotoPath = `/uploads/foto/${req.file.filename}`
 
-      const updatedUser = await User.findById(userId).select("-password");
+      const user = await User.findById(userId)
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" })
+      }
+
+      if (user.foto) {
+        const oldPath = path.join(uploadDir, path.basename(user.foto))
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
+      }
+
+      user.foto = newFotoPath
+      await user.save({ validateBeforeSave: false })
+
+      const updatedUser = await User.findById(userId).select("-password")
 
       res.json({
-        message: "Foto atualizada com sucesso",
-        user: {
-          id: updatedUser._id,
-          username: updatedUser.username,
-          nome: updatedUser.nome,
-          role: updatedUser.role,
-          time: updatedUser.time || null,
-          foto: updatedUser.foto || null,
-        },
-      });
+        message: "✅ Foto atualizada com sucesso!",
+        user: updatedUser,
+      })
     } catch (err) {
-      console.error("Erro no upload de foto:", err);
-      res.status(500).json({ message: "Erro interno ao processar a foto." });
+      console.error("❌ Erro no upload de foto:", err)
+      res.status(500).json({
+        message: "Erro interno ao processar a foto.",
+        error: err.message,
+      })
     }
   }
-);
+)
 
-export default router;
+export default router
+

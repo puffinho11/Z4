@@ -1,63 +1,59 @@
-import axios from "axios";
-import { getToken, clearAuth } from "./utils/authStorage"; // ✅ caminho corrigido
+import axios from "axios"
+import { getToken, clearAuth } from "./utils/authStorage"
 
-// URL base do servidor (ajuste se for produção)
-export const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+export const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 const api = axios.create({
   baseURL: `${SERVER_URL}/api`,
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
-});
+})
 
-// 🔹 Intercepta requisições e adiciona token JWT automaticamente
 api.interceptors.request.use(
   (config) => {
-    const token = getToken();
+    const token = getToken()
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`
     } else {
-      console.warn("⚠️ Nenhum token encontrado. Pode ocorrer erro 401 (não autorizado).");
+      console.warn("⚠️ Nenhum token encontrado. Pode ocorrer erro 401 (não autorizado).")
     }
-    return config;
+    return config
   },
   (error) => Promise.reject(error)
-);
+)
 
-// 🔹 Intercepta respostas e trata erros
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const { status, data } = error.response;
-      const msg = data?.message || data?.msg || error.message;
+      const { status, data } = error.response
+      const msg = data?.message || data?.msg || error.message
 
-      console.error(`❌ Erro ${status}:`, msg);
+      console.error(`❌ Erro ${status}:`, msg)
 
-      // Sessão expirada ou token inválido → limpa e redireciona
       if (status === 401 || status === 403) {
         const isExpired =
           msg?.toLowerCase().includes("expired") ||
-          msg?.toLowerCase().includes("inválido");
+          msg?.toLowerCase().includes("inválido")
 
         alert(
           isExpired
             ? "⚠️ Sua sessão expirou. Faça login novamente."
             : "⚠️ Acesso negado. Faça login novamente."
-        );
+        )
 
         clearAuth();
-        window.location.href = "/login";
+        window.location.href = "/login"
       }
     } else if (error.request) {
-      alert("Servidor offline. Tente novamente mais tarde.");
-      console.error("❌ Nenhuma resposta do servidor.");
+      alert("Servidor offline. Tente novamente mais tarde.")
+      console.error("❌ Nenhuma resposta do servidor.")
     } else {
-      console.error("❌ Erro de configuração:", error.message);
+      console.error("❌ Erro de configuração:", error.message)
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
-export default api;
+export default api

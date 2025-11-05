@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import api from "../api";
-import Countdown from "./Countdown";
+import React, { useEffect, useState } from "react"
+import api from "../api"
+import Countdown from "./Countdown"
 import {
   MdGroup,
   MdUpdate,
@@ -8,73 +8,73 @@ import {
   MdSportsSoccer,
   MdOutlineStyle,
   MdOutlineEvent,
-} from "react-icons/md";
+} from "react-icons/md"
 
 export default function Dashboard() {
-  const [registros, setRegistros] = useState([]);
-  const [eventos, setEventos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [registros, setRegistros] = useState([])
+  const [eventos, setEventos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   async function fetchEventos() {
     try {
-      const { data } = await api.get("/calendario");
-      setEventos(Array.isArray(data) ? data : []);
+      const { data } = await api.get("/calendario")
+      setEventos(Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error("Erro ao carregar eventos:", err);
+      console.error("Erro ao carregar eventos:", err)
     }
   }
 
   async function fetchRegistros() {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const { data } = await api.get("/registros");
-      setRegistros(Array.isArray(data) ? data : []);
-      await fetchEventos();
+      const { data } = await api.get("/registros")
+      setRegistros(Array.isArray(data) ? data : [])
+      await fetchEventos()
     } catch (err) {
-      console.error("Erro ao carregar registros:", err);
-      setError("Erro ao carregar dados. Verifique o servidor ou login.");
-      setRegistros([]);
+      console.error("Erro ao carregar registros:", err)
+      setError("Erro ao carregar dados. Verifique o servidor ou login.")
+      setRegistros([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchRegistros();
-  }, []);
+    fetchRegistros()
+  }, [])
 
-  const atletasCount = [...new Set(registros.map((r) => r.nome))].length;
+  const atletasCount = [...new Set(registros.map((r) => r.nome))].length
   const ultimos30 = registros.filter((r) => {
-    const d = new Date(r.data);
-    const ago = new Date();
-    ago.setDate(ago.getDate() - 30);
-    return d >= ago;
-  }).length;
+    const d = new Date(r.data)
+    const ago = new Date()
+    ago.setDate(ago.getDate() - 30)
+    return d >= ago
+  }).length
   const emRecuperacao = registros.filter(
     (r) => r.status === "Recuperação" || r.status === "Lesão"
-  ).length;
-  const totalLesoes = registros.reduce((s, r) => s + (+r.lesoes || 0), 0);
-  const totalGols = registros.reduce((s, r) => s + (+r.gols || 0), 0);
-  const totalAmarelos = registros.reduce((s, r) => s + (+r.amarelos || 0), 0);
-  const totalVermelhos = registros.reduce((s, r) => s + (+r.vermelhos || 0), 0);
+  ).length
+  const totalLesoes = registros.reduce((s, r) => s + (+r.lesoes || 0), 0)
+  const totalGols = registros.reduce((s, r) => s + (+r.gols || 0), 0)
+  const totalAmarelos = registros.reduce((s, r) => s + (+r.amarelos || 0), 0)
+  const totalVermelhos = registros.reduce((s, r) => s + (+r.vermelhos || 0), 0)
 
   const eventosFuturos = eventos
     .map((ev) => {
-      const dataString = ev.data.slice(0, 10);
-      const [y, m, d] = dataString.split("-").map(Number);
-      const [h, min] = (ev.hora || "00:00").split(":").map(Number);
-      return { ...ev, dateTime: new Date(y, m - 1, d, h, min) };
+      const dataString = ev.data.slice(0, 10)
+      const [y, m, d] = dataString.split("-").map(Number)
+      const [h, min] = (ev.hora || "00:00").split(":").map(Number)
+      return { ...ev, dateTime: new Date(y, m - 1, d, h, min) }
     })
     .filter((ev) => ev.dateTime.getTime() >= Date.now() - 60000)
-    .sort((a, b) => a.dateTime - b.dateTime);
+    .sort((a, b) => a.dateTime - b.dateTime)
 
-  const proximoEvento = eventosFuturos[0];
+  const proximoEvento = eventosFuturos[0]
   const listaProximosEventos = eventosFuturos.slice(
     proximoEvento ? 1 : 0,
     6
-  );
+  )
 
   return (
     <section className="p-8 ml-64 min-h-screen bg-white">
@@ -120,7 +120,7 @@ export default function Dashboard() {
         </>
       )}
     </section>
-  );
+  )
 }
 
 function ResumoCard({ title, value, icon: Icon, gradient }) {
@@ -136,7 +136,7 @@ function ResumoCard({ title, value, icon: Icon, gradient }) {
         <p className="text-3xl font-extrabold drop-shadow-sm">{value}</p>
       </div>
     </div>
-  );
+  )
 }
 
 function ResumoOcorrencias({
@@ -155,7 +155,7 @@ function ResumoOcorrencias({
       <ResumoItem label="Cartões Amarelos" value={totalAmarelos} color="yellow" icon={MdOutlineStyle} />
       <ResumoItem label="Cartões Vermelhos" value={totalVermelhos} color="red" icon={MdOutlineStyle} />
     </div>
-  );
+  )
 }
 
 function ResumoItem({ label, value, color, icon: Icon }) {
@@ -166,7 +166,7 @@ function ResumoItem({ label, value, color, icon: Icon }) {
       </span>
       <span className={`text-xl font-bold text-${color}-700`}>{value}</span>
     </div>
-  );
+  )
 }
 
 function Eventos({ proximoEvento, listaProximosEventos }) {
@@ -212,7 +212,7 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 

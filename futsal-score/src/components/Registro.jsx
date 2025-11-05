@@ -177,7 +177,7 @@ export default function Registro() {
               required
             >
               <option value="">Selecione</option>
-              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Adulto"].map(
+              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map(
                 (cat) => (
                   <option key={cat}>{cat}</option>
                 )
