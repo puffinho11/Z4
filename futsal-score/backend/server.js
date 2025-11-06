@@ -1,66 +1,59 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import client from "prom-client";
+import express from "express"
+import mongoose from "mongoose"
+import cors from "cors"
+import dotenv from "dotenv"
+import path from "path"
+import { fileURLToPath } from "url"
+import client from "prom-client"
 
-// 🧩 Rotas do sistema
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import registroRoutes from "./routes/registroRoutes.js";
-import chamadaRoutes from "./routes/chamadaRoutes.js";
-import calendarioRoutes from "./routes/calendarioRoutes.js";
-import exameRoutes from "./routes/exameRoutes.js";
-import timeRoutes from "./routes/timeRoutes.js";
+import authRoutes from "./routes/authRoutes.js"
+import userRoutes from "./routes/userRoutes.js"
+import registroRoutes from "./routes/registroRoutes.js"
+import chamadaRoutes from "./routes/chamadaRoutes.js"
+import calendarioRoutes from "./routes/calendarioRoutes.js"
+import exameRoutes from "./routes/exameRoutes.js"
+import timeRoutes from "./routes/timeRoutes.js"
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
-app.use(express.json());
+const app = express()
+app.use(express.json())
 
-// 🛡️ CORS – permite frontend local e domínio oficial
 app.use(
   cors({
     origin: [
       "https://z4esporte.com",
       "https://z4esporte.vercel.app",
       "http://localhost:5173",
-      "http://localhost" // adiciona acesso direto ao frontend local
+      "http://localhost"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   })
-);
+)
 
-// 📁 Diretórios estáticos (uploads)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")));
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
 
-// 🧠 Conexão com MongoDB Atlas
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Conectado ao MongoDB Atlas"))
-  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err));
+  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
 
-// 🚪 Rotas principais
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/registros", registroRoutes);
-app.use("/api/chamadas", chamadaRoutes);
-app.use("/api/calendario", calendarioRoutes);
-app.use("/api/exames", exameRoutes);
-app.use("/api/times", timeRoutes);
+app.use("/api/auth", authRoutes)
+app.use("/api/users", userRoutes)
+app.use("/api/registros", registroRoutes)
+app.use("/api/chamadas", chamadaRoutes)
+app.use("/api/calendario", calendarioRoutes)
+app.use("/api/exames", exameRoutes)
+app.use("/api/times", timeRoutes)
 
-// 🌐 Página inicial
 app.get("/", (req, res) => {
-  res.send("🚀 Servidor Z4 rodando com sucesso!");
-});
+  res.send("🚀 Servidor Z4 rodando com sucesso!")
+})
 
-// 🧪 Teste de status
 app.get("/api/test", (req, res) => {
   res.json({
     status: "online",
@@ -70,20 +63,18 @@ app.get("/api/test", (req, res) => {
         ? "🟢 Conectado ao MongoDB"
         : "🔴 Desconectado do MongoDB",
     time: new Date().toLocaleString("pt-BR"),
-  });
-});
+  })
+})
 
-// 📊 Métricas Prometheus
-const register = new client.Registry();
-client.collectDefaultMetrics({ register });
+const register = new client.Registry()
+client.collectDefaultMetrics({ register })
 app.get("/metrics", async (req, res) => {
-  res.setHeader("Content-Type", register.contentType);
-  res.end(await register.metrics());
-});
+  res.setHeader("Content-Type", register.contentType)
+  res.end(await register.metrics())
+})
 
-// ⚙️ Inicialização
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+const PORT = process.env.PORT || 8080
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`))
 
 
 
