@@ -1,8 +1,9 @@
 import axios from "axios";
 import { getToken, clearAuth } from "./utils/authStorage";
 
-// 🌍 Define automaticamente o backend (Railway em produção)
-export const SERVER_URL = import.meta.env.VITE_API_URL?.trim() || "http://localhost:3000";
+// 🌍 Define automaticamente o backend local (porta 8080)
+export const SERVER_URL =
+  import.meta.env.VITE_API_URL?.trim() || "http://localhost:8080";
 
 console.log("🌐 Conectando ao backend:", SERVER_URL);
 
@@ -13,28 +14,24 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// 🔐 Intercepta requisições e adiciona o token JWT se existir
+// 🔐 Adiciona token JWT automaticamente
 api.interceptors.request.use(
   (config) => {
     const token = getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ⚠️ Intercepta respostas e trata erros automaticamente
+// ⚠️ Trata erros de resposta
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
       const { status, data } = error.response;
       const msg = data?.message || data?.msg || error.message;
-
       console.error(`❌ Erro ${status}:`, msg);
-
       if (status === 401 || status === 403) {
         alert("⚠️ Sessão expirada. Faça login novamente.");
         clearAuth();
@@ -49,7 +46,7 @@ api.interceptors.response.use(
   }
 );
 
-// 🔧 Rotas principais (mantive todas suas funções originais)
+// 🔧 Rotas principais
 export const login = (data) => api.post("/auth/login", data);
 export const register = (data) => api.post("/auth/register", data);
 export const getUserProfile = (id) => api.get(`/users/${id}`);
@@ -80,13 +77,13 @@ export const createTime = (data) => api.post("/times", data);
 export const updateTime = (id, data) => api.put(`/times/${id}`, data);
 export const deleteTime = (id) => api.delete(`/times/${id}`);
 
-// 📚 Chamadas (frequência)
+// 📚 Chamadas
 export const getChamadas = () => api.get("/chamadas");
 export const createChamada = (data) => api.post("/chamadas", data);
 export const updateChamada = (id, data) => api.put(`/chamadas/${id}`, data);
 export const deleteChamada = (id) => api.delete(`/chamadas/${id}`);
 
-// 🧍‍♂️ Usuários (geral)
+// 🧍‍♂️ Usuários
 export const getUsers = () => api.get("/users");
 export const createUser = (data) => api.post("/users", data);
 export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role });
