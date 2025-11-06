@@ -185,7 +185,7 @@ export default function Chamada() {
               className="mt-1 w-full border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">Selecione...</option>
-              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Adulto"].map((cat) => (
+              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map((cat) => (
                 <option key={cat}>{cat}</option>
               ))}
             </select>

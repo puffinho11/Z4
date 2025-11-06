@@ -18,6 +18,13 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://z4esporte.com/$1",
+      "permanent": true
+    }
   ]
 }
 
