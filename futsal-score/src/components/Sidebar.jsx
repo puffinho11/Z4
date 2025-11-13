@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   MdDashboard,
   MdEvent,
@@ -9,11 +9,31 @@ import {
   MdLocalHospital,
   MdAdminPanelSettings,
   MdAccountCircle,
-} from "react-icons/md";
+  MdKeyboardArrowDown,
+} from "react-icons/md"
 import { FaSignOutAlt } from "react-icons/fa"
 import LogoFutsalScore from "./logo.png"
 
-export default function Sidebar({ user, onLogout, setSection }) {
+export default function Sidebar({
+  user,
+  onLogout,
+  setSection,
+  selectedCategoria,
+  setSelectedCategoria,
+}) {
+  const [openRegistro, setOpenRegistro] = useState(false)
+
+  const categorias = [
+    "Sub-7",
+    "Sub-9",
+    "Sub-11",
+    "Sub-13",
+    "Sub-15",
+    "Sub-17",
+    "Sub-20",
+    "Adulto",
+  ]
+
   const menuItems = [
     { label: "Dashboard", icon: <MdDashboard />, section: "dashboard" },
     { label: "Registro", icon: <MdGroup />, section: "registro" },
@@ -23,7 +43,7 @@ export default function Sidebar({ user, onLogout, setSection }) {
     { label: "Calendário", icon: <MdEvent />, section: "calendario" },
     { label: "Chamada", icon: <MdAssignment />, section: "chamada" },
     { label: "Meu Perfil", icon: <MdAccountCircle />, section: "perfil" },
-  ];
+  ]
 
   if (user?.role === "admin") {
     menuItems.push({
@@ -45,38 +65,66 @@ export default function Sidebar({ user, onLogout, setSection }) {
         </div>
         <nav className="flex flex-col mt-6 space-y-1 px-3">
           {menuItems.map((item) => {
-            const isActive = item.section === user?.section;
+            const isActive = item.section === user?.section
+            const isRegistro = item.section === "registro"
+
             return (
-              <button
-                key={item.section}
-                onClick={() => setSection(item.section)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 group relative
-                  ${
-                    isActive
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-900/40 scale-[1.02]"
-                      : "hover:bg-emerald-700/60 hover:translate-x-1"
-                  }`}
-              >
-                <span
-                  className={`text-xl transition-transform duration-300 ${
-                    isActive
-                      ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] scale-110"
-                      : "text-emerald-100 group-hover:text-white"
-                  }`}
+              <div key={item.section}>
+                <button
+                  onClick={() => {
+                    if (isRegistro) setOpenRegistro(!openRegistro)
+                    setSection(item.section)
+                  }}
+                  className={`flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 group
+                    ${
+                      isActive
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-900/40 scale-[1.02]"
+                        : "hover:bg-emerald-700/60 hover:translate-x-1"
+                    }`}
                 >
-                  {item.icon}
-                </span>
-                <span
-                  className={`${
-                    isActive
-                      ? "font-semibold text-white"
-                      : "text-emerald-100 group-hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={`text-xl ${
+                        isActive
+                          ? "text-white scale-110"
+                          : "text-emerald-100 group-hover:text-white"
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </span>
+                  {isRegistro && (
+                    <MdKeyboardArrowDown
+                      className={`text-xl transition-transform ${
+                        openRegistro ? "rotate-180" : ""
+                      }`}
+                    />
+                  )}
+                </button>
+                {isRegistro && openRegistro && (
+                  <ul className="ml-8 mt-1 space-y-1 animate-fade-in-down">
+                    {categorias.map((cat) => (
+                      <li key={cat}>
+                        <button
+                          onClick={() => {
+                            setSelectedCategoria(cat)
+                            setSection("registro")
+                          }}
+                          className={`w-full text-left text-sm px-3 py-1.5 rounded-md transition ${
+                            selectedCategoria === cat
+                              ? "bg-emerald-500/40 text-white"
+                              : "hover:bg-emerald-700/60 text-emerald-100"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )
           })}
         </nav>
       </div>
@@ -89,13 +137,14 @@ export default function Sidebar({ user, onLogout, setSection }) {
           onClick={onLogout}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-600 to-red-700 rounded-lg hover:from-rose-500 hover:to-red-600 transition-all shadow-md shadow-red-900/40 hover:scale-105 font-medium text-sm"
         >
-          <FaSignOutAlt />
-          Sair
+          <FaSignOutAlt /> Sair
         </button>
       </div>
     </aside>
   )
 }
+
+
 
 
 

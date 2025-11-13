@@ -73,8 +73,25 @@ app.get("/metrics", async (req, res) => {
   res.end(await register.metrics())
 })
 
-const PORT = process.env.PORT || 8080
-app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`))
+// 🚀 Inicialização inteligente com fallback de porta
+const DEFAULT_PORT = process.env.PORT || 8080
+
+function startServer(port) {
+  const server = app.listen(port, () => {
+    console.log(`🚀 Servidor rodando na porta ${port}`)
+  })
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`⚠️ Porta ${port} em uso. Tentando porta ${port + 1}...`)
+      startServer(Number(port) + 1)
+    } else {
+      throw err
+    }
+  })
+}
+
+startServer(DEFAULT_PORT)
 
 
 

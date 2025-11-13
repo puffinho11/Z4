@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react"
 import api from "../api"
-import { 
-  MdChecklist, 
-  MdSave, 
-  MdCancel, 
-  MdHistory, 
-  MdEdit, 
-  MdDelete, 
-  MdCalendarToday, 
+import {
+  MdChecklist,
+  MdSave,
+  MdCancel,
+  MdHistory,
+  MdEdit,
+  MdDelete,
+  MdCalendarToday,
   MdSportsSoccer,
   MdSupervisorAccount,
-  MdGroup
+  MdGroup,
 } from "react-icons/md"
 
 export default function Chamada() {
@@ -43,17 +43,19 @@ export default function Chamada() {
       if (!categoria) return
       try {
         const res = await api.get("/registros")
-        const filtrados = res.data.filter(
-          (a) => a.categoria?.toLowerCase() === categoria.toLowerCase()
-        )
-        setAtletas(filtrados.sort((a, b) => a.nome.localeCompare(b.nome)))
+        const filtrados = res.data
+          .filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase())
+          .sort((a, b) => a.nome.localeCompare(b.nome))
 
+        setAtletas(filtrados)
+
+        // mantém escolhas anteriores quando possível; default = presente (true)
         setPresencas((p) => {
-          const novasPresencas = {}
+          const novas = {}
           filtrados.forEach((a) => {
-            novasPresencas[a._id] = p[a._id] !== undefined ? p[a._id] : true
+            novas[a._id] = p[a._id] !== undefined ? p[a._id] : true
           })
-          return novasPresencas
+          return novas
         })
       } catch (err) {
         console.error("❌ Erro ao carregar atletas:", err)
@@ -62,30 +64,22 @@ export default function Chamada() {
     fetchAtletas()
   }, [categoria])
 
-  const handleToggle = (id) =>
-    setPresencas((p) => ({ ...p, [id]: !p[id] }))
+  const handleToggle = (id) => setPresencas((p) => ({ ...p, [id]: !p[id] }))
 
   const handleSalvar = async () => {
     if (!categoria || atletas.length === 0 || !professor.trim()) {
       alert("Preencha o nome do professor e selecione uma categoria.")
       return
     }
-
     setSalvando(true)
     setMensagem("")
-
     try {
       const atletasComNome = atletas.map((a) => ({
         nome: a.nome,
-        presente: presencas[a._id] || false,
+        presente: !!presencas[a._id],
       }))
 
-      const payload = {
-        categoria,
-        data,
-        professor,
-        atletas: atletasComNome,
-      }
+      const payload = { categoria, data, professor, atletas: atletasComNome }
 
       if (editandoId) {
         await api.put(`/chamadas/${editandoId}`, payload)
@@ -95,11 +89,14 @@ export default function Chamada() {
         setMensagem("✅ Chamada salva com sucesso!")
       }
 
+      // reset
+      setEditandoId(null)
       setCategoria("")
       setAtletas([])
       setPresencas({})
-      setEditandoId(null)
       setProfessor("")
+      setData(new Date().toISOString().slice(0, 10))
+
       carregarHistorico()
     } catch (err) {
       console.error("❌ Erro ao salvar chamada:", err)
@@ -124,7 +121,7 @@ export default function Chamada() {
   const handleEditar = async (chamada) => {
     setEditandoId(chamada._id)
     setCategoria(chamada.categoria)
-    setData(chamada.data)
+    setData(chamada.data?.slice(0, 10) || new Date().toISOString().slice(0, 10))
     setProfessor(chamada.professor || "")
     setMensagem("✏️ Editando chamada existente.")
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -132,16 +129,17 @@ export default function Chamada() {
     try {
       const resAtletas = await api.get("/registros")
       const atletasDaCategoria = resAtletas.data
-        .filter(
-          (a) => a.categoria?.toLowerCase() === chamada.categoria.toLowerCase()
-        )
+        .filter((a) => a.categoria?.toLowerCase() === chamada.categoria.toLowerCase())
         .sort((a, b) => a.nome.localeCompare(b.nome))
-      const presenciasMap = {}
-      const presencaPorNome = chamada.atletas.reduce((acc, current) => {
-        acc[current.nome] = current.presente
+
+      // mapeia presenças por nome da chamada selecionada
+      const presencaPorNome = chamada.atletas.reduce((acc, curr) => {
+        acc[curr.nome] = !!curr.presente
         return acc
       }, {})
 
+      // converte para o mapa de presenças por _id atuais
+      const presenciasMap = {}
       atletasDaCategoria.forEach((a) => {
         presenciasMap[a._id] = presencaPorNome[a.nome] || false
       })
@@ -154,26 +152,32 @@ export default function Chamada() {
     }
   }
 
-  const totalPresentes = Object.values(presencas).filter((p) => p).length
+  const totalPresentes = Object.values(presencas).filter(Boolean).length
   const totalAusentes = Object.values(presencas).filter((p) => !p).length
 
   return (
-    <section className="p-6 bg-white min-h-screen">
-      <h2 className="text-3xl font-bold text-emerald-800 mb-2 flex items-center gap-3">
-        <MdChecklist className="text-4xl text-emerald-600" /> Controle de Presenças
-      </h2>
-      <p className="text-gray-600 mb-6">
-        Registre a frequência dos atletas e acompanhe o histórico de chamadas.
-      </p>
+    // MOBILE-ONLY FEEL: centraliza e limita largura em telas grandes; 100% no mobile
+    <section className="p-4 bg-white min-h-screen flex justify-center">
+      <div className="w-full max-w-md">
+        {/* Cabeçalho */}
+        <h2 className="text-2xl sm:text-3xl font-bold text-emerald-800 mb-2 flex items-center gap-3">
+          <MdChecklist className="text-3xl sm:text-4xl text-emerald-600" />
+          Controle de Presenças
+        </h2>
+        <p className="text-gray-600 mb-4 text-sm sm:text-base">
+          Registre a frequência dos atletas e acompanhe o histórico.
+        </p>
 
-      <div className="bg-white shadow-lg rounded-2xl p-6 border border-emerald-100 mb-8">
-        <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
-          <MdSave className="text-xl text-emerald-600" /> {editandoId ? "Editar Chamada" : "Nova Chamada"}
-        </h3>
+        {/* Card principal */}
+        <div className="bg-white shadow-md rounded-2xl p-4 border border-emerald-100 mb-6">
+          <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-3 flex items-center gap-2">
+            <MdSave className="text-xl text-emerald-600" />
+            {editandoId ? "Editar Chamada" : "Nova Chamada"}
+          </h3>
 
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
+          {/* Campos topo - empilhados (mobile-first) */}
+          <div className="flex flex-col gap-3">
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdGroup className="text-lg text-emerald-600" /> Categoria
             </label>
             <select
@@ -181,210 +185,193 @@ export default function Chamada() {
               onChange={(e) => {
                 setCategoria(e.target.value)
                 setEditandoId(null)
+                setMensagem("")
               }}
-              className="mt-1 w-full border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
+              className="border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="">Selecione...</option>
-              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map((cat) => (
-                <option key={cat}>{cat}</option>
-              ))}
+              <option value="">Selecione a categoria</option>
+              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map(
+                (cat) => (
+                  <option key={cat}>{cat}</option>
+                )
+              )}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
+
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdCalendarToday className="text-lg text-emerald-600" /> Data
             </label>
             <input
               type="date"
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="mt-1 w-full border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
+              className="border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
+
+            <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdSupervisorAccount className="text-lg text-emerald-600" /> Professor
             </label>
             <input
               type="text"
               value={professor}
               onChange={(e) => setProfessor(e.target.value)}
-              placeholder="Digite o nome do professor"
-              className="mt-1 w-full border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
+              placeholder="Professor responsável"
+              className="border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
             />
           </div>
-        </div>
 
-        {categoria && (
-          <>
-            <h4 className="text-lg font-semibold mb-2 text-emerald-800 flex items-center gap-2">
-              <MdSportsSoccer className="text-xl text-emerald-600" /> 
-              Atletas da categoria {categoria} 
-              <span className="text-sm font-normal text-gray-500">
-                ({atletas.length} no total)
-              </span>
-            </h4>
+          {/* Lista de atletas (tocável) */}
+          {categoria && (
+            <div className="mt-5">
+              <h4 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2">
+                <MdSportsSoccer className="text-xl text-emerald-600" />
+                Atletas — {categoria}{" "}
+                <span className="text-sm font-normal text-gray-500">
+                  ({atletas.length} no total)
+                </span>
+              </h4>
 
-            {atletas.length === 0 ? (
-              <p className="text-gray-500 py-4 italic">
-                Nenhum atleta cadastrado nesta categoria.
-              </p>
-            ) : (
-              <div className="overflow-x-auto border border-emerald-100 rounded-lg mb-4">
-                <table className="min-w-full divide-y divide-emerald-100">
-                  <thead className="bg-emerald-50">
-                    <tr>
-                      <th className="p-3 text-left text-xs font-semibold text-emerald-800 uppercase tracking-wider">
-                        Atleta
-                      </th>
-                      <th className="p-3 text-center text-xs font-semibold text-emerald-800 uppercase tracking-wider w-32">
-                        Situação
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-emerald-50">
-                    {atletas.map((a) => (
-                      <tr key={a._id} className="hover:bg-emerald-50 transition">
-                        <td className="p-3 font-medium text-gray-800">{a.nome}</td>
-                        <td className="text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleToggle(a._id)}
-                            className={`p-1.5 rounded-full transition-colors font-semibold text-xs min-w-[70px] ${
-                              presencas[a._id]
-                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                                : "bg-red-100 text-red-700 hover:bg-red-200"
-                            }`}
-                            aria-label={presencas[a._id] ? "Presente" : "Ausente"}
-                          >
-                            {presencas[a._id] ? "Presente" : "Ausente"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+              {atletas.length === 0 ? (
+                <p className="text-gray-500 italic text-sm">
+                  Nenhum atleta cadastrado nesta categoria.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                  {atletas.map((a) => (
+                    <button
+                      key={a._id}
+                      type="button"
+                      onClick={() => handleToggle(a._id)}
+                      className={`flex justify-between items-center px-4 py-3 rounded-lg text-sm font-medium shadow-sm transition-all ${
+                        presencas[a._id]
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                      aria-label={presencas[a._id] ? "Presente" : "Ausente"}
+                    >
+                      <span className="text-left">{a.nome}</span>
+                      <span className="font-bold text-base">
+                        {presencas[a._id] ? "✔" : "✘"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-            <div className="flex justify-between items-center pt-2">
-              <div className="text-sm font-medium text-gray-600 space-x-4">
-                <span className="text-emerald-700">Presentes: {totalPresentes}</span>
-                <span className="text-red-700">Ausentes: {totalAusentes}</span>
-              </div>
-              <div className="flex justify-end gap-3">
-                {editandoId && (
-                  <button
-                    onClick={() => {
-                      setCategoria("")
-                      setAtletas([])
-                      setPresencas({})
-                      setEditandoId(null)
-                      setProfessor("")
-                      setMensagem("")
-                    }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition flex items-center gap-1"
-                  >
-                    <MdCancel /> Cancelar
-                  </button>
-                )}
-                <button
-                  onClick={handleSalvar}
-                  disabled={salvando}
-                  className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-700 text-white rounded-lg hover:scale-[1.03] transition flex items-center gap-1 disabled:bg-gray-400"
-                >
-                  <MdSave />
-                  {salvando
-                    ? "Salvando..."
-                    : editandoId
-                    ? "Atualizar Chamada"
-                    : "Salvar Chamada"}
-                </button>
+              <div className="flex justify-between text-xs text-gray-600 mt-3">
+                <span className="text-emerald-700">✅ Presentes: {totalPresentes}</span>
+                <span className="text-red-700">❌ Ausentes: {totalAusentes}</span>
               </div>
             </div>
+          )}
 
-            {mensagem && (
-              <p
-                className={`mt-4 p-3 rounded-lg font-medium text-sm ${
-                  mensagem.includes("✅")
-                    ? "bg-emerald-100 text-emerald-800"
-                    : mensagem.includes("✏️")
-                    ? "bg-yellow-100 text-yellow-800"
-                    : mensagem.includes("🗑️")
-                    ? "bg-red-100 text-red-800"
-                    : "bg-red-100 text-red-800"
-                } flex items-center gap-2`}
+          {/* Ações */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+            {editandoId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoria("")
+                  setAtletas([])
+                  setPresencas({})
+                  setEditandoId(null)
+                  setProfessor("")
+                  setMensagem("")
+                  setData(new Date().toISOString().slice(0, 10))
+                }}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition flex items-center gap-1 justify-center"
               >
-                {mensagem}
-              </p>
+                <MdCancel /> Cancelar
+              </button>
             )}
-          </>
-        )}
-      </div>
-
-      <div className="bg-white shadow-lg rounded-2xl p-6 border border-emerald-100">
-        <h3 className="text-xl font-semibold text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
-          <MdHistory className="text-2xl text-emerald-600" /> Histórico de Chamadas ({historico.length})
-        </h3>
-        {historico.length === 0 ? (
-          <p className="text-gray-500 py-4 italic text-center">
-            Nenhuma chamada registrada ainda.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {historico.map((c) => {
-              const presentes = c.atletas.filter((a) => a.presente).length
-              return (
-                <div
-                  key={c._id}
-                  className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl hover:shadow transition flex justify-between flex-wrap items-center gap-2"
-                >
-                  <div>
-                    <p className="font-bold text-emerald-800 flex items-center gap-2">
-                      <MdGroup className="text-xl text-emerald-700" /> {c.categoria}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                      <MdCalendarToday className="text-base text-emerald-600" /> Data:{" "}
-                      <span className="font-medium">
-                        {new Date(c.data).toLocaleDateString("pt-BR")}
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <MdSupervisorAccount className="text-base text-emerald-600" /> Prof:{" "}
-                      <span className="font-medium">{c.professor}</span>
-                    </p>
-                    <p className="text-sm text-gray-700 mt-2">
-                      Presenças:{" "}
-                      <span className="font-bold text-emerald-700">
-                        {presentes}
-                      </span>{" "}
-                      / {c.atletas.length}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3 text-sm">
-                    <button
-                      onClick={() => handleEditar(c)}
-                      className="text-emerald-700 hover:text-emerald-900 font-medium flex items-center gap-1"
-                    >
-                      <MdEdit /> Editar
-                    </button>
-                    <button
-                      onClick={() => handleExcluir(c._id)}
-                      className="text-red-700 hover:text-red-900 font-medium flex items-center gap-1"
-                    >
-                      <MdDelete /> Excluir
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+            <button
+              type="button"
+              onClick={handleSalvar}
+              disabled={salvando}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-6 py-2 rounded-lg hover:scale-[1.03] transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
+            >
+              <MdSave />
+              {salvando ? "Salvando..." : editandoId ? "Atualizar Chamada" : "Salvar Chamada"}
+            </button>
           </div>
-        )}
+
+          {mensagem && (
+            <p
+              className={`mt-4 p-3 rounded-lg font-medium text-sm text-center ${
+                mensagem.includes("✅")
+                  ? "bg-emerald-100 text-emerald-800"
+                  : mensagem.includes("✏️")
+                  ? "bg-yellow-100 text-yellow-800"
+                  : mensagem.includes("🗑️")
+                  ? "bg-red-100 text-red-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {mensagem}
+            </p>
+          )}
+        </div>
+
+        {/* Histórico (compacto e rolável) */}
+        <div className="bg-white shadow-md rounded-2xl p-4 border border-emerald-100">
+          <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-3 flex items-center gap-2">
+            <MdHistory className="text-xl text-emerald-600" /> Histórico de Chamadas ({historico.length})
+          </h3>
+
+          {historico.length === 0 ? (
+            <p className="text-gray-500 italic text-sm text-center">
+              Nenhuma chamada registrada.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
+              {historico.map((c) => {
+                const presentes = c.atletas.filter((a) => a.presente).length
+                return (
+                  <div
+                    key={c._id}
+                    className="p-3 border border-emerald-100 rounded-lg flex justify-between items-center hover:bg-emerald-50 transition"
+                  >
+                    <div>
+                      <p className="font-semibold text-emerald-800 flex items-center gap-2">
+                        <MdGroup className="text-lg text-emerald-700" /> {c.categoria}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                        <MdCalendarToday className="text-base text-emerald-600" />{" "}
+                        {new Date(c.data).toLocaleDateString("pt-BR")}
+                      </p>
+                      <p className="text-xs text-gray-700 mt-1">
+                        Presenças: <span className="font-bold text-emerald-700">{presentes}</span> / {c.atletas.length}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3 text-base">
+                      <button
+                        type="button"
+                        onClick={() => handleEditar(c)}
+                        className="text-emerald-700 hover:text-emerald-900"
+                        title="Editar"
+                      >
+                        <MdEdit />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExcluir(c._id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Excluir"
+                      >
+                        <MdDelete />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
 }
+
 
 
 

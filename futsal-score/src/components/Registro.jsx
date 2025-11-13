@@ -16,7 +16,7 @@ import {
   MdEmojiEvents,
 } from "react-icons/md"
 
-export default function Registro() {
+export default function Registro({ selectedCategoria }) {
   const blank = {
     nome: "",
     categoria: "",
@@ -31,6 +31,8 @@ export default function Registro() {
     foto: "",
     previewUrl: "",
   }
+
+  const categorias = ["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"]
 
   const [form, setForm] = useState(blank)
   const [editingId, setEditingId] = useState(null)
@@ -54,6 +56,12 @@ export default function Registro() {
   useEffect(() => {
     fetchRegistros()
   }, [])
+
+  useEffect(() => {
+    if (selectedCategoria) {
+      setForm(prev => ({ ...prev, categoria: selectedCategoria }))
+    }
+  }, [selectedCategoria])
 
   function handleChange(k, v) {
     setForm((p) => ({ ...p, [k]: v }))
@@ -105,7 +113,8 @@ export default function Registro() {
     setForm({
       ...registro,
       data: new Date(registro.data).toISOString().slice(0, 10),
-      previewUrl: registro.foto ? `http://localhost:3000${registro.foto}` : "",
+      previewUrl: registro.foto ? `${window.location.origin.replace(/:\d+$/, ":3000")}${registro.foto}` : "",
+      foto: "", 
     })
     setEditingId(registro._id)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -125,7 +134,11 @@ export default function Registro() {
     }
   }
 
-  const registrosPorCategoria = lista.reduce((acc, reg) => {
+  const listaFiltrada = selectedCategoria
+    ? lista.filter((r) => r.categoria === selectedCategoria)
+    : lista
+
+  const registrosPorCategoria = listaFiltrada.reduce((acc, reg) => {
     if (!acc[reg.categoria]) acc[reg.categoria] = []
     acc[reg.categoria].push(reg)
     return acc
@@ -135,26 +148,28 @@ export default function Registro() {
     <div className="p-8 bg-white min-h-screen">
       <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
         <MdPersonSearch className="text-5xl text-emerald-600" /> Monitoramento de Atletas
+        {selectedCategoria && (
+          <span className="ml-3 text-lg text-emerald-700">
+            • Categoria: <strong>{selectedCategoria}</strong>
+          </span>
+        )}
       </h2>
       <p className="text-gray-500 mb-8 text-lg">
         Gerencie e acompanhe os indicadores de desempenho dos jogadores.
       </p>
-
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 shadow">
           {error}
         </div>
       )}
-
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12 transition hover:shadow-emerald-300/40 hover:scale-[1.01]"
       >
         <h3 className="text-xl font-bold text-emerald-800 border-b-2 border-emerald-100 pb-3 flex items-center gap-2">
-          <MdSave className="text-2xl text-emerald-600" />{" "}
+          <MdSave className="text-2xl text-emerald-600" />
           {editingId ? "Editar Registro" : "Novo Registro"}
         </h3>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <div>
             <label className="block text-sm font-semibold text-gray-700">Atleta</label>
@@ -167,7 +182,6 @@ export default function Registro() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">Categoria</label>
             <select
@@ -177,14 +191,11 @@ export default function Registro() {
               required
             >
               <option value="">Selecione</option>
-              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map(
-                (cat) => (
-                  <option key={cat}>{cat}</option>
-                )
-              )}
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">Data</label>
             <input
@@ -195,7 +206,6 @@ export default function Registro() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">Status</label>
             <select
@@ -208,18 +218,17 @@ export default function Registro() {
               <option value="Lesão">Lesão</option>
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700">Foto do Atleta</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => {
-                const file = e.target.files[0];
+                const file = e.target.files?.[0]
                 if (file) {
-                  handleChange("foto", file);
-                  const previewUrl = URL.createObjectURL(file);
-                  setForm((prev) => ({ ...prev, previewUrl }));
+                  handleChange("foto", file)
+                  const previewUrl = URL.createObjectURL(file)
+                  setForm((prev) => ({ ...prev, previewUrl }))
                 }
               }}
               className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
@@ -232,7 +241,6 @@ export default function Registro() {
               />
             )}
           </div>
-
           {[
             { id: "treinos", label: "Treinos (Semana)", icon: <MdFitnessCenter /> },
             { id: "lesoes", label: "Lesões", icon: <MdHealing /> },
@@ -255,7 +263,6 @@ export default function Registro() {
             </div>
           ))}
         </div>
-
         <div className="flex justify-end gap-3 pt-4">
           {editingId && (
             <button
@@ -275,10 +282,10 @@ export default function Registro() {
           </button>
         </div>
       </form>
-
       <div className="bg-white shadow-md rounded-2xl p-8 border border-emerald-100">
         <h3 className="text-2xl font-bold text-emerald-800 mb-6 flex items-center gap-2">
-          <MdList className="text-3xl text-emerald-600" /> Registros por Categoria
+          <MdList className="text-3xl text-emerald-600" />
+          {selectedCategoria ? `Registros da categoria ${selectedCategoria}` : "Registros por Categoria"}
         </h3>
 
         {Object.keys(registrosPorCategoria).length === 0 ? (
@@ -288,9 +295,11 @@ export default function Registro() {
         ) : (
           Object.entries(registrosPorCategoria).map(([categoria, registros]) => (
             <div key={categoria} className="mb-10">
-              <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
-                <MdEmojiEvents className="text-yellow-500 text-2xl" /> {categoria}
-              </h4>
+              {!selectedCategoria && (
+                <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
+                  <MdEmojiEvents className="text-yellow-500 text-2xl" /> {categoria}
+                </h4>
+              )}
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {registros
@@ -303,7 +312,7 @@ export default function Registro() {
                     >
                       {r.foto ? (
                         <img
-                          src={`http://localhost:3000${r.foto}`}
+                          src={`${window.location.origin.replace(/:\d+$/, ":3000")}${r.foto}`}
                           alt={r.nome}
                           className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
                         />
@@ -328,6 +337,7 @@ export default function Registro() {
                           >
                             {r.status}
                           </span>
+                          {!selectedCategoria && <span className="ml-2">• {r.categoria}</span>}
                         </p>
 
                         <div className="flex flex-wrap gap-3 text-xs text-gray-700">
@@ -373,5 +383,7 @@ export default function Registro() {
     </div>
   )
 }
+
+
 
 

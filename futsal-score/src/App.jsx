@@ -10,27 +10,15 @@ import Calendario from './components/Calendario'
 import Chamada from './components/Chamada'
 import Admin from './components/Admin'
 import PerfilAtleta from './components/PerfilAtleta'
-import { getUser, clearAuth } from './utils/authStorage' 
-import normalizeUser from './utils/normalizeUser' 
-import { Analytics } from "@vercel/analytics/react"
-
-const sections = {
-  dashboard: <Dashboard />,
-  registro: (onSectionChange) => <Registro onSectionChange={onSectionChange} />,
-  relatorio: <Relatorio />,
-  desempenho: <Desempenho />,
-  exames: <Exames />,
-  calendario: <Calendario />,
-  chamada: <Chamada />,
-  admin: <Admin />,
-  perfil: (user, setUser) => <PerfilAtleta user={user} setUser={setUser} />
-}
-
+import { getUser, clearAuth } from './utils/authStorage'
+import normalizeUser from './utils/normalizeUser'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState('dashboard')
+  const [selectedCategoria, setSelectedCategoria] = useState(null)
 
   useEffect(() => {
     const curr = normalizeUser(getUser())
@@ -47,6 +35,7 @@ export default function App() {
     clearAuth()
     setUser(null)
     setSection('dashboard')
+    setSelectedCategoria(null)
   }
 
   if (loading) return null
@@ -56,27 +45,48 @@ export default function App() {
   }
 
   const renderSection = () => {
-    const SectionComponent = sections[section]
-
-    if (section === 'registro') {
-      return SectionComponent(setSection)
+    switch (section) {
+      case 'dashboard':
+        return <Dashboard />
+      case 'registro':
+        return <Registro selectedCategoria={selectedCategoria} />
+      case 'relatorio':
+        return <Relatorio />
+      case 'desempenho':
+        return <Desempenho />
+      case 'exames':
+        return <Exames />
+      case 'calendario':
+        return <Calendario />
+      case 'chamada':
+        return <Chamada />
+      case 'admin':
+        return <Admin />
+      case 'perfil':
+        return <PerfilAtleta user={user} setUser={setUser} />
+      default:
+        return <Dashboard />
     }
-    if (section === 'perfil') {
-      return SectionComponent(user, setUser)
-    }
-    
-    return SectionComponent
   }
-
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <Sidebar user={user} onLogout={handleLogout} setSection={setSection} />
-      <main className="ml-56 max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <Sidebar
+        user={user}
+        onLogout={handleLogout}
+        setSection={setSection}
+        selectedCategoria={selectedCategoria}
+        setSelectedCategoria={setSelectedCategoria}
+      />
+
+      <main className="ml-64 max-w-7xl mx-auto px-4 py-6 space-y-6 transition-all duration-300">
         {renderSection()}
       </main>
+
+      <Analytics />
     </div>
   )
 }
+
 
 
