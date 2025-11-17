@@ -6,6 +6,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import client from "prom-client"
 
+// Rotas
 import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import registroRoutes from "./routes/registroRoutes.js"
@@ -19,9 +20,11 @@ dotenv.config()
 const app = express()
 app.use(express.json())
 
+// ============ CORS CORRIGIDO ============
 app.use(
   cors({
     origin: [
+      "https://frontend-puffinho11s-projects.vercel.app",
       "https://z4esporte.com",
       "https://z4esporte.vercel.app",
       "http://localhost:5173",
@@ -32,16 +35,20 @@ app.use(
   })
 )
 
+// Caminhos
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
 
+// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Conectado ao MongoDB Atlas"))
   .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
 
+// Rotas de API
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)
@@ -62,18 +69,18 @@ app.get("/api/test", (req, res) => {
       mongoose.connection.readyState === 1
         ? "🟢 Conectado ao MongoDB"
         : "🔴 Desconectado do MongoDB",
-    time: new Date().toLocaleString("pt-BR"),
+    time: new Date().toLocaleString("pt-BR")
   })
 })
 
 const register = new client.Registry()
 client.collectDefaultMetrics({ register })
+
 app.get("/metrics", async (req, res) => {
   res.setHeader("Content-Type", register.contentType)
   res.end(await register.metrics())
 })
 
-// 🚀 Inicialização inteligente com fallback de porta
 const DEFAULT_PORT = process.env.PORT || 8080
 
 function startServer(port) {
@@ -92,6 +99,7 @@ function startServer(port) {
 }
 
 startServer(DEFAULT_PORT)
+
 
 
 

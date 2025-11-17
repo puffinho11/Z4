@@ -1,8 +1,10 @@
 import axios from "axios"
 import { getToken, clearAuth } from "./utils/authStorage"
 
+const PROD_URL = "https://z4esportes-e2e56b52b1d2.herokuapp.com"
+
 export const SERVER_URL =
-  import.meta.env.VITE_API_URL?.trim() || "http://localhost:8080"
+  import.meta.env.VITE_API_URL?.trim() || PROD_URL
 
 console.log("🌐 Conectando ao backend:", SERVER_URL)
 
@@ -28,6 +30,7 @@ api.interceptors.response.use(
       const { status, data } = error.response
       const msg = data?.message || data?.msg || error.message
       console.error(`❌ Erro ${status}:`, msg)
+
       if (status === 401 || status === 403) {
         alert("⚠️ Sessão expirada. Faça login novamente.")
         clearAuth()
@@ -38,6 +41,7 @@ api.interceptors.response.use(
     } else {
       console.error("❌ Erro de configuração:", error.message)
     }
+
     return Promise.reject(error)
   }
 )
@@ -78,4 +82,3 @@ export const createUser = (data) => api.post("/users", data)
 export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role })
 
 export default api
-
