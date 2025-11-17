@@ -19,7 +19,8 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState('dashboard')
   const [selectedCategoria, setSelectedCategoria] = useState(null)
-  const [isOpen, setIsOpen] = useState(false) // controle sidebar
+  const [isOpen, setIsOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
     const curr = normalizeUser(getUser())
@@ -35,43 +36,29 @@ export default function App() {
   function handleLogout() {
     clearAuth()
     setUser(null)
-    setSection('dashboard')
-    setSelectedCategoria(null)
   }
 
   if (loading) return null
 
-  if (!user) {
-    return <LoginModal onLogin={handleLogin} />
-  }
+  if (!user) return <LoginModal onLogin={handleLogin} />
 
   const renderSection = () => {
     switch (section) {
-      case 'dashboard':
-        return <Dashboard />
-      case 'registro':
-        return <Registro selectedCategoria={selectedCategoria} />
-      case 'relatorio':
-        return <Relatorio />
-      case 'desempenho':
-        return <Desempenho />
-      case 'exames':
-        return <Exames />
-      case 'calendario':
-        return <Calendario />
-      case 'chamada':
-        return <Chamada />
-      case 'admin':
-        return <Admin />
-      case 'perfil':
-        return <PerfilAtleta user={user} setUser={setUser} />
-      default:
-        return <Dashboard />
+      case 'dashboard': return <Dashboard />
+      case 'registro': return <Registro selectedCategoria={selectedCategoria} />
+      case 'relatorio': return <Relatorio />
+      case 'desempenho': return <Desempenho />
+      case 'exames': return <Exames />
+      case 'calendario': return <Calendario />
+      case 'chamada': return <Chamada />
+      case 'admin': return <Admin />
+      case 'perfil': return <PerfilAtleta user={user} setUser={setUser} />
+      default: return <Dashboard />
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar
         user={user}
         onLogout={handleLogout}
@@ -80,9 +67,16 @@ export default function App() {
         setSelectedCategoria={setSelectedCategoria}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
       />
 
-      <main className="md:ml-64 px-4 py-6 transition-all duration-300">
+      <main
+        className={`
+          transition-all duration-300 px-4 py-6
+          ${collapsed ? "md:ml-16" : "md:ml-64"}
+        `}
+      >
         {renderSection()}
       </main>
 
@@ -90,6 +84,7 @@ export default function App() {
     </div>
   )
 }
+
 
 
 
