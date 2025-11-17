@@ -20,7 +20,6 @@ dotenv.config()
 const app = express()
 app.use(express.json())
 
-// ============ CORS CORRIGIDO ============
 app.use(
   cors({
     origin: [
@@ -35,20 +34,17 @@ app.use(
   })
 )
 
-// Caminhos
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
 
-// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Conectado ao MongoDB Atlas"))
   .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
 
-// Rotas de API
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)

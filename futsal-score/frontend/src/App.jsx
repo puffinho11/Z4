@@ -19,6 +19,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState('dashboard')
   const [selectedCategoria, setSelectedCategoria] = useState(null)
+  const [isOpen, setIsOpen] = useState(false) // controle sidebar
 
   useEffect(() => {
     const curr = normalizeUser(getUser())
@@ -77,9 +78,11 @@ export default function App() {
         setSection={setSection}
         selectedCategoria={selectedCategoria}
         setSelectedCategoria={setSelectedCategoria}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
       />
 
-      <main className="ml-64 max-w-7xl mx-auto px-4 py-6 space-y-6 transition-all duration-300">
+      <main className="md:ml-64 px-4 py-6 transition-all duration-300">
         {renderSection()}
       </main>
 
