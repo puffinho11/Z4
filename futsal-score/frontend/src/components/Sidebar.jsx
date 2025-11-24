@@ -103,19 +103,17 @@ export default function Sidebar({
           >
             <MdClose size={28} />
           </button>
-
-          {/* LISTA */}
           <nav className="mt-6 px-2 space-y-1">
             {menuItems.map((item) => {
-              const isRegistro = item.section === "registro";
+              const isRegistro = item.section === "registro"
 
               return (
                 <div key={item.section}>
                   <button
                     onClick={() => {
-                      if (isRegistro) setOpenRegistro(!openRegistro);
-                      setSection(item.section);
-                      setIsOpen(false); // mobile fecha
+                      if (isRegistro) setOpenRegistro(!openRegistro)
+                      setSection(item.section)
+                      setIsOpen(false)
                     }}
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-emerald-700/60 transition"
                   >
@@ -150,7 +148,7 @@ export default function Sidebar({
                     </ul>
                   )}
                 </div>
-              );
+              )
             })}
           </nav>
         </div>
