@@ -6,7 +6,6 @@ import path from "path"
 import { fileURLToPath } from "url"
 import client from "prom-client"
 
-// Rotas
 import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import registroRoutes from "./routes/registroRoutes.js"

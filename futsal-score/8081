@@ -2927,3 +2927,40 @@ Node.js v22.18.0
  INFO  Accepting connections at http://localhost:3000
  INFO  Accepting connections at http://localhost:3000
  INFO  Accepting connections at http://localhost:57575
+ INFO  Accepting connections at http://localhost:3000
+ INFO  Accepting connections at http://localhost:3000
+ HTTP  25/11/2025 14:18:08 ::1 GET /
+ HTTP  25/11/2025 14:18:08 ::1 Returned 200 in 257 ms
+ HTTP  25/11/2025 14:18:08 ::1 GET /favicon.ico
+ HTTP  25/11/2025 14:18:08 ::1 Returned 404 in 2 ms
+ HTTP  25/11/2025 14:18:10 ::1 GET /
+ HTTP  25/11/2025 14:18:10 ::1 Returned 200 in 3 ms
+ HTTP  25/11/2025 14:18:11 ::1 GET /.gitignore
+ HTTP  25/11/2025 14:18:11 ::1 Returned 200 in 5 ms
+ HTTP  25/11/2025 14:18:13 ::1 GET /backend/
+ HTTP  25/11/2025 14:18:13 ::1 Returned 200 in 4 ms
+ HTTP  25/11/2025 14:18:14 ::1 GET /backend/db.js
+ HTTP  25/11/2025 14:18:14 ::1 Returned 200 in 1 ms
+ HTTP  25/11/2025 14:18:20 ::1 GET /.vercel/
+ HTTP  25/11/2025 14:18:20 ::1 Returned 200 in 2 ms
+ HTTP  25/11/2025 14:18:54 ::1 GET /
+ HTTP  25/11/2025 14:18:54 ::1 Returned 200 in 5 ms
+ HTTP  25/11/2025 14:25:31 ::1 OPTIONS /login
+ HTTP  25/11/2025 14:25:31 ::1 Returned 404 in 1 ms
+ HTTP  25/11/2025 14:25:40 ::1 OPTIONS /login
+ HTTP  25/11/2025 14:25:40 ::1 Returned 404 in 1 ms
+ HTTP  25/11/2025 14:28:26 ::1 GET /
+ HTTP  25/11/2025 14:28:26 ::1 Returned 200 in 3 ms
+ INFO  Accepting connections at http://localhost:3000
+ HTTP  26/11/2025 10:03:11 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:03:11 ::1 Returned 404 in 224 ms
+ HTTP  26/11/2025 10:06:02 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:06:02 ::1 Returned 404 in 2 ms
+ HTTP  26/11/2025 10:12:16 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:12:16 ::1 Returned 404 in 2 ms
+ HTTP  26/11/2025 10:13:55 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:13:55 ::1 Returned 404 in 1 ms
+ HTTP  26/11/2025 10:36:59 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:36:59 ::1 Returned 404 in 1 ms
+ HTTP  26/11/2025 10:42:46 ::1 GET /uploads/registros/1764014199365-300101488.jpeg
+ HTTP  26/11/2025 10:42:46 ::1 Returned 404 in 2 ms
