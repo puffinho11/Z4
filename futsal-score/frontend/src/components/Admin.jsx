@@ -115,7 +115,7 @@ export default function Admin() {
   }
 
   return (
-    <section className="p-8 ml-64 min-h-screen bg-white">
+    <section className="p-4 sm:p-6 lg:p-8 ml-0 lg:ml-64 min-h-screen bg-white">
       <h2 className="text-3xl font-bold mb-8 text-emerald-800 flex items-center gap-2">
         <MdAdminPanelSettings className="text-4xl text-emerald-600" />
         Gestão de Usuários
