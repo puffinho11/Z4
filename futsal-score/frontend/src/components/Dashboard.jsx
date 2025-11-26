@@ -77,7 +77,7 @@ export default function Dashboard() {
   )
 
   return (
-    <section className="p-8 ml-64 min-h-screen bg-white">
+    <section className="p-4 sm:p-6 lg:p-8 ml-0 lg:ml-64 min-h-screen bg-white">
       {loading && <p className="text-emerald-600 animate-pulse">Carregando...</p>}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 shadow">
