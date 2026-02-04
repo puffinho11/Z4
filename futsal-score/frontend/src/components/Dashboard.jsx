@@ -46,15 +46,18 @@ export default function Dashboard() {
   }, [])
 
   const atletasCount = [...new Set(registros.map((r) => r.nome))].length
+
   const ultimos30 = registros.filter((r) => {
     const d = new Date(r.data)
     const ago = new Date()
     ago.setDate(ago.getDate() - 30)
     return d >= ago
   }).length
+
   const emRecuperacao = registros.filter(
     (r) => r.status === "Recuperação" || r.status === "Lesão"
   ).length
+
   const totalLesoes = registros.reduce((s, r) => s + (+r.lesoes || 0), 0)
   const totalGols = registros.reduce((s, r) => s + (+r.gols || 0), 0)
   const totalAmarelos = registros.reduce((s, r) => s + (+r.amarelos || 0), 0)
@@ -71,14 +74,12 @@ export default function Dashboard() {
     .sort((a, b) => a.dateTime - b.dateTime)
 
   const proximoEvento = eventosFuturos[0]
-  const listaProximosEventos = eventosFuturos.slice(
-    proximoEvento ? 1 : 0,
-    6
-  )
+  const listaProximosEventos = eventosFuturos.slice(proximoEvento ? 1 : 0, 6)
 
   return (
-    <section className="p-4 sm:p-6 lg:p-8 ml-0 lg:ml-64 min-h-screen bg-white">
+    <section className="p-4 sm:p-6 lg:p-8 ml-0 lg:ml-64 min-h-screen bg-slate-50">
       {loading && <p className="text-emerald-600 animate-pulse">Carregando...</p>}
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 shadow">
           {error}
@@ -108,6 +109,7 @@ export default function Dashboard() {
             />
           </div>
 
+          {/* ✅ TIRADO o apóstrofo que deixava o grid torto */}
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ResumoOcorrencias
               {...{ totalLesoes, totalGols, totalAmarelos, totalVermelhos }}
@@ -146,25 +148,59 @@ function ResumoOcorrencias({
   totalVermelhos,
 }) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md border border-emerald-100 hover:shadow-lg transition">
-      <h3 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2 border-b pb-2">
+    <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 hover:shadow-lg transition">
+      <h3 className="text-lg font-bold mb-4 text-emerald-800 flex items-center gap-2 border-b border-slate-200 pb-3">
         <MdSportsSoccer className="text-xl text-emerald-600" /> Resumo Geral
       </h3>
-      <ResumoItem label="Lesões" value={totalLesoes} color="red" icon={MdOutlineHealing} />
-      <ResumoItem label="Gols" value={totalGols} color="emerald" icon={MdSportsSoccer} />
-      <ResumoItem label="Cartões Amarelos" value={totalAmarelos} color="yellow" icon={MdOutlineStyle} />
-      <ResumoItem label="Cartões Vermelhos" value={totalVermelhos} color="red" icon={MdOutlineStyle} />
+
+      <div className="space-y-2">
+        <ResumoItem label="Lesões" value={totalLesoes} tone="red" icon={MdOutlineHealing} />
+        <ResumoItem label="Gols" value={totalGols} tone="emerald" icon={MdSportsSoccer} />
+        <ResumoItem
+          label="Cartões Amarelos"
+          value={totalAmarelos}
+          tone="yellow"
+          icon={MdOutlineStyle}
+        />
+        <ResumoItem
+          label="Cartões Vermelhos"
+          value={totalVermelhos}
+          tone="red"
+          icon={MdOutlineStyle}
+          noBorder
+        />
+      </div>
     </div>
   )
 }
 
-function ResumoItem({ label, value, color, icon: Icon }) {
+/**
+ * ✅ sem classes dinâmicas do tailwind (text-${color}-600)
+ * porque isso quebra no build
+ */
+function ResumoItem({ label, value, tone = "emerald", icon: Icon, noBorder = false }) {
+  const toneStyles = {
+    red: { icon: "text-red-600", value: "text-red-700", badge: "bg-red-50 border-red-200" },
+    emerald: { icon: "text-emerald-600", value: "text-emerald-700", badge: "bg-emerald-50 border-emerald-200" },
+    yellow: { icon: "text-yellow-600", value: "text-yellow-700", badge: "bg-yellow-50 border-yellow-200" },
+  }
+
+  const t = toneStyles[tone] || toneStyles.emerald
+
   return (
-    <div className="flex justify-between border-b pb-2 mb-2 items-center">
-      <span className="text-sm text-gray-600 flex items-center gap-2">
-        <Icon className={`text-${color}-600`} /> {label}
+    <div
+      className={`flex items-center justify-between py-2 ${
+        noBorder ? "" : "border-b border-slate-100"
+      }`}
+    >
+      <span className="text-sm text-slate-600 flex items-center gap-2">
+        <Icon className={`${t.icon} text-lg`} />
+        {label}
       </span>
-      <span className={`text-xl font-bold text-${color}-700`}>{value}</span>
+
+      <span className={`text-lg font-extrabold ${t.value} border ${t.badge} px-3 py-1 rounded-full`}>
+        {value}
+      </span>
     </div>
   )
 }
@@ -175,6 +211,7 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
       <h3 className="text-xl font-bold text-emerald-800 flex items-center gap-2">
         <MdOutlineEvent className="text-2xl text-emerald-700" /> Próximos Eventos
       </h3>
+
       {proximoEvento ? (
         <Countdown
           targetDate={proximoEvento.dateTime.toISOString()}
@@ -184,25 +221,27 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
           eventLocal={proximoEvento.local}
         />
       ) : (
-        <div className="bg-white p-6 rounded-xl shadow-md text-gray-500 border border-emerald-100 flex flex-col items-center">
+        <div className="bg-white p-6 rounded-2xl shadow-md text-slate-500 border border-slate-200 flex flex-col items-center">
           <p className="italic font-semibold">Nenhum evento futuro</p>
         </div>
       )}
+
       {listaProximosEventos.length > 0 && (
-        <div className="bg-white p-4 rounded-xl shadow-md border border-emerald-100">
-          <h4 className="text-md font-semibold text-emerald-700 mb-3 border-b pb-2 flex items-center gap-2">
+        <div className="bg-white p-4 rounded-2xl shadow-md border border-slate-200">
+          <h4 className="text-md font-semibold text-emerald-700 mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
             <MdOutlineEvent className="text-lg" /> Outros Eventos
           </h4>
+
           <ul className="space-y-2">
             {listaProximosEventos.map((ev, i) => (
               <li
                 key={i}
-                className="flex justify-between items-center text-sm text-gray-600 border-l-4 border-emerald-200 pl-2 py-1"
+                className="flex justify-between items-center text-sm text-slate-600 border-l-4 border-emerald-200 pl-2 py-1"
               >
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-slate-800">
                   {ev.titulo} {ev.adversario ? `vs ${ev.adversario}` : ""}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   {ev.dateTime.toLocaleDateString("pt-BR")}{" "}
                   {ev.hora && `às ${ev.hora}`}
                 </span>
@@ -214,6 +253,9 @@ function Eventos({ proximoEvento, listaProximosEventos }) {
     </div>
   )
 }
+
+
+
 
 
 
