@@ -13,13 +13,12 @@ import chamadaRoutes from "./routes/chamadaRoutes.js"
 import calendarioRoutes from "./routes/calendarioRoutes.js"
 import exameRoutes from "./routes/exameRoutes.js"
 import timeRoutes from "./routes/timeRoutes.js"
-import uploadRoutes from "./routes/uploadRoutes.js";
-
-app.use("/upload", uploadRoutes);
+import uploadRoutes from "./routes/uploadRoutes.js"
 
 dotenv.config()
 
 const app = express()
+
 app.use(express.json())
 
 app.use(
@@ -36,11 +35,7 @@ app.use(
   })
 )
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
-app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
+app.use("/upload", uploadRoutes)
 
 mongoose
   .connect(process.env.MONGO_URI)
