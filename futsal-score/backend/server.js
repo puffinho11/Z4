@@ -93,4 +93,15 @@ function startServer(port) {
   })
 }
 
+const cloudinary = require("cloudinary").v2;
+
+app.get("/test-cloudinary", async (req, res) => {
+  try {
+    const result = await cloudinary.api.ping();
+    res.json({ ok: true, result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 startServer(DEFAULT_PORT)
