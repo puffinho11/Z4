@@ -7,6 +7,15 @@ import { fileURLToPath } from "url"
 import client from "prom-client"
 
 import authRoutes from "./routes/authRoutes.js"
+import express from "express"
+import mongoose from "mongoose"
+import cors from "cors"
+import dotenv from "dotenv"
+import path from "path"
+import { fileURLToPath } from "url"
+import client from "prom-client"
+
+import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import registroRoutes from "./routes/registroRoutes.js"
 import chamadaRoutes from "./routes/chamadaRoutes.js"
@@ -18,7 +27,6 @@ import uploadRoutes from "./routes/uploadRoutes.js"
 dotenv.config()
 
 const app = express()
-
 app.use(express.json())
 
 app.use(
@@ -35,7 +43,11 @@ app.use(
   })
 )
 
-app.use("/upload", uploadRoutes)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -49,6 +61,9 @@ app.use("/api/chamadas", chamadaRoutes)
 app.use("/api/calendario", calendarioRoutes)
 app.use("/api/exames", exameRoutes)
 app.use("/api/times", timeRoutes)
+
+// ✅ AQUI É O PONTO DO 404:
+app.use("/api/upload", uploadRoutes)
 
 app.get("/", (req, res) => {
   res.send("🚀 Servidor Z4 rodando com sucesso!")

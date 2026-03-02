@@ -27,8 +27,8 @@ const normalizeUser = (u) => {
 
 const getFullPhotoUrl = (pathOrUrl) => {
   if (!pathOrUrl) return null
-  if (typeof pathOrUrl === "string" && pathOrUrl.startsWith("http")) return pathOrUrl // Cloudinary
-  return `${SERVER_URL}${pathOrUrl}` // caso antigo (uploads local)
+  if (typeof pathOrUrl === "string" && pathOrUrl.startsWith("http")) return pathOrUrl
+  return `${SERVER_URL}${pathOrUrl}`
 }
 
 export default function PerfilAtleta({ user, setUser }) {
@@ -46,6 +46,12 @@ export default function PerfilAtleta({ user, setUser }) {
     }
   }, [mensagem])
 
+  useEffect(() => {
+    return () => {
+      if (previewFoto) URL.revokeObjectURL(previewFoto)
+    }
+  }, [previewFoto])
+
   const fotoSrc = previewFoto
     ? previewFoto
     : user.fotoUrl
@@ -55,10 +61,11 @@ export default function PerfilAtleta({ user, setUser }) {
     : "https://cdn-icons-png.flaticon.com/512/847/847969.png"
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files?.[0]
     if (file) {
       setNovaFoto(file)
-      setPreviewFoto(URL.createObjectURL(file))
+      const url = URL.createObjectURL(file)
+      setPreviewFoto(url)
       setMensagem("📁 Foto pronta para upload.")
     }
   }
@@ -70,19 +77,21 @@ export default function PerfilAtleta({ user, setUser }) {
     }
 
     setLoading(true)
-    const formData = new FormData()
 
-    // ✅ IMPORTANTE: backend está com .single("file")
-    formData.append("file", novaFoto)
+    const formData = new FormData()
+    formData.append("foto", novaFoto) // ✅ trocado de "file" para "foto"
 
     try {
-      // ✅ IMPORTANTE: rota do backend é /upload/foto
       const response = await api.post("/upload/foto", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       })
 
-      // uploadRoutes retorna: { ok: true, url, public_id }
-      const { url } = response.data || {}
+      const url =
+        response.data?.url ||
+        response.data?.fotoUrl ||
+        response.data?.secure_url ||
+        response.data?.data?.url ||
+        response.data?.data?.secure_url
 
       if (!url) {
         setMensagem("❌ Upload falhou: URL não retornou.")
@@ -95,7 +104,6 @@ export default function PerfilAtleta({ user, setUser }) {
         return
       }
 
-      // Atualiza o usuário localmente (para aparecer na hora)
       const updatedUser = normalizeUser({
         ...user,
         fotoUrl: url
@@ -106,9 +114,14 @@ export default function PerfilAtleta({ user, setUser }) {
 
       setMensagem("✅ Foto atualizada com sucesso!")
       setNovaFoto(null)
+      if (previewFoto) URL.revokeObjectURL(previewFoto)
       setPreviewFoto("")
     } catch (error) {
-      setMensagem(error.response?.data?.error || "❌ Erro ao enviar a foto.")
+      const msg =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "❌ Erro ao enviar a foto."
+      setMensagem(msg)
     } finally {
       setLoading(false)
     }
@@ -127,7 +140,7 @@ export default function PerfilAtleta({ user, setUser }) {
         username: novoNome
       })
 
-      const { user: updatedUser, message } = response.data
+      const { user: updatedUser, message } = response.data || {}
       const token = getToken()
 
       if (!token || !updatedUser) {
