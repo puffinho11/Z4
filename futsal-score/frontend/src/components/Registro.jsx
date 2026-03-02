@@ -13,7 +13,7 @@ import {
   MdPhotoCamera,
   MdDelete,
   MdEdit,
-  MdEmojiEvents,
+  MdEmojiEvents
 } from "react-icons/md"
 
 export default function Registro({ selectedCategoria }) {
@@ -28,17 +28,28 @@ export default function Registro({ selectedCategoria }) {
     gols: 0,
     amarelos: 0,
     vermelhos: 0,
-    foto: "",
-    previewUrl: "",
+    foto: "", 
+    previewUrl: ""
   }
 
-  const categorias = ["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"]
+  const categorias = [
+    "Sub-7",
+    "Sub-9",
+    "Sub-11",
+    "Sub-13",
+    "Sub-15",
+    "Sub-17",
+    "Sub-20",
+    "Adulto"
+  ]
 
   const [form, setForm] = useState(blank)
   const [editingId, setEditingId] = useState(null)
   const [lista, setLista] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  const [fotoFile, setFotoFile] = useState(null)
 
   async function fetchRegistros() {
     setLoading(true)
@@ -59,7 +70,7 @@ export default function Registro({ selectedCategoria }) {
 
   useEffect(() => {
     if (selectedCategoria) {
-      setForm(prev => ({ ...prev, categoria: selectedCategoria }))
+      setForm((prev) => ({ ...prev, categoria: selectedCategoria }))
     }
   }, [selectedCategoria])
 
@@ -69,8 +80,23 @@ export default function Registro({ selectedCategoria }) {
 
   function resetForm() {
     setForm(blank)
+    setFotoFile(null)
     setEditingId(null)
     setError(null)
+  }
+
+  async function uploadRegistroFotoIfNeeded() {
+    if (!fotoFile) return null
+
+    const fd = new FormData()
+    fd.append("file", fotoFile)
+
+    const { data } = await api.post("/upload/registro", fd, {
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+
+    if (!data?.url) throw new Error("Upload falhou: URL não retornou.")
+    return data.url
   }
 
   async function handleSubmit(e) {
@@ -78,22 +104,25 @@ export default function Registro({ selectedCategoria }) {
     setLoading(true)
     setError(null)
 
-    const dataToSend = new FormData()
-    Object.entries(form).forEach(([key, value]) => {
-      if (key !== "previewUrl") dataToSend.append(key, value)
-    })
-
     try {
+      let fotoUrl = form.foto
+      if (fotoFile) {
+        fotoUrl = await uploadRegistroFotoIfNeeded()
+      }
+
+      const payload = {
+        ...form,
+        foto: fotoUrl || ""
+      }
+
+      delete payload.previewUrl
+
       let res
       if (editingId) {
-        res = await api.put(`/registros/${editingId}`, dataToSend, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
+        res = await api.put(`/registros/${editingId}`, payload)
         setLista(lista.map((r) => (r._id === editingId ? res.data : r)))
       } else {
-        res = await api.post("/registros", dataToSend, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
+        res = await api.post("/registros", payload)
         setLista([...lista, res.data])
       }
 
@@ -102,7 +131,7 @@ export default function Registro({ selectedCategoria }) {
     } catch (err) {
       console.error(err)
       const errorMessage =
-        err.response?.data?.msg || "Erro ao salvar registro. Verifique o console."
+        err.response?.data?.msg || err.message || "Erro ao salvar registro. Verifique o console."
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -113,9 +142,10 @@ export default function Registro({ selectedCategoria }) {
     setForm({
       ...registro,
       data: new Date(registro.data).toISOString().slice(0, 10),
-      previewUrl: registro.foto ? `${window.location.origin.replace(/:\d+$/, ":3000")}${registro.foto}` : "",
-      foto: "", 
+      previewUrl: registro.foto || "",
+      foto: registro.foto || ""
     })
+    setFotoFile(null)
     setEditingId(registro._id)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
@@ -144,6 +174,8 @@ export default function Registro({ selectedCategoria }) {
     return acc
   }, {})
 
+  const isCloudUrl = (v) => typeof v === "string" && v.startsWith("http")
+
   return (
     <div className="p-8 bg-white min-h-screen">
       <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
@@ -154,14 +186,17 @@ export default function Registro({ selectedCategoria }) {
           </span>
         )}
       </h2>
+
       <p className="text-gray-500 mb-8 text-lg">
         Gerencie e acompanhe os indicadores de desempenho dos jogadores.
       </p>
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6 shadow">
           {error}
         </div>
       )}
+
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12 transition hover:shadow-emerald-300/40 hover:scale-[1.01]"
@@ -170,6 +205,7 @@ export default function Registro({ selectedCategoria }) {
           <MdSave className="text-2xl text-emerald-600" />
           {editingId ? "Editar Registro" : "Novo Registro"}
         </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <div>
             <label className="block text-sm font-semibold text-gray-700">Atleta</label>
@@ -182,6 +218,7 @@ export default function Registro({ selectedCategoria }) {
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700">Categoria</label>
             <select
@@ -192,10 +229,13 @@ export default function Registro({ selectedCategoria }) {
             >
               <option value="">Selecione</option>
               {categorias.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700">Data</label>
             <input
@@ -206,6 +246,7 @@ export default function Registro({ selectedCategoria }) {
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700">Status</label>
             <select
@@ -218,6 +259,7 @@ export default function Registro({ selectedCategoria }) {
               <option value="Lesão">Lesão</option>
             </select>
           </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700">Foto do Atleta</label>
             <input
@@ -226,13 +268,14 @@ export default function Registro({ selectedCategoria }) {
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) {
-                  handleChange("foto", file)
+                  setFotoFile(file)
                   const previewUrl = URL.createObjectURL(file)
                   setForm((prev) => ({ ...prev, previewUrl }))
                 }
               }}
               className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
             />
+
             {form.previewUrl && (
               <img
                 src={form.previewUrl}
@@ -241,13 +284,14 @@ export default function Registro({ selectedCategoria }) {
               />
             )}
           </div>
+
           {[
             { id: "treinos", label: "Treinos (Semana)", icon: <MdFitnessCenter /> },
             { id: "lesoes", label: "Lesões", icon: <MdHealing /> },
             { id: "vo2", label: "VO₂ Máx.", icon: <MdOutlineSpeed /> },
             { id: "gols", label: "Gols", icon: <MdSportsSoccer /> },
             { id: "amarelos", label: "Cartões Amarelos", icon: <MdOutlineStyle /> },
-            { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> },
+            { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> }
           ].map((f) => (
             <div key={f.id}>
               <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
@@ -263,6 +307,7 @@ export default function Registro({ selectedCategoria }) {
             </div>
           ))}
         </div>
+
         <div className="flex justify-end gap-3 pt-4">
           {editingId && (
             <button
@@ -273,6 +318,7 @@ export default function Registro({ selectedCategoria }) {
               <MdOutlineCancel /> Cancelar
             </button>
           )}
+
           <button
             type="submit"
             className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:shadow-emerald-300/50 hover:scale-[1.02] transition flex items-center gap-2"
@@ -282,6 +328,7 @@ export default function Registro({ selectedCategoria }) {
           </button>
         </div>
       </form>
+
       <div className="bg-white shadow-md rounded-2xl p-8 border border-emerald-100">
         <h3 className="text-2xl font-bold text-emerald-800 mb-6 flex items-center gap-2">
           <MdList className="text-3xl text-emerald-600" />
@@ -312,7 +359,7 @@ export default function Registro({ selectedCategoria }) {
                     >
                       {r.foto ? (
                         <img
-                          src={`${window.location.origin.replace(/:\d+$/, ":3000")}${r.foto}`}
+                          src={isCloudUrl(r.foto) ? r.foto : r.foto}
                           alt={r.nome}
                           className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
                         />

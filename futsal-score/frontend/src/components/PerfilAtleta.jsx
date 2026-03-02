@@ -10,7 +10,7 @@ import {
   MdFileUpload,
   MdSportsSoccer,
   MdBadge,
-  MdPerson,
+  MdPerson
 } from "react-icons/md"
 
 const normalizeUser = (u) => {
@@ -21,13 +21,14 @@ const normalizeUser = (u) => {
     nome: u.nome || u.username || "Usuário",
     fotoUrl: u.fotoUrl || u.foto || "",
     role: u.role || "user",
-    time: u.time || "SemTime",
+    time: u.time || "SemTime"
   }
 }
 
-const getFullPhotoUrl = (relativePath) => {
-  if (!relativePath) return null
-  return `${SERVER_URL}${relativePath}`
+const getFullPhotoUrl = (pathOrUrl) => {
+  if (!pathOrUrl) return null
+  if (typeof pathOrUrl === "string" && pathOrUrl.startsWith("http")) return pathOrUrl // Cloudinary
+  return `${SERVER_URL}${pathOrUrl}` // caso antigo (uploads local)
 }
 
 export default function PerfilAtleta({ user, setUser }) {
@@ -67,29 +68,47 @@ export default function PerfilAtleta({ user, setUser }) {
       setMensagem("⚠️ Selecione uma nova foto primeiro.")
       return
     }
+
     setLoading(true)
     const formData = new FormData()
-    formData.append("foto", novaFoto)
+
+    // ✅ IMPORTANTE: backend está com .single("file")
+    formData.append("file", novaFoto)
+
     try {
-      const response = await api.post("/auth/upload/foto", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // ✅ IMPORTANTE: rota do backend é /upload/foto
+      const response = await api.post("/upload/foto", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       })
-      const { user: updatedUser, message } = response.data
-      const token = getToken()
-      if (!token || !updatedUser) {
-        setMensagem("❌ Erro ao atualizar a foto.")
+
+      // uploadRoutes retorna: { ok: true, url, public_id }
+      const { url } = response.data || {}
+
+      if (!url) {
+        setMensagem("❌ Upload falhou: URL não retornou.")
         return
       }
-      const normalizedUser = normalizeUser(updatedUser)
-      saveUser({ token, user: normalizedUser })
-      setUser(normalizedUser)
-      setMensagem(message || "✅ Foto atualizada com sucesso!")
+
+      const token = getToken()
+      if (!token) {
+        setMensagem("❌ Token não encontrado. Faça login novamente.")
+        return
+      }
+
+      // Atualiza o usuário localmente (para aparecer na hora)
+      const updatedUser = normalizeUser({
+        ...user,
+        fotoUrl: url
+      })
+
+      saveUser({ token, user: updatedUser })
+      setUser(updatedUser)
+
+      setMensagem("✅ Foto atualizada com sucesso!")
       setNovaFoto(null)
       setPreviewFoto("")
     } catch (error) {
-      setMensagem(
-        error.response?.data?.message || "❌ Erro ao enviar a foto."
-      )
+      setMensagem(error.response?.data?.error || "❌ Erro ao enviar a foto.")
     } finally {
       setLoading(false)
     }
@@ -100,26 +119,29 @@ export default function PerfilAtleta({ user, setUser }) {
       setEditandoNome(false)
       return
     }
+
     setLoading(true)
+
     try {
       const response = await api.put(`/users/${user.username}`, {
-        username: novoNome,
+        username: novoNome
       })
+
       const { user: updatedUser, message } = response.data
       const token = getToken()
+
       if (!token || !updatedUser) {
         setMensagem("❌ Erro ao atualizar nome.")
         return
       }
+
       const normalizedUser = normalizeUser(updatedUser)
       saveUser({ token, user: normalizedUser })
       setUser(normalizedUser)
       setMensagem(message || "✅ Nome atualizado!")
       setEditandoNome(false)
     } catch (error) {
-      setMensagem(
-        error.response?.data?.message || "❌ Erro ao atualizar o nome."
-      )
+      setMensagem(error.response?.data?.message || "❌ Erro ao atualizar o nome.")
     } finally {
       setLoading(false)
     }
@@ -152,6 +174,7 @@ export default function PerfilAtleta({ user, setUser }) {
               alt="Foto de Perfil"
               className="w-40 h-40 rounded-full border-4 border-emerald-500 shadow-md object-cover transition-transform group-hover:scale-105"
             />
+
             <label
               className={`absolute bottom-2 right-2 p-3 rounded-full cursor-pointer shadow-md transition ${
                 loading
@@ -210,6 +233,7 @@ export default function PerfilAtleta({ user, setUser }) {
                     <button
                       onClick={() => setEditandoNome(true)}
                       className="text-emerald-600 hover:text-emerald-800"
+                      disabled={loading}
                     >
                       <MdEdit className="text-xl" />
                     </button>
@@ -242,7 +266,7 @@ export default function PerfilAtleta({ user, setUser }) {
                 <div>
                   <p className="text-sm text-gray-500">Time</p>
                   <p className="text-lg font-semibold text-gray-800">
-                    {user.time.nome || user.time}
+                    {user.time?.nome || user.time}
                   </p>
                 </div>
               </div>
