@@ -1,24 +1,50 @@
-import express from "express";
-import { uploadFoto, uploadRegistro } from "../middleware/uploadCloudinary.js";
+import { Router } from "express"
+import multer from "multer"
+import cloudinary from "cloudinary"
 
-const router = express.Router();
+const router = Router()
 
-// Upload foto
-router.post("/foto", uploadFoto.single("file"), (req, res) => {
-  return res.json({
-    ok: true,
-    url: req.file?.path,
-    public_id: req.file?.filename,
-  });
-});
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+})
 
-// Upload registro
-router.post("/registro", uploadRegistro.single("file"), (req, res) => {
-  return res.json({
-    ok: true,
-    url: req.file?.path,
-    public_id: req.file?.filename,
-  });
-});
+const upload = multer({ storage: multer.memoryStorage() })
 
-export default router;
+function uploadBufferToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.v2.uploader.upload_stream(
+      {
+        folder: "z4/fotos",
+        resource_type: "image"
+      },
+      (error, result) => {
+        if (error) return reject(error)
+        resolve(result)
+      }
+    )
+
+    stream.end(buffer)
+  })
+}
+
+// POST /api/upload/foto
+router.post("/foto", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Nenhum arquivo enviado (campo: file)" })
+    }
+
+    const result = await uploadBufferToCloudinary(req.file.buffer)
+
+    return res.json({
+      url: result.secure_url,
+      public_id: result.public_id
+    })
+  } catch (err) {
+    return res.status(500).json({ error: "Erro no upload", details: err.message })
+  }
+})
+
+export default router
