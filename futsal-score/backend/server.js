@@ -13,6 +13,9 @@ import chamadaRoutes from "./routes/chamadaRoutes.js"
 import calendarioRoutes from "./routes/calendarioRoutes.js"
 import exameRoutes from "./routes/exameRoutes.js"
 import timeRoutes from "./routes/timeRoutes.js"
+import uploadRoutes from "./routes/uploadRoutes.js";
+
+app.use("/upload", uploadRoutes);
 
 dotenv.config()
 
@@ -92,16 +95,5 @@ function startServer(port) {
     }
   })
 }
-
-const cloudinary = require("cloudinary").v2;
-
-app.get("/test-cloudinary", async (req, res) => {
-  try {
-    const result = await cloudinary.api.ping();
-    res.json({ ok: true, result });
-  } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
-  }
-});
 
 startServer(DEFAULT_PORT)
