@@ -3,21 +3,29 @@ import { getToken, clearAuth } from "./utils/authStorage"
 
 const PROD_URL = "https://z4-r2za.onrender.com"
 
-export const SERVER_URL =
-  import.meta.env.VITE_API_URL?.trim() || PROD_URL
+export const SERVER_URL = import.meta.env.VITE_API_URL?.trim() || PROD_URL
 
 console.log("🌐 Conectando ao backend:", SERVER_URL)
 
 const api = axios.create({
   baseURL: `${SERVER_URL}/api`,
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
+  // ✅ NÃO coloque Content-Type fixo aqui
 })
 
 api.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
+
+    // ✅ Se for FormData, deixa o browser/axios setar o multipart + boundary
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"]
+    } else {
+      // ✅ Para JSON normal
+      config.headers["Content-Type"] = "application/json"
+    }
+
     return config
   },
   (error) => Promise.reject(error)
@@ -28,7 +36,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response
-      const msg = data?.message || data?.msg || error.message
+      const msg = data?.message || data?.msg || data?.error || error.message
       console.error(`❌ Erro ${status}:`, msg)
 
       if (status === 401 || status === 403) {
@@ -79,6 +87,7 @@ export const deleteChamada = (id) => api.delete(`/chamadas/${id}`)
 
 export const getUsers = () => api.get("/users")
 export const createUser = (data) => api.post("/users", data)
-export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role })
+export const updateUserRole = (id, role) =>
+  api.put(`/users/${id}/role`, { role })
 
 export default api
