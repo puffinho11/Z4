@@ -6,6 +6,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import client from "prom-client"
 
+// Rotas
 import authRoutes from "./routes/authRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import registroRoutes from "./routes/registroRoutes.js"
@@ -19,7 +20,8 @@ dotenv.config()
 
 const app = express()
 
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ extended: true }))
 
 app.use(
   cors({
@@ -28,10 +30,10 @@ app.use(
       "https://z4esporte.com",
       "https://z4esporte.vercel.app",
       "http://localhost:5173",
-      "http://localhost"
+      "http://localhost",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
   })
 )
 
@@ -39,9 +41,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
-app.use("/uploads/foto", express.static(path.join(__dirname, "uploads/foto")))
 
-// ROTAS
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)
@@ -50,7 +50,6 @@ app.use("/api/calendario", calendarioRoutes)
 app.use("/api/exames", exameRoutes)
 app.use("/api/times", timeRoutes)
 
-// ✅ Upload Cloudinary
 app.use("/api/upload", uploadRoutes)
 
 app.get("/", (req, res) => {
@@ -61,27 +60,42 @@ app.get("/api/test", (req, res) => {
   res.json({
     status: "online",
     message: "🚀 Backend Z4 está rodando corretamente!",
-    mongo: mongoose.connection.readyState === 1 ? "🟢 Conectado ao MongoDB" : "🔴 Desconectado do MongoDB",
-    time: new Date().toLocaleString("pt-BR")
+    mongo:
+      mongoose.connection.readyState === 1
+        ? "🟢 Conectado ao MongoDB"
+        : "🔴 Desconectado do MongoDB",
+    time: new Date().toLocaleString("pt-BR"),
   })
 })
 
-// Metrics
 const register = new client.Registry()
 client.collectDefaultMetrics({ register })
 
 app.get("/metrics", async (req, res) => {
-  res.setHeader("Content-Type", register.contentType)
-  res.end(await register.metrics())
+  try {
+    res.setHeader("Content-Type", register.contentType)
+    res.end(await register.metrics())
+  } catch (err) {
+    res.status(500).json({ message: "Erro ao gerar métricas" })
+  }
 })
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ Conectado ao MongoDB Atlas"))
-  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
+app.use((err, req, res, next) => {
+  console.error("❌ Erro:", err)
+  res.status(err.statusCode || 500).json({
+    message: err.message || "Erro interno no servidor",
+  })
+})
 
 const PORT = process.env.PORT || 8080
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`)
-})
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ Conectado ao MongoDB Atlas")
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor rodando na porta ${PORT}`)
+    })
+  })
+  .catch((err) => console.error("❌ Erro ao conectar ao MongoDB:", err))
