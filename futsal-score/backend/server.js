@@ -20,6 +20,9 @@ dotenv.config()
 
 const app = express()
 
+/**
+ * Middlewares
+ */
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
 
@@ -37,11 +40,21 @@ app.use(
   })
 )
 
+/**
+ * Path helpers (ESM)
+ */
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+/**
+ * Static para servir arquivos enviados
+ * Ex: https://seu-backend.onrender.com/uploads/arquivo.jpg
+ */
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
+/**
+ * Rotas
+ */
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/registros", registroRoutes)
@@ -50,8 +63,12 @@ app.use("/api/calendario", calendarioRoutes)
 app.use("/api/exames", exameRoutes)
 app.use("/api/times", timeRoutes)
 
+// Upload: POST /api/upload/foto
 app.use("/api/upload", uploadRoutes)
 
+/**
+ * Healthcheck
+ */
 app.get("/", (req, res) => {
   res.send("🚀 Servidor Z4 rodando com sucesso!")
 })
@@ -68,6 +85,9 @@ app.get("/api/test", (req, res) => {
   })
 })
 
+/**
+ * Metrics (Prometheus)
+ */
 const register = new client.Registry()
 client.collectDefaultMetrics({ register })
 
@@ -80,6 +100,9 @@ app.get("/metrics", async (req, res) => {
   }
 })
 
+/**
+ * Handler de erro
+ */
 app.use((err, req, res, next) => {
   console.error("❌ Erro:", err)
   res.status(err.statusCode || 500).json({
@@ -87,13 +110,15 @@ app.use((err, req, res, next) => {
   })
 })
 
+/**
+ * Mongo + Start
+ */
 const PORT = process.env.PORT || 8080
 
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Conectado ao MongoDB Atlas")
-
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`)
     })
