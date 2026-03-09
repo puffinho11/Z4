@@ -9,20 +9,20 @@ console.log("🌐 Conectando ao backend:", SERVER_URL)
 
 const api = axios.create({
   baseURL: `${SERVER_URL}/api`,
-  timeout: 10000,
-  // ✅ NÃO coloque Content-Type fixo aqui
+  timeout: 60000,
 })
 
 api.interceptors.request.use(
   (config) => {
     const token = getToken()
-    if (token) config.headers.Authorization = `Bearer ${token}`
 
-    // ✅ Se for FormData, deixa o browser/axios setar o multipart + boundary
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"]
     } else {
-      // ✅ Para JSON normal
       config.headers["Content-Type"] = "application/json"
     }
 
@@ -36,7 +36,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { status, data } = error.response
-      const msg = data?.message || data?.msg || data?.error || error.message
+      const msg = data?.message || data?.msg || data?.error || "Erro na requisição"
+
       console.error(`❌ Erro ${status}:`, msg)
 
       if (status === 401 || status === 403) {
@@ -44,10 +45,15 @@ api.interceptors.response.use(
         clearAuth()
         window.location.href = "/login"
       }
+    } else if (error.code === "ECONNABORTED") {
+      console.error("❌ Timeout ao conectar com o servidor")
+      alert("⚠️ O servidor demorou para responder. Tente novamente.")
     } else if (error.request) {
+      console.error("❌ Servidor offline ou sem resposta")
       alert("⚠️ Servidor offline. Tente novamente mais tarde.")
     } else {
       console.error("❌ Erro de configuração:", error.message)
+      alert("⚠️ Erro inesperado na aplicação.")
     }
 
     return Promise.reject(error)
@@ -56,8 +62,12 @@ api.interceptors.response.use(
 
 export const login = (data) => api.post("/auth/login", data)
 export const register = (data) => api.post("/auth/register", data)
+
 export const getUserProfile = (id) => api.get(`/users/${id}`)
+export const getUsers = () => api.get("/users")
+export const createUser = (data) => api.post("/users", data)
 export const updateUser = (id, data) => api.put(`/users/${id}`, data)
+export const updateUserRole = (id, role) => api.put(`/users/${id}/role`, { role })
 export const deleteUser = (id) => api.delete(`/users/${id}`)
 
 export const getRegistros = () => api.get("/registros")
@@ -85,9 +95,8 @@ export const createChamada = (data) => api.post("/chamadas", data)
 export const updateChamada = (id, data) => api.put(`/chamadas/${id}`, data)
 export const deleteChamada = (id) => api.delete(`/chamadas/${id}`)
 
-export const getUsers = () => api.get("/users")
-export const createUser = (data) => api.post("/users", data)
-export const updateUserRole = (id, role) =>
-  api.put(`/users/${id}/role`, { role })
+export const uploadArquivo = (formData) => api.post("/upload", formData)
+
+export const pingServer = () => api.get("/test")
 
 export default api
