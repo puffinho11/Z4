@@ -6,10 +6,8 @@ import { fileURLToPath } from "url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Caminho absoluto da pasta uploads
 const uploadPath = path.join(__dirname, "../uploads")
 
-// Cria a pasta se não existir
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true })
 }

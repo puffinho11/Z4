@@ -9,13 +9,11 @@ import authMiddleware from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// Diretório para uploads de fotos
 const uploadDir = path.resolve("uploads", "foto")
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true })
 }
 
-// Configuração do multer (upload de imagens)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -38,9 +36,6 @@ const upload = multer({
   },
 })
 
-/* ===============================
-   🔑 ROTA DE LOGIN
-================================= */
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body
@@ -87,9 +82,6 @@ router.post("/login", async (req, res) => {
   }
 })
 
-/* ===============================
-   🆕 ROTA DE REGISTRO
-================================= */
 router.post("/register", async (req, res) => {
   try {
     const { username, nome, password, role, time } = req.body
@@ -131,9 +123,6 @@ router.post("/register", async (req, res) => {
   }
 })
 
-/* ===============================
-   👤 PERFIL DO USUÁRIO (autenticado)
-================================= */
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const u = req.user
@@ -151,9 +140,6 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 })
 
-/* ===============================
-   🖼️ UPLOAD DE FOTO
-================================= */
 router.post(
   "/upload/foto",
   authMiddleware,
