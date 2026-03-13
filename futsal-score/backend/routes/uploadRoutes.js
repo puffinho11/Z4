@@ -1,9 +1,9 @@
 import express from "express"
-import { upload } from "../utils/uploadConfig.js"
+import { uploadFoto } from "../middleware/uploadCloudinary.js";
 
 const router = express.Router()
 
-router.post("/foto", upload.single("file"), (req, res) => {
+router.post("/foto", uploadFoto.single("foto"), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "Nenhuma imagem enviada" })
@@ -11,8 +11,8 @@ router.post("/foto", upload.single("file"), (req, res) => {
 
     res.status(200).json({
       message: "Upload realizado com sucesso",
-      file: `/uploads/${req.file.filename}`,
-    })
+      url: req.file.path || req.file.secure_url, 
+    });
   } catch (error) {
     console.error("Erro no upload:", error)
     res.status(500).json({ message: "Erro no upload" })
