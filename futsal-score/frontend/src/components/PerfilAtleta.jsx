@@ -79,7 +79,7 @@ export default function PerfilAtleta({ user, setUser }) {
     setLoading(true)
 
     const formData = new FormData()
-    formData.append("foto", novaFoto) 
+    formData.append("foto", novaFoto)
 
     try {
       const response = await api.post("/upload/foto", formData)
