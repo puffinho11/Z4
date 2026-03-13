@@ -189,7 +189,7 @@ export default function PerfilAtleta({ user, setUser }) {
       <div className="bg-white shadow-xl rounded-2xl p-8 max-w-3xl w-full border border-gray-200">
         <h1 className="text-3xl font-bold text-emerald-800 mb-6 flex items-center gap-3 border-b pb-3">
           <MdAccountCircle className="text-emerald-600 text-4xl" />
-          Perfil do Atleta
+          Meu Perfil
         </h1>
 
         {mensagem && (

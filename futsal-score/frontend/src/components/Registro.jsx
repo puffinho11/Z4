@@ -28,7 +28,7 @@ export default function Registro({ selectedCategoria }) {
     gols: 0,
     amarelos: 0,
     vermelhos: 0,
-    foto: "", 
+    foto: "",
     previewUrl: ""
   }
 
@@ -48,8 +48,6 @@ export default function Registro({ selectedCategoria }) {
   const [lista, setLista] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
-  const [fotoFile, setFotoFile] = useState(null)
 
   async function fetchRegistros() {
     setLoading(true)
@@ -75,28 +73,42 @@ export default function Registro({ selectedCategoria }) {
   }, [selectedCategoria])
 
   function handleChange(k, v) {
-    setForm((p) => ({ ...p, [k]: v }))
+    setForm((prev) => ({ ...prev, [k]: v }))
   }
 
   function resetForm() {
-    setForm(blank)
-    setFotoFile(null)
+    setForm({
+      ...blank,
+      categoria: selectedCategoria || ""
+    })
     setEditingId(null)
     setError(null)
   }
 
-  async function uploadRegistroFotoIfNeeded() {
-    if (!fotoFile) return null
-
-    const fd = new FormData()
-    fd.append("file", fotoFile)
-
-    const { data } = await api.post("/upload/registro", fd, {
-      headers: { "Content-Type": "multipart/form-data" }
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (error) => reject(error)
     })
+  }
 
-    if (!data?.url) throw new Error("Upload falhou: URL não retornou.")
-    return data.url
+  async function handleFotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const base64 = await fileToBase64(file)
+      setForm((prev) => ({
+        ...prev,
+        foto: base64,
+        previewUrl: base64
+      }))
+    } catch (err) {
+      console.error("Erro ao converter imagem:", err)
+      setError("Erro ao carregar a imagem.")
+    }
   }
 
   async function handleSubmit(e) {
@@ -105,33 +117,42 @@ export default function Registro({ selectedCategoria }) {
     setError(null)
 
     try {
-      let fotoUrl = form.foto
-      if (fotoFile) {
-        fotoUrl = await uploadRegistroFotoIfNeeded()
-      }
-
       const payload = {
-        ...form,
-        foto: fotoUrl || ""
+        nome: form.nome,
+        categoria: form.categoria,
+        status: form.status,
+        treinos: Number(form.treinos) || 0,
+        lesoes: Number(form.lesoes) || 0,
+        vo2: Number(form.vo2) || 0,
+        data: form.data,
+        gols: Number(form.gols) || 0,
+        amarelos: Number(form.amarelos) || 0,
+        vermelhos: Number(form.vermelhos) || 0,
+        foto: form.foto || ""
       }
-
-      delete payload.previewUrl
 
       let res
+
       if (editingId) {
         res = await api.put(`/registros/${editingId}`, payload)
-        setLista(lista.map((r) => (r._id === editingId ? res.data : r)))
+        setLista((prev) =>
+          prev.map((r) => (r._id === editingId ? res.data : r))
+        )
+        alert("Registro atualizado com sucesso!")
       } else {
         res = await api.post("/registros", payload)
-        setLista([...lista, res.data])
+        setLista((prev) => [...prev, res.data])
+        alert("Registro salvo com sucesso!")
       }
 
       resetForm()
-      alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!")
     } catch (err) {
       console.error(err)
       const errorMessage =
-        err.response?.data?.msg || err.message || "Erro ao salvar registro. Verifique o console."
+        err.response?.data?.msg ||
+        err.response?.data?.error ||
+        err.message ||
+        "Erro ao salvar registro. Verifique o console."
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -140,24 +161,37 @@ export default function Registro({ selectedCategoria }) {
 
   function editar(registro) {
     setForm({
-      ...registro,
-      data: new Date(registro.data).toISOString().slice(0, 10),
-      previewUrl: registro.foto || "",
-      foto: registro.foto || ""
+      nome: registro.nome || "",
+      categoria: registro.categoria || "",
+      status: registro.status || "OK",
+      treinos: registro.treinos ?? 3,
+      lesoes: registro.lesoes ?? 0,
+      vo2: registro.vo2 ?? 50,
+      data: registro.data
+        ? new Date(registro.data).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+      gols: registro.gols ?? 0,
+      amarelos: registro.amarelos ?? 0,
+      vermelhos: registro.vermelhos ?? 0,
+      foto: registro.foto || "",
+      previewUrl: registro.foto || ""
     })
-    setFotoFile(null)
+
     setEditingId(registro._id)
+    setError(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   async function excluir(id) {
     if (!window.confirm("Tem certeza que deseja remover este registro?")) return
+
     setLoading(true)
     try {
       await api.delete(`/registros/${id}`)
-      setLista(lista.filter((r) => r._id !== id))
+      setLista((prev) => prev.filter((r) => r._id !== id))
       alert("Registro excluído com sucesso!")
-    } catch {
+    } catch (err) {
+      console.error(err)
       setError("Erro ao excluir registro.")
     } finally {
       setLoading(false)
@@ -174,12 +208,11 @@ export default function Registro({ selectedCategoria }) {
     return acc
   }, {})
 
-  const isCloudUrl = (v) => typeof v === "string" && v.startsWith("http")
-
   return (
     <div className="p-8 bg-white min-h-screen">
       <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
-        <MdPersonSearch className="text-5xl text-emerald-600" /> Monitoramento de Atletas
+        <MdPersonSearch className="text-5xl text-emerald-600" />
+        Monitoramento de Atletas
         {selectedCategoria && (
           <span className="ml-3 text-lg text-emerald-700">
             • Categoria: <strong>{selectedCategoria}</strong>
@@ -208,7 +241,9 @@ export default function Registro({ selectedCategoria }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Atleta</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Atleta
+            </label>
             <input
               type="text"
               value={form.nome}
@@ -220,7 +255,9 @@ export default function Registro({ selectedCategoria }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Categoria</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Categoria
+            </label>
             <select
               value={form.categoria}
               onChange={(e) => handleChange("categoria", e.target.value)}
@@ -237,7 +274,9 @@ export default function Registro({ selectedCategoria }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Data</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Data
+            </label>
             <input
               type="date"
               value={form.data}
@@ -248,7 +287,9 @@ export default function Registro({ selectedCategoria }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Status</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Status
+            </label>
             <select
               value={form.status}
               onChange={(e) => handleChange("status", e.target.value)}
@@ -261,18 +302,13 @@ export default function Registro({ selectedCategoria }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Foto do Atleta</label>
+            <label className="block text-sm font-semibold text-gray-700">
+              Foto do Atleta
+            </label>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  setFotoFile(file)
-                  const previewUrl = URL.createObjectURL(file)
-                  setForm((prev) => ({ ...prev, previewUrl }))
-                }
-              }}
+              onChange={handleFotoChange}
               className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
             />
 
@@ -332,7 +368,9 @@ export default function Registro({ selectedCategoria }) {
       <div className="bg-white shadow-md rounded-2xl p-8 border border-emerald-100">
         <h3 className="text-2xl font-bold text-emerald-800 mb-6 flex items-center gap-2">
           <MdList className="text-3xl text-emerald-600" />
-          {selectedCategoria ? `Registros da categoria ${selectedCategoria}` : "Registros por Categoria"}
+          {selectedCategoria
+            ? `Registros da categoria ${selectedCategoria}`
+            : "Registros por Categoria"}
         </h3>
 
         {Object.keys(registrosPorCategoria).length === 0 ? (
@@ -359,7 +397,7 @@ export default function Registro({ selectedCategoria }) {
                     >
                       {r.foto ? (
                         <img
-                          src={isCloudUrl(r.foto) ? r.foto : r.foto}
+                          src={r.foto}
                           alt={r.nome}
                           className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
                         />
@@ -370,7 +408,9 @@ export default function Registro({ selectedCategoria }) {
                       )}
 
                       <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-gray-800">{r.nome}</h4>
+                        <h4 className="text-lg font-semibold text-gray-800">
+                          {r.nome}
+                        </h4>
                         <p className="text-sm text-gray-500 mb-2">
                           Data: {new Date(r.data).toLocaleDateString("pt-BR")} •{" "}
                           <span
@@ -384,7 +424,9 @@ export default function Registro({ selectedCategoria }) {
                           >
                             {r.status}
                           </span>
-                          {!selectedCategoria && <span className="ml-2">• {r.categoria}</span>}
+                          {!selectedCategoria && (
+                            <span className="ml-2">• {r.categoria}</span>
+                          )}
                         </p>
 
                         <div className="flex flex-wrap gap-3 text-xs text-gray-700">
