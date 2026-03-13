@@ -3,7 +3,7 @@ import { upload } from "../utils/uploadConfig.js"
 
 const router = express.Router()
 
-router.post("/foto", upload.single("foto"), (req, res) => {
+router.post("/foto", upload.single("file"), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "Nenhuma imagem enviada" })

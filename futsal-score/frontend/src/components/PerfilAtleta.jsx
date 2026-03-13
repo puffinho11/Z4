@@ -79,10 +79,10 @@ export default function PerfilAtleta({ user, setUser }) {
     setLoading(true)
 
     const formData = new FormData()
-    formData.append("file", novaFoto) // ✅ backend espera "file"
+    formData.append("foto", novaFoto) 
 
     try {
-      const response = await api.post("/upload/foto", formData) // ✅ sem headers manuais
+      const response = await api.post("/upload/foto", formData)
 
       const url =
         response.data?.url ||
