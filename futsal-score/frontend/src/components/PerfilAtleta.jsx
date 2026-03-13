@@ -70,60 +70,46 @@ export default function PerfilAtleta({ user, setUser }) {
     }
   }
 
-  async function handleFotoChange() {
-    if (!novaFoto) {
-      setMensagem("⚠️ Selecione uma nova foto primeiro.")
+async function handleFotoChange() {
+  if (!novaFoto) {
+    setMensagem("⚠️ Selecione uma nova foto primeiro.")
+    return
+  }
+
+  setLoading(true)
+
+  const formData = new FormData()
+  formData.append("foto", novaFoto)
+  formData.append("username", user.username) 
+
+  try {
+    const response = await api.post("/upload/foto", formData)
+
+    const url = response.data?.url
+
+    if (!url) {
+      setMensagem("❌ Upload falhou: URL não retornou.")
       return
     }
 
-    setLoading(true)
+    const token = getToken()
+    const updatedUser = normalizeUser({
+      ...user,
+      foto: url 
+    })
 
-    const formData = new FormData()
-    formData.append("foto", novaFoto)
+    saveUser({ token, user: updatedUser })
+    setUser(updatedUser)
 
-    try {
-      const response = await api.post("/upload/foto", formData)
-
-      const url =
-        response.data?.url ||
-        response.data?.fotoUrl ||
-        response.data?.secure_url ||
-        response.data?.data?.url ||
-        response.data?.data?.secure_url
-
-      if (!url) {
-        setMensagem("❌ Upload falhou: URL não retornou.")
-        return
-      }
-
-      const token = getToken()
-      if (!token) {
-        setMensagem("❌ Token não encontrado. Faça login novamente.")
-        return
-      }
-
-      const updatedUser = normalizeUser({
-        ...user,
-        fotoUrl: url
-      })
-
-      saveUser({ token, user: updatedUser })
-      setUser(updatedUser)
-
-      setMensagem("✅ Foto atualizada com sucesso!")
-      setNovaFoto(null)
-      if (previewFoto) URL.revokeObjectURL(previewFoto)
-      setPreviewFoto("")
-    } catch (error) {
-      const msg =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        "❌ Erro ao enviar a foto."
-      setMensagem(msg)
-    } finally {
-      setLoading(false)
-    }
+    setMensagem("✅ Foto salva no perfil com sucesso!")
+    setNovaFoto(null)
+    setPreviewFoto("")
+  } catch (error) {
+    setMensagem(error.response?.data?.message || "❌ Erro ao enviar a foto.")
+  } finally {
+    setLoading(false)
   }
+}
 
   async function handleNomeChange() {
     if (novoNome === user.username) {
