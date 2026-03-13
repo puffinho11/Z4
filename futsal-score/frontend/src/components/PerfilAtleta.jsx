@@ -29,6 +29,7 @@ const normalizeUser = (u) => {
 const getFullPhotoUrl = (pathOrUrl) => {
   if (!pathOrUrl) return null
   if (typeof pathOrUrl === "string" && pathOrUrl.startsWith("http")) return pathOrUrl
+  if (typeof pathOrUrl === "string" && pathOrUrl.startsWith("data:image")) return pathOrUrl
   return `${SERVER_URL}${pathOrUrl}`
 }
 
@@ -334,5 +335,4 @@ export default function PerfilAtleta({ user, setUser }) {
     </div>
   )
 }
-
 

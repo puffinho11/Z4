@@ -1,13 +1,19 @@
 import multer from "multer"
-import { CloudinaryStorage } from "multer-storage-cloudinary"
-import cloudinary from "../config/cloudinary.js"
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "z4-perfis",
-    allowed_formats: ["jpg", "png", "jpeg"],
+const storage = multer.memoryStorage()
+
+export const uploadFoto = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+
+    if (!tiposPermitidos.includes(file.mimetype)) {
+      return cb(new Error("Formato inválido. Envie JPG, JPEG, PNG ou WEBP."))
+    }
+
+    cb(null, true)
   },
 })
-
-export const uploadFoto = multer({ storage })

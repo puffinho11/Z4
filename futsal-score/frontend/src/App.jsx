@@ -72,7 +72,6 @@ export default function App() {
         setCollapsed={setCollapsed}
       />
 
-      {/* MAIN CORRIGIDO PARA ACABAR COM O ESPAÇO EM BRANCO */}
       <main
         className={`
           flex-1 min-h-screen 

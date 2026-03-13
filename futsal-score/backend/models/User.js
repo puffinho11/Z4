@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
     },
     foto: {
       type: String,
-      default: null,
+      default: "",
     },
     criadoEm: {
       type: Date,
