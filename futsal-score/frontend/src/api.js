@@ -1,7 +1,7 @@
 import axios from "axios"
 import { getToken, clearAuth } from "./utils/authStorage"
 
-const PROD_URL = "https://z4-r2za.onrender.com"
+const PROD_URL = "https://z4-2.onrender.com"
 
 export const SERVER_URL = import.meta.env.VITE_API_URL?.trim() || PROD_URL
 
