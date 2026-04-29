@@ -19,6 +19,9 @@ import {
 export default function Registro({ selectedCategoria }) {
   const blank = {
     nome: "",
+    cpf: "",
+    dataNascimento: "",
+    sexo: "",
     categoria: "",
     status: "OK",
     treinos: 3,
@@ -32,22 +35,54 @@ export default function Registro({ selectedCategoria }) {
     previewUrl: ""
   }
 
-  const categorias = [
-    "Sub-7",
-    "Sub-9",
-    "Sub-11",
-    "Sub-13",
-    "Sub-15",
-    "Sub-17",
-    "Sub-20",
-    "Adulto"
-  ]
-
   const [form, setForm] = useState(blank)
   const [editingId, setEditingId] = useState(null)
   const [lista, setLista] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  function calcularIdade(dataNascimento) {
+    if (!dataNascimento) return null
+
+    const hoje = new Date()
+    const nascimento = new Date(dataNascimento)
+    let idade = hoje.getFullYear() - nascimento.getFullYear()
+    const mes = hoje.getMonth() - nascimento.getMonth()
+
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--
+    }
+
+    return idade
+  }
+
+  function definirCategoria(dataNascimento, sexo) {
+    const idade = calcularIdade(dataNascimento)
+
+    if (!idade || !sexo) return ""
+
+    let categoriaBase = ""
+
+    if (idade <= 7) categoriaBase = "Sub-7"
+    else if (idade <= 9) categoriaBase = "Sub-9"
+    else if (idade <= 11) categoriaBase = "Sub-11"
+    else if (idade <= 13) categoriaBase = "Sub-13"
+    else if (idade <= 15) categoriaBase = "Sub-15"
+    else if (idade <= 17) categoriaBase = "Sub-17"
+    else if (idade <= 20) categoriaBase = "Sub-20"
+    else categoriaBase = "Adulto"
+
+    return `${categoriaBase} ${sexo}`
+  }
+
+  function formatarCPF(value) {
+    return value
+      .replace(/\D/g, "")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+      .slice(0, 14)
+  }
 
   async function fetchRegistros() {
     setLoading(true)
@@ -73,7 +108,22 @@ export default function Registro({ selectedCategoria }) {
   }, [selectedCategoria])
 
   function handleChange(k, v) {
-    setForm((prev) => ({ ...prev, [k]: v }))
+    setForm((prev) => {
+      const novoForm = { ...prev, [k]: v }
+
+      if (k === "cpf") {
+        novoForm.cpf = formatarCPF(v)
+      }
+
+      if (k === "dataNascimento" || k === "sexo") {
+        novoForm.categoria = definirCategoria(
+          k === "dataNascimento" ? v : novoForm.dataNascimento,
+          k === "sexo" ? v : novoForm.sexo
+        )
+      }
+
+      return novoForm
+    })
   }
 
   function resetForm() {
@@ -119,6 +169,9 @@ export default function Registro({ selectedCategoria }) {
     try {
       const payload = {
         nome: form.nome,
+        cpf: form.cpf,
+        dataNascimento: form.dataNascimento,
+        sexo: form.sexo,
         categoria: form.categoria,
         status: form.status,
         treinos: Number(form.treinos) || 0,
@@ -162,6 +215,11 @@ export default function Registro({ selectedCategoria }) {
   function editar(registro) {
     setForm({
       nome: registro.nome || "",
+      cpf: registro.cpf || "",
+      dataNascimento: registro.dataNascimento
+        ? new Date(registro.dataNascimento).toISOString().slice(0, 10)
+        : "",
+      sexo: registro.sexo || "",
       categoria: registro.categoria || "",
       status: registro.status || "OK",
       treinos: registro.treinos ?? 3,
@@ -203,8 +261,14 @@ export default function Registro({ selectedCategoria }) {
     : lista
 
   const registrosPorCategoria = listaFiltrada.reduce((acc, reg) => {
-    if (!acc[reg.categoria]) acc[reg.categoria] = []
-    acc[reg.categoria].push(reg)
+    const sexoGrupo = reg.sexo || "Não informado"
+    const categoriaGrupo = reg.categoria || "Sem categoria"
+
+    if (!acc[sexoGrupo]) acc[sexoGrupo] = {}
+    if (!acc[sexoGrupo][categoriaGrupo]) acc[sexoGrupo][categoriaGrupo] = []
+
+    acc[sexoGrupo][categoriaGrupo].push(reg)
+
     return acc
   }, {})
 
@@ -213,11 +277,6 @@ export default function Registro({ selectedCategoria }) {
       <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
         <MdPersonSearch className="text-5xl text-emerald-600" />
         Monitoramento de Atletas
-        {selectedCategoria && (
-          <span className="ml-3 text-lg text-emerald-700">
-            • Categoria: <strong>{selectedCategoria}</strong>
-          </span>
-        )}
       </h2>
 
       <p className="text-gray-500 mb-8 text-lg">
@@ -232,7 +291,7 @@ export default function Registro({ selectedCategoria }) {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12 transition hover:shadow-emerald-300/40 hover:scale-[1.01]"
+        className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12"
       >
         <h3 className="text-xl font-bold text-emerald-800 border-b-2 border-emerald-100 pb-3 flex items-center gap-2">
           <MdSave className="text-2xl text-emerald-600" />
@@ -248,7 +307,7 @@ export default function Registro({ selectedCategoria }) {
               type="text"
               value={form.nome}
               onChange={(e) => handleChange("nome", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
               placeholder="Ex: João Silva"
               required
             />
@@ -256,32 +315,70 @@ export default function Registro({ selectedCategoria }) {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700">
-              Categoria
+              CPF
+            </label>
+            <input
+              type="text"
+              value={form.cpf}
+              onChange={(e) => handleChange("cpf", e.target.value)}
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              placeholder="000.000.000-00"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Data de Nascimento
+            </label>
+            <input
+              type="date"
+              value={form.dataNascimento}
+              onChange={(e) => handleChange("dataNascimento", e.target.value)}
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Sexo
             </label>
             <select
-              value={form.categoria}
-              onChange={(e) => handleChange("categoria", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              value={form.sexo}
+              onChange={(e) => handleChange("sexo", e.target.value)}
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
               required
             >
               <option value="">Selecione</option>
-              {categorias.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700">
-              Data
+              Categoria Automática
+            </label>
+            <input
+              type="text"
+              value={form.categoria}
+              readOnly
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 bg-gray-100"
+              placeholder="Será preenchida automaticamente"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">
+              Data do Registro
             </label>
             <input
               type="date"
               value={form.data}
               onChange={(e) => handleChange("data", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
               required
             />
           </div>
@@ -293,7 +390,7 @@ export default function Registro({ selectedCategoria }) {
             <select
               value={form.status}
               onChange={(e) => handleChange("status", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
             >
               <option value="OK">OK</option>
               <option value="Recuperação">Recuperação</option>
@@ -309,7 +406,7 @@ export default function Registro({ selectedCategoria }) {
               type="file"
               accept="image/*"
               onChange={handleFotoChange}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer"
             />
 
             {form.previewUrl && (
@@ -337,7 +434,7 @@ export default function Registro({ selectedCategoria }) {
                 type="number"
                 value={form[f.id]}
                 onChange={(e) => handleChange(f.id, e.target.value)}
-                className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
                 min="0"
               />
             </div>
@@ -357,7 +454,7 @@ export default function Registro({ selectedCategoria }) {
 
           <button
             type="submit"
-            className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:shadow-emerald-300/50 hover:scale-[1.02] transition flex items-center gap-2"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:scale-[1.02] transition flex items-center gap-2"
             disabled={loading}
           >
             {loading ? "Salvando..." : editingId ? "Atualizar Registro" : "Salvar Registro"}
@@ -368,9 +465,7 @@ export default function Registro({ selectedCategoria }) {
       <div className="bg-white shadow-md rounded-2xl p-8 border border-emerald-100">
         <h3 className="text-2xl font-bold text-emerald-800 mb-6 flex items-center gap-2">
           <MdList className="text-3xl text-emerald-600" />
-          {selectedCategoria
-            ? `Registros da categoria ${selectedCategoria}`
-            : "Registros por Categoria"}
+          Registros por Categoria
         </h3>
 
         {Object.keys(registrosPorCategoria).length === 0 ? (
@@ -378,93 +473,103 @@ export default function Registro({ selectedCategoria }) {
             Nenhum registro encontrado.
           </p>
         ) : (
-          Object.entries(registrosPorCategoria).map(([categoria, registros]) => (
-            <div key={categoria} className="mb-10">
-              {!selectedCategoria && (
-                <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
-                  <MdEmojiEvents className="text-yellow-500 text-2xl" /> {categoria}
-                </h4>
-              )}
+          Object.entries(registrosPorCategoria).map(([sexo, categorias]) => (
+            <div key={sexo} className="mb-12">
+              <h3 className="text-2xl font-bold text-emerald-900 mb-5">
+                Categoria {sexo}
+              </h3>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {registros
-                  .slice()
-                  .sort((a, b) => new Date(b.data) - new Date(a.data))
-                  .map((r) => (
-                    <div
-                      key={r._id}
-                      className="bg-white border border-emerald-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                    >
-                      {r.foto ? (
-                        <img
-                          src={r.foto}
-                          alt={r.nome}
-                          className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-3xl">
-                          <MdPhotoCamera />
-                        </div>
-                      )}
+              {Object.entries(categorias).map(([categoria, registros]) => (
+                <div key={categoria} className="mb-10">
+                  <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
+                    <MdEmojiEvents className="text-yellow-500 text-2xl" />
+                    {categoria}
+                  </h4>
 
-                      <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          {r.nome}
-                        </h4>
-                        <p className="text-sm text-gray-500 mb-2">
-                          Data: {new Date(r.data).toLocaleDateString("pt-BR")} •{" "}
-                          <span
-                            className={`font-semibold ${
-                              r.status === "OK"
-                                ? "text-green-600"
-                                : r.status === "Recuperação"
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {r.status}
-                          </span>
-                          {!selectedCategoria && (
-                            <span className="ml-2">• {r.categoria}</span>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {registros
+                      .slice()
+                      .sort((a, b) => new Date(b.data) - new Date(a.data))
+                      .map((r) => (
+                        <div
+                          key={r._id}
+                          className="bg-white border border-emerald-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg transition-all duration-200"
+                        >
+                          {r.foto ? (
+                            <img
+                              src={r.foto}
+                              alt={r.nome}
+                              className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-3xl">
+                              <MdPhotoCamera />
+                            </div>
                           )}
-                        </p>
 
-                        <div className="flex flex-wrap gap-3 text-xs text-gray-700">
-                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
-                            <MdSportsSoccer /> {r.gols}
-                          </span>
-                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
-                            <MdOutlineSpeed /> VO₂: {r.vo2}
-                          </span>
-                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
-                            <MdHealing /> {r.lesoes}
-                          </span>
-                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
-                            <MdOutlineStyle /> Am: {r.amarelos}
-                          </span>
-                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
-                            <MdOutlineStyle /> Vm: {r.vermelhos}
-                          </span>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-gray-800">
+                              {r.nome}
+                            </h4>
+
+                            <p className="text-sm text-gray-500">
+                              CPF: {r.cpf || "Não informado"}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              Nascimento:{" "}
+                              {r.dataNascimento
+                                ? new Date(r.dataNascimento).toLocaleDateString("pt-BR")
+                                : "Não informado"}
+                            </p>
+
+                            <p className="text-sm text-gray-500 mb-2">
+                              Registro: {new Date(r.data).toLocaleDateString("pt-BR")} •{" "}
+                              <span
+                                className={`font-semibold ${
+                                  r.status === "OK"
+                                    ? "text-green-600"
+                                    : r.status === "Recuperação"
+                                    ? "text-yellow-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {r.status}
+                              </span>
+                            </p>
+
+                            <div className="flex flex-wrap gap-3 text-xs text-gray-700">
+                              <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
+                                <MdSportsSoccer /> {r.gols}
+                              </span>
+                              <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
+                                <MdOutlineSpeed /> VO₂: {r.vo2}
+                              </span>
+                              <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
+                                <MdHealing /> {r.lesoes}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => editar(r)}
+                              className="text-emerald-600 font-medium hover:text-emerald-800 flex items-center gap-1"
+                            >
+                              <MdEdit /> Editar
+                            </button>
+                            <button
+                              onClick={() => excluir(r._id)}
+                              className="text-red-600 font-medium hover:text-red-800 flex items-center gap-1"
+                            >
+                              <MdDelete /> Excluir
+                            </button>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => editar(r)}
-                          className="text-emerald-600 font-medium hover:text-emerald-800 flex items-center gap-1"
-                        >
-                          <MdEdit /> Editar
-                        </button>
-                        <button
-                          onClick={() => excluir(r._id)}
-                          className="text-red-600 font-medium hover:text-red-800 flex items-center gap-1"
-                        >
-                          <MdDelete /> Excluir
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ))
         )}
