@@ -8,6 +8,7 @@ import Desempenho from "./components/Desempenho"
 import Exames from "./components/Exames"
 import Calendario from "./components/Calendario"
 import Chamada from "./components/Chamada"
+import Carteirinha from "./components/Carteirinha"
 import Admin from "./components/Admin"
 import PerfilAtleta from "./components/PerfilAtleta"
 import { getUser, clearAuth } from "./utils/authStorage"
@@ -44,22 +45,43 @@ export default function App() {
 
   const renderSection = () => {
     switch (section) {
-      case "dashboard": return <Dashboard />
-      case "registro": return <Registro selectedCategoria={selectedCategoria} />
-      case "relatorio": return <Relatorio />
-      case "desempenho": return <Desempenho />
-      case "exames": return <Exames />
-      case "calendario": return <Calendario />
-      case "chamada": return <Chamada />
-      case "admin": return <Admin />
-      case "perfil": return <PerfilAtleta user={user} setUser={setUser} />
-      default: return <Dashboard />
+      case "dashboard":
+        return <Dashboard />
+
+      case "registro":
+        return <Registro selectedCategoria={selectedCategoria} />
+
+      case "relatorio":
+        return <Relatorio />
+
+      case "desempenho":
+        return <Desempenho />
+
+      case "exames":
+        return <Exames />
+
+      case "calendario":
+        return <Calendario />
+
+      case "chamada":
+        return <Chamada />
+
+      case "carteirinha":
+        return <Carteirinha />
+
+      case "admin":
+        return <Admin />
+
+      case "perfil":
+        return <PerfilAtleta user={user} setUser={setUser} />
+
+      default:
+        return <Dashboard />
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-
       <Sidebar
         user={user}
         onLogout={handleLogout}
@@ -76,11 +98,7 @@ export default function App() {
         className={`
           flex-1 min-h-screen 
           transition-all duration-300 px-4 py-6
-
-          /* MOBILE SEM MARGEM */
           ml-0
-
-          /* NO DESKTOP: sidebar aberta/fechada */
           ${collapsed ? "md:ml-16" : "md:ml-64"}
         `}
       >

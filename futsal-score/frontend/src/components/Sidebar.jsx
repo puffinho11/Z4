@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 import {
   MdDashboard,
   MdEvent,
@@ -13,10 +13,11 @@ import {
   MdMenu,
   MdClose,
   MdChevronLeft,
-  MdChevronRight
-} from "react-icons/md";
-import { FaSignOutAlt } from "react-icons/fa";
-import LogoFutsalScore from "./logo.png";
+  MdChevronRight,
+  MdBadge,
+} from "react-icons/md"
+import { FaSignOutAlt } from "react-icons/fa"
+import LogoFutsalScore from "./logo.png"
 
 export default function Sidebar({
   user,
@@ -29,7 +30,7 @@ export default function Sidebar({
   collapsed,
   setCollapsed,
 }) {
-  const [openRegistro, setOpenRegistro] = useState(false);
+  const [openRegistro, setOpenRegistro] = useState(false)
 
   const categorias = [
     "Sub-7",
@@ -40,7 +41,7 @@ export default function Sidebar({
     "Sub-17",
     "Sub-20",
     "Adulto",
-  ];
+  ]
 
   const menuItems = [
     { label: "Dashboard", icon: <MdDashboard />, section: "dashboard" },
@@ -50,15 +51,16 @@ export default function Sidebar({
     { label: "Exames", icon: <MdLocalHospital />, section: "exames" },
     { label: "Calendário", icon: <MdEvent />, section: "calendario" },
     { label: "Chamada", icon: <MdAssignment />, section: "chamada" },
+    { label: "Carteirinhas", icon: <MdBadge />, section: "carteirinha" },
     { label: "Meu Perfil", icon: <MdAccountCircle />, section: "perfil" },
-  ];
+  ]
 
   if (user?.role === "admin") {
     menuItems.push({
       label: "Administração",
       icon: <MdAdminPanelSettings />,
       section: "admin",
-    });
+    })
   }
 
   return (
@@ -69,21 +71,21 @@ export default function Sidebar({
       >
         <MdMenu size={28} />
       </button>
+
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
         ></div>
       )}
+
       <aside
         className={`
           fixed top-0 left-0 h-full bg-gradient-to-b 
           from-emerald-600 via-emerald-700 to-emerald-900 
           text-white shadow-xl flex flex-col justify-between z-50 
           transform transition-all duration-300
-
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-
           ${collapsed ? "md:w-16" : "md:w-64"}
           w-64
         `}
@@ -93,16 +95,19 @@ export default function Sidebar({
             {!collapsed && (
               <img src={LogoFutsalScore} alt="logo" className="max-h-20" />
             )}
+
             {collapsed && (
               <img src={LogoFutsalScore} alt="logo" className="max-h-10" />
             )}
           </div>
+
           <button
             className="md:hidden absolute top-4 right-4 text-white"
             onClick={() => setIsOpen(false)}
           >
             <MdClose size={28} />
           </button>
+
           <nav className="mt-6 px-2 space-y-1">
             {menuItems.map((item) => {
               const isRegistro = item.section === "registro"
@@ -111,8 +116,18 @@ export default function Sidebar({
                 <div key={item.section}>
                   <button
                     onClick={() => {
-                      if (isRegistro) setOpenRegistro(!openRegistro)
+                      if (isRegistro) {
+                        setOpenRegistro(!openRegistro)
+                      } else {
+                        setOpenRegistro(false)
+                      }
+
                       setSection(item.section)
+
+                      if (!isRegistro) {
+                        setSelectedCategoria(null)
+                      }
+
                       setIsOpen(false)
                     }}
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-emerald-700/60 transition"
@@ -129,15 +144,16 @@ export default function Sidebar({
                       />
                     )}
                   </button>
+
                   {isRegistro && openRegistro && !collapsed && (
                     <ul className="ml-10 space-y-1">
                       {categorias.map((cat) => (
                         <li key={cat}>
                           <button
                             onClick={() => {
-                              setSelectedCategoria(cat);
-                              setSection("registro");
-                              setIsOpen(false);
+                              setSelectedCategoria(cat)
+                              setSection("registro")
+                              setIsOpen(false)
                             }}
                             className="block w-full text-left text-sm px-3 py-1.5 rounded-md hover:bg-emerald-700/60"
                           >
@@ -152,6 +168,7 @@ export default function Sidebar({
             })}
           </nav>
         </div>
+
         <div className="p-4 flex flex-col gap-4">
           {!collapsed && (
             <div className="text-sm opacity-80 px-2">
@@ -166,6 +183,7 @@ export default function Sidebar({
             <FaSignOutAlt />
             {!collapsed && <span>Sair</span>}
           </button>
+
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex items-center justify-center w-full py-2 rounded-lg bg-emerald-800 hover:bg-emerald-900 transition"
@@ -177,4 +195,3 @@ export default function Sidebar({
     </>
   )
 }
-
