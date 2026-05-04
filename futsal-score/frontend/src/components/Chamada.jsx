@@ -24,6 +24,17 @@ export default function Chamada() {
   const [editandoId, setEditandoId] = useState(null)
   const [professor, setProfessor] = useState("")
 
+  const categorias = [
+    "Sub-7",
+    "Sub-9",
+    "Sub-11",
+    "Sub-13",
+    "Sub-15",
+    "Sub-17",
+    "Sub-20",
+    "Adulto",
+  ]
+
   useEffect(() => {
     carregarHistorico()
   }, [])
@@ -31,55 +42,114 @@ export default function Chamada() {
   async function carregarHistorico() {
     try {
       const res = await api.get("/chamadas")
-      const sortedHistorico = res.data.sort((a, b) => new Date(b.data) - new Date(a.data))
+      const sortedHistorico = Array.isArray(res.data)
+        ? res.data.sort((a, b) => new Date(b.data) - new Date(a.data))
+        : []
+
       setHistorico(sortedHistorico)
     } catch (err) {
       console.error("❌ Erro ao carregar histórico:", err)
     }
   }
 
+  function categoriaConfere(categoriaAtleta, categoriaSelecionada) {
+    const catAtleta = categoriaAtleta?.toLowerCase() || ""
+    const catSelecionada = categoriaSelecionada?.toLowerCase() || ""
+
+    return catAtleta === catSelecionada || catAtleta.startsWith(catSelecionada)
+  }
+
+  function separarPorSexo(listaAtletas) {
+    return listaAtletas.reduce(
+      (acc, atleta) => {
+        const sexo = atleta.sexo || ""
+
+        if (sexo === "Masculino") {
+          acc.Masculino.push(atleta)
+        } else if (sexo === "Feminino") {
+          acc.Feminino.push(atleta)
+        } else {
+          acc["Não informado"].push(atleta)
+        }
+
+        return acc
+      },
+      {
+        Masculino: [],
+        Feminino: [],
+        "Não informado": [],
+      }
+    )
+  }
+
   useEffect(() => {
     async function fetchAtletas() {
-      if (!categoria) return
+      if (!categoria) {
+        setAtletas([])
+        setPresencas({})
+        return
+      }
+
       try {
         const res = await api.get("/registros")
-        const filtrados = res.data
-          .filter((a) => a.categoria?.toLowerCase() === categoria.toLowerCase())
-          .sort((a, b) => a.nome.localeCompare(b.nome))
+
+        const filtrados = Array.isArray(res.data)
+          ? res.data
+              .filter((a) => categoriaConfere(a.categoria, categoria))
+              .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
+          : []
 
         setAtletas(filtrados)
 
-        // mantém escolhas anteriores quando possível; default = presente (true)
         setPresencas((p) => {
           const novas = {}
+
           filtrados.forEach((a) => {
             novas[a._id] = p[a._id] !== undefined ? p[a._id] : true
           })
+
           return novas
         })
       } catch (err) {
         console.error("❌ Erro ao carregar atletas:", err)
+        setAtletas([])
+        setPresencas({})
       }
     }
+
     fetchAtletas()
   }, [categoria])
 
-  const handleToggle = (id) => setPresencas((p) => ({ ...p, [id]: !p[id] }))
+  const handleToggle = (id) => {
+    setPresencas((p) => ({
+      ...p,
+      [id]: !p[id],
+    }))
+  }
 
   const handleSalvar = async () => {
     if (!categoria || atletas.length === 0 || !professor.trim()) {
-      alert("Preencha o nome do professor e selecione uma categoria.")
+      alert("Preencha o nome do professor e selecione uma categoria com atletas.")
       return
     }
+
     setSalvando(true)
     setMensagem("")
+
     try {
       const atletasComNome = atletas.map((a) => ({
         nome: a.nome,
+        sexo: a.sexo || "Não informado",
+        categoria: a.categoria || categoria,
         presente: !!presencas[a._id],
       }))
 
-      const payload = { categoria, data, professor, atletas: atletasComNome }
+      const payload = {
+        categoria,
+        data,
+        professor,
+        atletas: atletasComNome,
+      }
 
       if (editandoId) {
         await api.put(`/chamadas/${editandoId}`, payload)
@@ -89,7 +159,6 @@ export default function Chamada() {
         setMensagem("✅ Chamada salva com sucesso!")
       }
 
-      // reset
       setEditandoId(null)
       setCategoria("")
       setAtletas([])
@@ -108,6 +177,7 @@ export default function Chamada() {
 
   const handleExcluir = async (id) => {
     if (!window.confirm("Deseja realmente excluir esta chamada?")) return
+
     try {
       await api.delete(`/chamadas/${id}`)
       setMensagem("🗑️ Chamada excluída com sucesso!")
@@ -128,58 +198,71 @@ export default function Chamada() {
 
     try {
       const resAtletas = await api.get("/registros")
-      const atletasDaCategoria = resAtletas.data
-        .filter((a) => a.categoria?.toLowerCase() === chamada.categoria.toLowerCase())
-        .sort((a, b) => a.nome.localeCompare(b.nome))
 
-      // mapeia presenças por nome da chamada selecionada
+      const atletasDaCategoria = Array.isArray(resAtletas.data)
+        ? resAtletas.data
+            .filter((a) => categoriaConfere(a.categoria, chamada.categoria))
+            .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
+        : []
+
       const presencaPorNome = chamada.atletas.reduce((acc, curr) => {
         acc[curr.nome] = !!curr.presente
         return acc
       }, {})
 
-      // converte para o mapa de presenças por _id atuais
-      const presenciasMap = {}
+      const presencasMap = {}
+
       atletasDaCategoria.forEach((a) => {
-        presenciasMap[a._id] = presencaPorNome[a.nome] || false
+        presencasMap[a._id] = presencaPorNome[a.nome] || false
       })
 
       setAtletas(atletasDaCategoria)
-      setPresencas(presenciasMap)
+      setPresencas(presencasMap)
     } catch (err) {
       console.error("❌ Erro ao carregar atletas para edição:", err)
       setMensagem("❌ Erro ao carregar atletas da categoria para edição.")
     }
   }
 
+  const cancelarEdicao = () => {
+    setCategoria("")
+    setAtletas([])
+    setPresencas({})
+    setEditandoId(null)
+    setProfessor("")
+    setMensagem("")
+    setData(new Date().toISOString().slice(0, 10))
+  }
+
   const totalPresentes = Object.values(presencas).filter(Boolean).length
   const totalAusentes = Object.values(presencas).filter((p) => !p).length
 
+  const atletasPorSexo = separarPorSexo(atletas)
+
   return (
-    // MOBILE-ONLY FEEL: centraliza e limita largura em telas grandes; 100% no mobile
     <section className="p-4 bg-white min-h-screen flex justify-center">
       <div className="w-full max-w-md">
-        {/* Cabeçalho */}
         <h2 className="text-2xl sm:text-3xl font-bold text-emerald-800 mb-2 flex items-center gap-3">
           <MdChecklist className="text-3xl sm:text-4xl text-emerald-600" />
           Controle de Presenças
         </h2>
+
         <p className="text-gray-600 mb-4 text-sm sm:text-base">
           Registre a frequência dos atletas e acompanhe o histórico.
         </p>
 
-        {/* Card principal */}
         <div className="bg-white shadow-md rounded-2xl p-4 border border-emerald-100 mb-6">
           <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-3 flex items-center gap-2">
             <MdSave className="text-xl text-emerald-600" />
             {editandoId ? "Editar Chamada" : "Nova Chamada"}
           </h3>
 
-          {/* Campos topo - empilhados (mobile-first) */}
           <div className="flex flex-col gap-3">
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
-              <MdGroup className="text-lg text-emerald-600" /> Categoria
+              <MdGroup className="text-lg text-emerald-600" />
+              Categoria
             </label>
+
             <select
               value={categoria}
               onChange={(e) => {
@@ -190,16 +273,18 @@ export default function Chamada() {
               className="border border-emerald-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">Selecione a categoria</option>
-              {["Sub-7", "Sub-9", "Sub-11", "Sub-13", "Sub-15", "Sub-17", "Sub-20", "Adulto"].map(
-                (cat) => (
-                  <option key={cat}>{cat}</option>
-                )
-              )}
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
 
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
-              <MdCalendarToday className="text-lg text-emerald-600" /> Data
+              <MdCalendarToday className="text-lg text-emerald-600" />
+              Data
             </label>
+
             <input
               type="date"
               value={data}
@@ -208,8 +293,10 @@ export default function Chamada() {
             />
 
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
-              <MdSupervisorAccount className="text-lg text-emerald-600" /> Professor
+              <MdSupervisorAccount className="text-lg text-emerald-600" />
+              Professor
             </label>
+
             <input
               type="text"
               value={professor}
@@ -219,12 +306,11 @@ export default function Chamada() {
             />
           </div>
 
-          {/* Lista de atletas (tocável) */}
           {categoria && (
             <div className="mt-5">
               <h4 className="text-lg font-semibold mb-3 text-emerald-800 flex items-center gap-2">
                 <MdSportsSoccer className="text-xl text-emerald-600" />
-                Atletas — {categoria}{" "}
+                Atletas — {categoria}
                 <span className="text-sm font-normal text-gray-500">
                   ({atletas.length} no total)
                 </span>
@@ -235,54 +321,78 @@ export default function Chamada() {
                   Nenhum atleta cadastrado nesta categoria.
                 </p>
               ) : (
-                <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
-                  {atletas.map((a) => (
-                    <button
-                      key={a._id}
-                      type="button"
-                      onClick={() => handleToggle(a._id)}
-                      className={`flex justify-between items-center px-4 py-3 rounded-lg text-sm font-medium shadow-sm transition-all ${
-                        presencas[a._id]
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                      aria-label={presencas[a._id] ? "Presente" : "Ausente"}
-                    >
-                      <span className="text-left">{a.nome}</span>
-                      <span className="font-bold text-base">
-                        {presencas[a._id] ? "✔" : "✘"}
-                      </span>
-                    </button>
-                  ))}
+                <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
+                  {Object.entries(atletasPorSexo).map(([sexo, lista]) => {
+                    if (lista.length === 0) return null
+
+                    const presentesSexo = lista.filter((a) => presencas[a._id]).length
+                    const ausentesSexo = lista.length - presentesSexo
+
+                    return (
+                      <div key={sexo} className="border border-emerald-100 rounded-xl p-3 bg-emerald-50/40">
+                        <h5 className="font-bold text-emerald-800 mb-2 flex justify-between items-center">
+                          <span>
+                            {sexo === "Masculino"
+                              ? "Masculino"
+                              : sexo === "Feminino"
+                              ? "Feminino"
+                              : "Não informado"}
+                          </span>
+
+                          <span className="text-xs font-normal text-gray-600">
+                            ✅ {presentesSexo} | ❌ {ausentesSexo}
+                          </span>
+                        </h5>
+
+                        <div className="flex flex-col gap-2">
+                          {lista.map((a) => (
+                            <button
+                              key={a._id}
+                              type="button"
+                              onClick={() => handleToggle(a._id)}
+                              className={`flex justify-between items-center px-4 py-3 rounded-lg text-sm font-medium shadow-sm transition-all ${
+                                presencas[a._id]
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-red-100 text-red-700"
+                              }`}
+                              aria-label={presencas[a._id] ? "Presente" : "Ausente"}
+                            >
+                              <span className="text-left">{a.nome}</span>
+                              <span className="font-bold text-base">
+                                {presencas[a._id] ? "✔" : "✘"}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
               <div className="flex justify-between text-xs text-gray-600 mt-3">
-                <span className="text-emerald-700">✅ Presentes: {totalPresentes}</span>
-                <span className="text-red-700">❌ Ausentes: {totalAusentes}</span>
+                <span className="text-emerald-700">
+                  ✅ Presentes: {totalPresentes}
+                </span>
+                <span className="text-red-700">
+                  ❌ Ausentes: {totalAusentes}
+                </span>
               </div>
             </div>
           )}
 
-          {/* Ações */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
             {editandoId && (
               <button
                 type="button"
-                onClick={() => {
-                  setCategoria("")
-                  setAtletas([])
-                  setPresencas({})
-                  setEditandoId(null)
-                  setProfessor("")
-                  setMensagem("")
-                  setData(new Date().toISOString().slice(0, 10))
-                }}
+                onClick={cancelarEdicao}
                 className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition flex items-center gap-1 justify-center"
               >
-                <MdCancel /> Cancelar
+                <MdCancel />
+                Cancelar
               </button>
             )}
+
             <button
               type="button"
               onClick={handleSalvar}
@@ -290,7 +400,11 @@ export default function Chamada() {
               className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white px-6 py-2 rounded-lg hover:scale-[1.03] transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
             >
               <MdSave />
-              {salvando ? "Salvando..." : editandoId ? "Atualizar Chamada" : "Salvar Chamada"}
+              {salvando
+                ? "Salvando..."
+                : editandoId
+                ? "Atualizar Chamada"
+                : "Salvar Chamada"}
             </button>
           </div>
 
@@ -311,10 +425,10 @@ export default function Chamada() {
           )}
         </div>
 
-        {/* Histórico (compacto e rolável) */}
         <div className="bg-white shadow-md rounded-2xl p-4 border border-emerald-100">
           <h3 className="text-lg font-semibold text-emerald-800 border-b pb-2 mb-3 flex items-center gap-2">
-            <MdHistory className="text-xl text-emerald-600" /> Histórico de Chamadas ({historico.length})
+            <MdHistory className="text-xl text-emerald-600" />
+            Histórico de Chamadas ({historico.length})
           </h3>
 
           {historico.length === 0 ? (
@@ -325,6 +439,7 @@ export default function Chamada() {
             <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
               {historico.map((c) => {
                 const presentes = c.atletas.filter((a) => a.presente).length
+
                 return (
                   <div
                     key={c._id}
@@ -332,14 +447,28 @@ export default function Chamada() {
                   >
                     <div>
                       <p className="font-semibold text-emerald-800 flex items-center gap-2">
-                        <MdGroup className="text-lg text-emerald-700" /> {c.categoria}
+                        <MdGroup className="text-lg text-emerald-700" />
+                        {c.categoria}
                       </p>
+
                       <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                        <MdCalendarToday className="text-base text-emerald-600" />{" "}
+                        <MdCalendarToday className="text-base text-emerald-600" />
                         {new Date(c.data).toLocaleDateString("pt-BR")}
                       </p>
+
                       <p className="text-xs text-gray-700 mt-1">
-                        Presenças: <span className="font-bold text-emerald-700">{presentes}</span> / {c.atletas.length}
+                        Professor:{" "}
+                        <span className="font-bold text-emerald-700">
+                          {c.professor}
+                        </span>
+                      </p>
+
+                      <p className="text-xs text-gray-700 mt-1">
+                        Presenças:{" "}
+                        <span className="font-bold text-emerald-700">
+                          {presentes}
+                        </span>{" "}
+                        / {c.atletas.length}
                       </p>
                     </div>
 
@@ -352,6 +481,7 @@ export default function Chamada() {
                       >
                         <MdEdit />
                       </button>
+
                       <button
                         type="button"
                         onClick={() => handleExcluir(c._id)}

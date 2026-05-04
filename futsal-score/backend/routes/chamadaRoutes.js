@@ -12,7 +12,13 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Campos obrigatórios ausentes." })
     }
 
-    const novaChamada = new Chamada({ categoria, data, professor, atletas })
+    const novaChamada = new Chamada({
+      categoria,
+      data,
+      professor,
+      atletas,
+    })
+
     await novaChamada.save()
 
     res.status(201).json(novaChamada)
@@ -24,7 +30,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const chamadas = await Chamada.find().sort({ data: -1 })
+    const chamadas = await Chamada.find().sort({ createdAt: -1 })
     res.json(chamadas)
   } catch (err) {
     console.error("Erro ao buscar chamadas:", err)
@@ -35,8 +41,11 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const chamada = await Chamada.findById(req.params.id)
-    if (!chamada)
+
+    if (!chamada) {
       return res.status(404).json({ message: "Chamada não encontrada." })
+    }
+
     res.json(chamada)
   } catch (err) {
     console.error("Erro ao buscar chamada:", err)
@@ -47,14 +56,16 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const { categoria, data, professor, atletas } = req.body
+
     const chamadaAtualizada = await Chamada.findByIdAndUpdate(
       req.params.id,
       { categoria, data, professor, atletas },
       { new: true }
     )
 
-    if (!chamadaAtualizada)
+    if (!chamadaAtualizada) {
       return res.status(404).json({ message: "Chamada não encontrada." })
+    }
 
     res.json(chamadaAtualizada)
   } catch (err) {
@@ -66,8 +77,10 @@ router.put("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const chamadaRemovida = await Chamada.findByIdAndDelete(req.params.id)
-    if (!chamadaRemovida)
+
+    if (!chamadaRemovida) {
       return res.status(404).json({ message: "Chamada não encontrada." })
+    }
 
     res.json({ message: "Chamada excluída com sucesso." })
   } catch (err) {
