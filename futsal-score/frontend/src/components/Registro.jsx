@@ -46,10 +46,12 @@ export default function Registro({ selectedCategoria }) {
 
     const hoje = new Date()
     const nascimento = new Date(dataNascimento)
+
     let idade = hoje.getFullYear() - nascimento.getFullYear()
     const mes = hoje.getMonth() - nascimento.getMonth()
+    const dia = hoje.getDate() - nascimento.getDate()
 
-    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+    if (mes < 0 || (mes === 0 && dia < 0)) {
       idade--
     }
 
@@ -59,7 +61,7 @@ export default function Registro({ selectedCategoria }) {
   function definirCategoria(dataNascimento, sexo) {
     const idade = calcularIdade(dataNascimento)
 
-    if (!idade || !sexo) return ""
+    if (idade === null || !sexo) return ""
 
     let categoriaBase = ""
 
@@ -116,10 +118,12 @@ export default function Registro({ selectedCategoria }) {
       }
 
       if (k === "dataNascimento" || k === "sexo") {
-        novoForm.categoria = definirCategoria(
-          k === "dataNascimento" ? v : novoForm.dataNascimento,
-          k === "sexo" ? v : novoForm.sexo
-        )
+        const dataNascimentoAtual =
+          k === "dataNascimento" ? v : novoForm.dataNascimento
+
+        const sexoAtual = k === "sexo" ? v : novoForm.sexo
+
+        novoForm.categoria = definirCategoria(dataNascimentoAtual, sexoAtual)
       }
 
       return novoForm
@@ -358,16 +362,33 @@ export default function Registro({ selectedCategoria }) {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700">
-              Categoria Automática
+              Categoria
             </label>
-            <input
-              type="text"
+            <select
               value={form.categoria}
-              readOnly
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 bg-gray-100"
-              placeholder="Será preenchida automaticamente"
+              onChange={(e) => handleChange("categoria", e.target.value)}
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 bg-white"
               required
-            />
+            >
+              <option value="">Selecione</option>
+              <option value="Sub-7 Masculino">Sub-7 Masculino</option>
+              <option value="Sub-9 Masculino">Sub-9 Masculino</option>
+              <option value="Sub-11 Masculino">Sub-11 Masculino</option>
+              <option value="Sub-13 Masculino">Sub-13 Masculino</option>
+              <option value="Sub-15 Masculino">Sub-15 Masculino</option>
+              <option value="Sub-17 Masculino">Sub-17 Masculino</option>
+              <option value="Sub-20 Masculino">Sub-20 Masculino</option>
+              <option value="Adulto Masculino">Adulto Masculino</option>
+
+              <option value="Sub-7 Feminino">Sub-7 Feminino</option>
+              <option value="Sub-9 Feminino">Sub-9 Feminino</option>
+              <option value="Sub-11 Feminino">Sub-11 Feminino</option>
+              <option value="Sub-13 Feminino">Sub-13 Feminino</option>
+              <option value="Sub-15 Feminino">Sub-15 Feminino</option>
+              <option value="Sub-17 Feminino">Sub-17 Feminino</option>
+              <option value="Sub-20 Feminino">Sub-20 Feminino</option>
+              <option value="Adulto Feminino">Adulto Feminino</option>
+            </select>
           </div>
 
           <div>
