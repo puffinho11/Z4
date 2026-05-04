@@ -13,7 +13,7 @@ import {
   MdPhotoCamera,
   MdDelete,
   MdEdit,
-  MdEmojiEvents
+  MdEmojiEvents,
 } from "react-icons/md"
 
 export default function Registro({ selectedCategoria }) {
@@ -22,7 +22,7 @@ export default function Registro({ selectedCategoria }) {
     cpf: "",
     dataNascimento: "",
     sexo: "",
-    categoria: "",
+    categoria: selectedCategoria || "",
     status: "OK",
     treinos: 3,
     lesoes: 0,
@@ -32,8 +32,27 @@ export default function Registro({ selectedCategoria }) {
     amarelos: 0,
     vermelhos: 0,
     foto: "",
-    previewUrl: ""
+    previewUrl: "",
   }
+
+  const categorias = [
+    "Sub-7 Masculino",
+    "Sub-9 Masculino",
+    "Sub-11 Masculino",
+    "Sub-13 Masculino",
+    "Sub-15 Masculino",
+    "Sub-17 Masculino",
+    "Sub-20 Masculino",
+    "Adulto Masculino",
+    "Sub-7 Feminino",
+    "Sub-9 Feminino",
+    "Sub-11 Feminino",
+    "Sub-13 Feminino",
+    "Sub-15 Feminino",
+    "Sub-17 Feminino",
+    "Sub-20 Feminino",
+    "Adulto Feminino",
+  ]
 
   const [form, setForm] = useState(blank)
   const [editingId, setEditingId] = useState(null)
@@ -86,14 +105,39 @@ export default function Registro({ selectedCategoria }) {
       .slice(0, 14)
   }
 
+  function getApiBaseUrl() {
+    const base = api.defaults?.baseURL || ""
+
+    if (base.includes("/api")) {
+      return base.replace("/api", "")
+    }
+
+    return base || window.location.origin.replace(/:\d+$/, ":3000")
+  }
+
+  function montarUrlFoto(foto) {
+    if (!foto) return ""
+    if (foto.startsWith("http")) return foto
+    return `${getApiBaseUrl()}${foto}`
+  }
+
   async function fetchRegistros() {
     setLoading(true)
+    setError(null)
+
     try {
       const { data } = await api.get("/registros")
       setLista(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error("Erro ao carregar registros:", err)
-      setError("Erro ao carregar registros. Verifique o console.")
+
+      const errorMessage =
+        err.response?.data?.msg ||
+        err.response?.data?.error ||
+        "Erro ao carregar registros. Verifique o console."
+
+      setError(errorMessage)
+      setLista([])
     } finally {
       setLoading(false)
     }
@@ -104,14 +148,20 @@ export default function Registro({ selectedCategoria }) {
   }, [])
 
   useEffect(() => {
-    if (selectedCategoria) {
-      setForm((prev) => ({ ...prev, categoria: selectedCategoria }))
+    if (selectedCategoria && !editingId) {
+      setForm((prev) => ({
+        ...prev,
+        categoria: selectedCategoria,
+      }))
     }
-  }, [selectedCategoria])
+  }, [selectedCategoria, editingId])
 
   function handleChange(k, v) {
     setForm((prev) => {
-      const novoForm = { ...prev, [k]: v }
+      const novoForm = {
+        ...prev,
+        [k]: v,
+      }
 
       if (k === "cpf") {
         novoForm.cpf = formatarCPF(v)
@@ -133,36 +183,11 @@ export default function Registro({ selectedCategoria }) {
   function resetForm() {
     setForm({
       ...blank,
-      categoria: selectedCategoria || ""
+      categoria: selectedCategoria || "",
     })
+
     setEditingId(null)
     setError(null)
-  }
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result)
-      reader.onerror = (error) => reject(error)
-    })
-  }
-
-  async function handleFotoChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    try {
-      const base64 = await fileToBase64(file)
-      setForm((prev) => ({
-        ...prev,
-        foto: base64,
-        previewUrl: base64
-      }))
-    } catch (err) {
-      console.error("Erro ao converter imagem:", err)
-      setError("Erro ao carregar a imagem.")
-    }
   }
 
   async function handleSubmit(e) {
@@ -170,46 +195,45 @@ export default function Registro({ selectedCategoria }) {
     setLoading(true)
     setError(null)
 
-    try {
-      const payload = {
-        nome: form.nome,
-        cpf: form.cpf,
-        dataNascimento: form.dataNascimento,
-        sexo: form.sexo,
-        categoria: form.categoria,
-        status: form.status,
-        treinos: Number(form.treinos) || 0,
-        lesoes: Number(form.lesoes) || 0,
-        vo2: Number(form.vo2) || 0,
-        data: form.data,
-        gols: Number(form.gols) || 0,
-        amarelos: Number(form.amarelos) || 0,
-        vermelhos: Number(form.vermelhos) || 0,
-        foto: form.foto || ""
-      }
+    const dataToSend = new FormData()
 
+    Object.entries(form).forEach(([key, value]) => {
+      if (key !== "previewUrl") {
+        dataToSend.append(key, value)
+      }
+    })
+
+    try {
       let res
 
       if (editingId) {
-        res = await api.put(`/registros/${editingId}`, payload)
+        res = await api.put(`/registros/${editingId}`, dataToSend, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+
         setLista((prev) =>
           prev.map((r) => (r._id === editingId ? res.data : r))
         )
-        alert("Registro atualizado com sucesso!")
       } else {
-        res = await api.post("/registros", payload)
-        setLista((prev) => [...prev, res.data])
-        alert("Registro salvo com sucesso!")
+        res = await api.post("/registros", dataToSend, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+
+        setLista((prev) => [res.data, ...prev])
       }
 
       resetForm()
+      alert(editingId ? "Registro atualizado com sucesso!" : "Registro salvo com sucesso!")
+
+      await fetchRegistros()
     } catch (err) {
       console.error(err)
+
       const errorMessage =
         err.response?.data?.msg ||
         err.response?.data?.error ||
-        err.message ||
         "Erro ao salvar registro. Verifique o console."
+
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -235,8 +259,8 @@ export default function Registro({ selectedCategoria }) {
       gols: registro.gols ?? 0,
       amarelos: registro.amarelos ?? 0,
       vermelhos: registro.vermelhos ?? 0,
-      foto: registro.foto || "",
-      previewUrl: registro.foto || ""
+      foto: "",
+      previewUrl: montarUrlFoto(registro.foto),
     })
 
     setEditingId(registro._id)
@@ -248,28 +272,48 @@ export default function Registro({ selectedCategoria }) {
     if (!window.confirm("Tem certeza que deseja remover este registro?")) return
 
     setLoading(true)
+    setError(null)
+
     try {
       await api.delete(`/registros/${id}`)
       setLista((prev) => prev.filter((r) => r._id !== id))
       alert("Registro excluído com sucesso!")
     } catch (err) {
       console.error(err)
-      setError("Erro ao excluir registro.")
+
+      const errorMessage =
+        err.response?.data?.msg ||
+        err.response?.data?.error ||
+        "Erro ao excluir registro."
+
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   const listaFiltrada = selectedCategoria
-    ? lista.filter((r) => r.categoria === selectedCategoria)
+    ? lista.filter((r) => {
+        const categoria = r.categoria || ""
+
+        return (
+          categoria === selectedCategoria ||
+          categoria.startsWith(selectedCategoria)
+        )
+      })
     : lista
 
   const registrosPorCategoria = listaFiltrada.reduce((acc, reg) => {
     const sexoGrupo = reg.sexo || "Não informado"
     const categoriaGrupo = reg.categoria || "Sem categoria"
 
-    if (!acc[sexoGrupo]) acc[sexoGrupo] = {}
-    if (!acc[sexoGrupo][categoriaGrupo]) acc[sexoGrupo][categoriaGrupo] = []
+    if (!acc[sexoGrupo]) {
+      acc[sexoGrupo] = {}
+    }
+
+    if (!acc[sexoGrupo][categoriaGrupo]) {
+      acc[sexoGrupo][categoriaGrupo] = []
+    }
 
     acc[sexoGrupo][categoriaGrupo].push(reg)
 
@@ -281,6 +325,12 @@ export default function Registro({ selectedCategoria }) {
       <h2 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center gap-3">
         <MdPersonSearch className="text-5xl text-emerald-600" />
         Monitoramento de Atletas
+
+        {selectedCategoria && (
+          <span className="ml-3 text-lg text-emerald-700">
+            • Categoria: <strong>{selectedCategoria}</strong>
+          </span>
+        )}
       </h2>
 
       <p className="text-gray-500 mb-8 text-lg">
@@ -295,7 +345,7 @@ export default function Registro({ selectedCategoria }) {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12"
+        className="bg-white shadow-lg rounded-2xl p-8 border border-emerald-100 space-y-6 mb-12 transition hover:shadow-emerald-300/40"
       >
         <h3 className="text-xl font-bold text-emerald-800 border-b-2 border-emerald-100 pb-3 flex items-center gap-2">
           <MdSave className="text-2xl text-emerald-600" />
@@ -311,7 +361,7 @@ export default function Registro({ selectedCategoria }) {
               type="text"
               value={form.nome}
               onChange={(e) => handleChange("nome", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="Ex: João Silva"
               required
             />
@@ -325,7 +375,7 @@ export default function Registro({ selectedCategoria }) {
               type="text"
               value={form.cpf}
               onChange={(e) => handleChange("cpf", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="000.000.000-00"
               required
             />
@@ -339,7 +389,7 @@ export default function Registro({ selectedCategoria }) {
               type="date"
               value={form.dataNascimento}
               onChange={(e) => handleChange("dataNascimento", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             />
           </div>
@@ -351,7 +401,7 @@ export default function Registro({ selectedCategoria }) {
             <select
               value={form.sexo}
               onChange={(e) => handleChange("sexo", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             >
               <option value="">Selecione</option>
@@ -362,32 +412,20 @@ export default function Registro({ selectedCategoria }) {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700">
-              Categoria
+              Categoria Automática
             </label>
             <select
               value={form.categoria}
               onChange={(e) => handleChange("categoria", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 bg-white"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             >
               <option value="">Selecione</option>
-              <option value="Sub-7 Masculino">Sub-7 Masculino</option>
-              <option value="Sub-9 Masculino">Sub-9 Masculino</option>
-              <option value="Sub-11 Masculino">Sub-11 Masculino</option>
-              <option value="Sub-13 Masculino">Sub-13 Masculino</option>
-              <option value="Sub-15 Masculino">Sub-15 Masculino</option>
-              <option value="Sub-17 Masculino">Sub-17 Masculino</option>
-              <option value="Sub-20 Masculino">Sub-20 Masculino</option>
-              <option value="Adulto Masculino">Adulto Masculino</option>
-
-              <option value="Sub-7 Feminino">Sub-7 Feminino</option>
-              <option value="Sub-9 Feminino">Sub-9 Feminino</option>
-              <option value="Sub-11 Feminino">Sub-11 Feminino</option>
-              <option value="Sub-13 Feminino">Sub-13 Feminino</option>
-              <option value="Sub-15 Feminino">Sub-15 Feminino</option>
-              <option value="Sub-17 Feminino">Sub-17 Feminino</option>
-              <option value="Sub-20 Feminino">Sub-20 Feminino</option>
-              <option value="Adulto Feminino">Adulto Feminino</option>
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -399,7 +437,7 @@ export default function Registro({ selectedCategoria }) {
               type="date"
               value={form.data}
               onChange={(e) => handleChange("data", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               required
             />
           </div>
@@ -411,7 +449,7 @@ export default function Registro({ selectedCategoria }) {
             <select
               value={form.status}
               onChange={(e) => handleChange("status", e.target.value)}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
               <option value="OK">OK</option>
               <option value="Recuperação">Recuperação</option>
@@ -426,8 +464,22 @@ export default function Registro({ selectedCategoria }) {
             <input
               type="file"
               accept="image/*"
-              onChange={handleFotoChange}
-              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+
+                if (file) {
+                  handleChange("foto", file)
+
+                  const previewUrl = URL.createObjectURL(file)
+
+                  setForm((prev) => ({
+                    ...prev,
+                    foto: file,
+                    previewUrl,
+                  }))
+                }
+              }}
+              className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700"
             />
 
             {form.previewUrl && (
@@ -445,7 +497,7 @@ export default function Registro({ selectedCategoria }) {
             { id: "vo2", label: "VO₂ Máx.", icon: <MdOutlineSpeed /> },
             { id: "gols", label: "Gols", icon: <MdSportsSoccer /> },
             { id: "amarelos", label: "Cartões Amarelos", icon: <MdOutlineStyle /> },
-            { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> }
+            { id: "vermelhos", label: "Cartões Vermelhos", icon: <MdOutlineStyle /> },
           ].map((f) => (
             <div key={f.id}>
               <label className="block text-sm font-semibold text-gray-700 flex items-center gap-1">
@@ -455,7 +507,7 @@ export default function Registro({ selectedCategoria }) {
                 type="number"
                 value={form[f.id]}
                 onChange={(e) => handleChange(f.id, e.target.value)}
-                className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1"
+                className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 min="0"
               />
             </div>
@@ -475,10 +527,14 @@ export default function Registro({ selectedCategoria }) {
 
           <button
             type="submit"
-            className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:scale-[1.02] transition flex items-center gap-2"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-700 text-white py-2 px-6 rounded-xl shadow-md hover:shadow-emerald-300/50 hover:scale-[1.02] transition flex items-center gap-2"
             disabled={loading}
           >
-            {loading ? "Salvando..." : editingId ? "Atualizar Registro" : "Salvar Registro"}
+            {loading
+              ? "Salvando..."
+              : editingId
+              ? "Atualizar Registro"
+              : "Salvar Registro"}
           </button>
         </div>
       </form>
@@ -489,18 +545,24 @@ export default function Registro({ selectedCategoria }) {
           Registros por Categoria
         </h3>
 
-        {Object.keys(registrosPorCategoria).length === 0 ? (
+        {loading && (
+          <p className="text-gray-500 text-center py-6">
+            Carregando registros...
+          </p>
+        )}
+
+        {!loading && Object.keys(registrosPorCategoria).length === 0 ? (
           <p className="text-gray-500 text-center py-10 bg-emerald-50 rounded-2xl border">
             Nenhum registro encontrado.
           </p>
         ) : (
-          Object.entries(registrosPorCategoria).map(([sexo, categorias]) => (
+          Object.entries(registrosPorCategoria).map(([sexo, categoriasObj]) => (
             <div key={sexo} className="mb-12">
               <h3 className="text-2xl font-bold text-emerald-900 mb-5">
                 Categoria {sexo}
               </h3>
 
-              {Object.entries(categorias).map(([categoria, registros]) => (
+              {Object.entries(categoriasObj).map(([categoria, registros]) => (
                 <div key={categoria} className="mb-10">
                   <h4 className="text-xl font-bold text-emerald-700 border-b-2 border-emerald-100 pb-3 mb-4 flex items-center gap-2">
                     <MdEmojiEvents className="text-yellow-500 text-2xl" />
@@ -514,11 +576,11 @@ export default function Registro({ selectedCategoria }) {
                       .map((r) => (
                         <div
                           key={r._id}
-                          className="bg-white border border-emerald-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg transition-all duration-200"
+                          className="bg-white border border-emerald-200 rounded-2xl p-5 flex items-center gap-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                         >
                           {r.foto ? (
                             <img
-                              src={r.foto}
+                              src={montarUrlFoto(r.foto)}
                               alt={r.nome}
                               className="w-20 h-20 object-cover rounded-full border-2 border-emerald-400 shadow-md"
                             />
@@ -545,7 +607,11 @@ export default function Registro({ selectedCategoria }) {
                             </p>
 
                             <p className="text-sm text-gray-500 mb-2">
-                              Registro: {new Date(r.data).toLocaleDateString("pt-BR")} •{" "}
+                              Registro:{" "}
+                              {r.data
+                                ? new Date(r.data).toLocaleDateString("pt-BR")
+                                : "Não informada"}{" "}
+                              •{" "}
                               <span
                                 className={`font-semibold ${
                                   r.status === "OK"
@@ -569,6 +635,12 @@ export default function Registro({ selectedCategoria }) {
                               <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
                                 <MdHealing /> {r.lesoes}
                               </span>
+                              <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
+                                <MdOutlineStyle /> Am: {r.amarelos}
+                              </span>
+                              <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm border">
+                                <MdOutlineStyle /> Vm: {r.vermelhos}
+                              </span>
                             </div>
                           </div>
 
@@ -579,6 +651,7 @@ export default function Registro({ selectedCategoria }) {
                             >
                               <MdEdit /> Editar
                             </button>
+
                             <button
                               onClick={() => excluir(r._id)}
                               className="text-red-600 font-medium hover:text-red-800 flex items-center gap-1"

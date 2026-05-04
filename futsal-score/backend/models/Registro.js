@@ -10,18 +10,19 @@ const registroSchema = new mongoose.Schema(
 
     cpf: {
       type: String,
-      default: "",
+      required: true,
+      trim: true,
     },
 
     dataNascimento: {
       type: Date,
-      default: null,
+      required: true,
     },
 
     sexo: {
       type: String,
-      enum: ["Masculino", "Feminino", ""],
-      default: "",
+      enum: ["Masculino", "Feminino"],
+      required: true,
     },
 
     categoria: {

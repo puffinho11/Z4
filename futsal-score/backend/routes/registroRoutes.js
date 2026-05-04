@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage })
 
 function getUserId(user) {
-  return user?._id || user?.id || user?.userId
+  return user?._id || user?.id || user?.userId || null
 }
 
 function getUserRole(user) {
@@ -36,7 +36,7 @@ function getUserRole(user) {
   )
 }
 
-function isUserAdmin(user) {
+function isAdminUser(user) {
   const role = getUserRole(user)
   return role === "admin" || user?.isAdmin === true
 }
@@ -45,7 +45,6 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isUserAdmin(user)
 
     if (!userId) {
       return res.status(401).json({
@@ -54,10 +53,22 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
     }
 
     const novoRegistro = new Registro({
-      ...req.body,
-      foto: req.file ? `/uploads/registros/${req.file.filename}` : req.body.foto || "",
+      nome: req.body.nome,
+      cpf: req.body.cpf,
+      dataNascimento: req.body.dataNascimento,
+      sexo: req.body.sexo,
+      categoria: req.body.categoria,
+      status: req.body.status || "OK",
+      treinos: Number(req.body.treinos) || 0,
+      lesoes: Number(req.body.lesoes) || 0,
+      vo2: Number(req.body.vo2) || 0,
+      data: req.body.data || Date.now(),
+      gols: Number(req.body.gols) || 0,
+      amarelos: Number(req.body.amarelos) || 0,
+      vermelhos: Number(req.body.vermelhos) || 0,
+      foto: req.file ? `/uploads/registros/${req.file.filename}` : "",
       criadoPor: userId,
-      time: user.time || req.body.time || null,
+      time: user.time || req.body.time || "Sem time",
     })
 
     await novoRegistro.save()
@@ -73,7 +84,7 @@ router.get("/", auth, async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isUserAdmin(user)
+    const isAdmin = isAdminUser(user)
 
     let query = {}
 
@@ -82,11 +93,18 @@ router.get("/", auth, async (req, res) => {
         $or: [
           { criadoPor: userId },
           { time: user.time },
+          { time: "Sem time" },
+          { time: null },
+          { time: "" },
+          { time: "Todos" },
         ],
       }
     }
 
-    const registros = await Registro.find(query).sort({ data: -1, createdAt: -1 })
+    const registros = await Registro.find(query).sort({
+      data: -1,
+      createdAt: -1,
+    })
 
     res.json(registros)
   } catch (error) {
@@ -99,7 +117,7 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isUserAdmin(user)
+    const isAdmin = isAdminUser(user)
     const { id } = req.params
 
     const registro = await Registro.findById(id)
@@ -114,14 +132,32 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
     const mesmoTime =
       registro.time && user.time && String(registro.time) === String(user.time)
 
-    if (!isAdmin && !mesmoCriador && !mesmoTime) {
+    const registroSemTime =
+      !registro.time ||
+      registro.time === "" ||
+      registro.time === "Todos" ||
+      registro.time === "Sem time"
+
+    if (!isAdmin && !mesmoCriador && !mesmoTime && !registroSemTime) {
       return res.status(403).json({
         msg: "Sem permissão para editar este registro.",
       })
     }
 
     const dadosAtualizados = {
-      ...req.body,
+      nome: req.body.nome,
+      cpf: req.body.cpf,
+      dataNascimento: req.body.dataNascimento,
+      sexo: req.body.sexo,
+      categoria: req.body.categoria,
+      status: req.body.status || "OK",
+      treinos: Number(req.body.treinos) || 0,
+      lesoes: Number(req.body.lesoes) || 0,
+      vo2: Number(req.body.vo2) || 0,
+      data: req.body.data || registro.data,
+      gols: Number(req.body.gols) || 0,
+      amarelos: Number(req.body.amarelos) || 0,
+      vermelhos: Number(req.body.vermelhos) || 0,
     }
 
     if (req.file) {
@@ -130,7 +166,7 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
 
     if (!isAdmin) {
       dadosAtualizados.criadoPor = registro.criadoPor || userId
-      dadosAtualizados.time = registro.time || user.time || null
+      dadosAtualizados.time = registro.time || user.time || "Sem time"
     }
 
     const atualizado = await Registro.findByIdAndUpdate(id, dadosAtualizados, {
@@ -148,7 +184,7 @@ router.delete("/:id", auth, async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isUserAdmin(user)
+    const isAdmin = isAdminUser(user)
     const { id } = req.params
 
     const registro = await Registro.findById(id)
@@ -163,7 +199,13 @@ router.delete("/:id", auth, async (req, res) => {
     const mesmoTime =
       registro.time && user.time && String(registro.time) === String(user.time)
 
-    if (!isAdmin && !mesmoCriador && !mesmoTime) {
+    const registroSemTime =
+      !registro.time ||
+      registro.time === "" ||
+      registro.time === "Todos" ||
+      registro.time === "Sem time"
+
+    if (!isAdmin && !mesmoCriador && !mesmoTime && !registroSemTime) {
       return res.status(403).json({
         msg: "Sem permissão para excluir este registro.",
       })
