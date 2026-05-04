@@ -10,18 +10,18 @@ const registroSchema = new mongoose.Schema(
 
     cpf: {
       type: String,
-      required: true,
+      default: "",
     },
 
     dataNascimento: {
       type: Date,
-      required: true,
+      default: null,
     },
 
     sexo: {
       type: String,
-      enum: ["Masculino", "Feminino"],
-      required: true,
+      enum: ["Masculino", "Feminino", ""],
+      default: "",
     },
 
     categoria: {
@@ -78,6 +78,7 @@ const registroSchema = new mongoose.Schema(
     criadoPor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
 
     time: {
@@ -87,6 +88,7 @@ const registroSchema = new mongoose.Schema(
   },
   {
     collection: "registros",
+    timestamps: true,
   }
 )
 
