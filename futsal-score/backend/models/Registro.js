@@ -76,6 +76,11 @@ const registroSchema = new mongoose.Schema(
       default: "",
     },
 
+    codigoAtleta: {
+      type: String,
+      unique: true,
+    },
+
     criadoPor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -92,6 +97,14 @@ const registroSchema = new mongoose.Schema(
     timestamps: true,
   }
 )
+
+registroSchema.pre("save", function (next) {
+  if (!this.codigoAtleta) {
+    this.codigoAtleta = `ATL-${this._id.toString().slice(-6).toUpperCase()}`
+  }
+
+  next()
+})
 
 const Registro = mongoose.model("Registro", registroSchema)
 
