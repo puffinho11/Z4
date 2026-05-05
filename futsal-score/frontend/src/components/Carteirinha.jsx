@@ -46,11 +46,7 @@ export default function Carteirinha() {
 
   function getApiBaseUrl() {
     const base = api.defaults?.baseURL || ""
-
-    if (base.includes("/api")) {
-      return base.replace("/api", "")
-    }
-
+    if (base.includes("/api")) return base.replace("/api", "")
     return base || window.location.origin.replace(/:\d+$/, ":3000")
   }
 
@@ -114,10 +110,12 @@ export default function Carteirinha() {
     if (!elemento) return null
 
     const canvas = await html2canvas(elemento, {
-      scale: 3,
+      scale: 4,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
+      scrollX: 0,
+      scrollY: 0,
     })
 
     return canvas.toDataURL("image/png", 1.0)
@@ -184,6 +182,7 @@ export default function Carteirinha() {
             border: 4px solid #059669;
             box-sizing: border-box;
             font-family: Arial, Helvetica, sans-serif;
+            flex-shrink: 0;
           }
 
           .card-topo {
@@ -203,6 +202,10 @@ export default function Carteirinha() {
             font-weight: 900;
             text-transform: uppercase;
             line-height: 24px;
+            max-width: 390px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
 
           .card-subtitulo {
@@ -211,7 +214,7 @@ export default function Carteirinha() {
           }
 
           .card-corpo {
-            height: 160px;
+            height: 158px;
             padding: 18px;
             display: flex;
             gap: 18px;
@@ -219,7 +222,7 @@ export default function Carteirinha() {
 
           .card-foto {
             width: 105px;
-            height: 130px;
+            height: 128px;
             border-radius: 14px;
             border: 3px solid #34d399;
             background: #f3f4f6;
@@ -249,7 +252,7 @@ export default function Carteirinha() {
             font-weight: 900;
             color: #1f2937;
             margin-top: 2px;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
             word-break: break-word;
           }
 
@@ -262,18 +265,26 @@ export default function Carteirinha() {
           }
 
           .categoria-card {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: #d1fae5;
             color: #047857;
             padding: 5px 12px;
             border-radius: 999px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 900;
             margin-top: 3px;
+            min-width: 125px;
+            max-width: 165px;
+            height: 28px;
+            line-height: 14px;
+            text-align: center;
+            white-space: nowrap;
           }
 
           .card-rodape {
-            height: 42px;
+            height: 36px;
             border-top: 1px solid #d1fae5;
             padding: 0 18px;
             display: flex;
@@ -294,8 +305,8 @@ export default function Carteirinha() {
           }
 
           .verso-corpo {
-            height: 160px;
-            padding: 18px;
+            height: 158px;
+            padding: 22px 18px 14px 18px;
             display: flex;
             gap: 18px;
             align-items: center;
@@ -313,17 +324,26 @@ export default function Carteirinha() {
             flex-shrink: 0;
           }
 
-          .preview-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+          .verso-info {
+            padding-top: 0;
           }
 
-          @media (min-width: 900px) {
-            .preview-cards {
-              flex-direction: row;
-              align-items: flex-start;
-            }
+          .verso-info .texto-card {
+            margin-bottom: 9px;
+          }
+
+          .carteirinha-area {
+            width: fit-content;
+            max-width: 100%;
+            margin: 0 auto;
+          }
+
+          .preview-cards {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
           }
         `}
       </style>
@@ -400,117 +420,116 @@ export default function Carteirinha() {
         <div
           id="area-carteirinhas"
           ref={printRef}
-          className="grid grid-cols-1 gap-8"
+          className="flex flex-col gap-8"
         >
           {atletasFiltrados.map((atleta) => (
             <div
               key={atleta._id}
               className="carteirinha-print bg-white rounded-2xl shadow-lg border border-emerald-100 p-5"
             >
-              <div className="preview-cards">
-                <div id={`frente-${atleta._id}`} className="card-carteirinha">
-                  <div className="card-topo">
-                    <div className="card-time">
-                      {atleta.time || "Sem time"}
-                    </div>
-                    <div className="card-subtitulo">
-                      Carteirinha de Identificação do Atleta
-                    </div>
-                  </div>
-
-                  <div className="card-corpo">
-                    <div className="card-foto">
-                      {atleta.foto ? (
-                        <img
-                          src={montarUrlFoto(atleta.foto)}
-                          alt={atleta.nome}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <MdPhotoCamera className="text-5xl text-gray-400" />
-                      )}
-                    </div>
-
-                    <div className="card-info">
-                      <div className="label-card">Nome</div>
-                      <div className="nome-card">{atleta.nome}</div>
-
-                      <div className="label-card flex items-center gap-1">
-                        <MdCalendarToday />
-                        Data de Nascimento
+              <div className="carteirinha-area">
+                <div className="preview-cards">
+                  <div id={`frente-${atleta._id}`} className="card-carteirinha">
+                    <div className="card-topo">
+                      <div className="card-time">
+                        {atleta.time || "Sem time"}
                       </div>
-                      <div className="texto-card">
-                        {formatarData(atleta.dataNascimento)}
-                      </div>
-
-                      <div className="label-card">Categoria</div>
-                      <div className="categoria-card">
-                        {atleta.categoria}
+                      <div className="card-subtitulo">
+                        Carteirinha de Identificação do Atleta
                       </div>
                     </div>
-                  </div>
 
-                  <div className="card-rodape">
-                    <span>Código do atleta</span>
-                    <span className="codigo-card">
-                      {gerarCodigoAtleta(atleta)}
-                    </span>
-                  </div>
-                </div>
+                    <div className="card-corpo">
+                      <div className="card-foto">
+                        {atleta.foto ? (
+                          <img
+                            src={montarUrlFoto(atleta.foto)}
+                            alt={atleta.nome}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <MdPhotoCamera className="text-5xl text-gray-400" />
+                        )}
+                      </div>
 
-                <div id={`verso-${atleta._id}`} className="card-carteirinha">
-                  <div className="card-topo verso-topo">
-                    <div className="card-time">Validação do Atleta</div>
-                    <div className="card-subtitulo">
-                      Escaneie o QR Code para conferir os dados
+                      <div className="card-info">
+                        <div className="label-card">Nome</div>
+                        <div className="nome-card">{atleta.nome}</div>
+
+                        <div className="label-card flex items-center gap-1">
+                          <MdCalendarToday />
+                          Data de Nascimento
+                        </div>
+                        <div className="texto-card">
+                          {formatarData(atleta.dataNascimento)}
+                        </div>
+
+                        <div className="label-card">Categoria</div>
+                        <div className="categoria-card">
+                          {atleta.categoria}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="verso-corpo">
-                    <div className="box-qrcode">
-                      <QRCodeCanvas
-                        value={gerarValorQr(atleta)}
-                        size={94}
-                        level="H"
-                        includeMargin={true}
-                      />
-                    </div>
-
-                    <div className="card-info">
-                      <div className="label-card">Código do Atleta</div>
-                      <div className="text-[20px] font-black text-emerald-700 mb-2">
+                    <div className="card-rodape">
+                      <span>Código do atleta</span>
+                      <span className="codigo-card">
                         {gerarCodigoAtleta(atleta)}
-                      </div>
-
-                      <div className="label-card">Nome</div>
-                      <div className="texto-card">{atleta.nome}</div>
-
-                      <div className="label-card">Time</div>
-                      <div className="texto-card">{atleta.time || "Sem time"}</div>
-
-                      <div className="label-card">Categoria</div>
-                      <div className="texto-card">{atleta.categoria}</div>
+                      </span>
                     </div>
                   </div>
 
-                  <div className="card-rodape">
-                    <span>Documento esportivo</span>
-                    <span>
-                      <MdQrCode2 className="inline-block mr-1" />
-                      QR Code
-                    </span>
+                  <div id={`verso-${atleta._id}`} className="card-carteirinha">
+                    <div className="card-topo verso-topo">
+                      <div className="card-time">Validação do Atleta</div>
+                      <div className="card-subtitulo">
+                        Escaneie o QR Code para conferir os dados
+                      </div>
+                    </div>
+
+                    <div className="verso-corpo">
+                      <div className="box-qrcode">
+                        <QRCodeCanvas
+                          value={gerarValorQr(atleta)}
+                          size={94}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      </div>
+
+                      <div className="card-info verso-info">
+                        <div className="label-card">Nome</div>
+                        <div className="texto-card">{atleta.nome}</div>
+
+                        <div className="label-card">Time</div>
+                        <div className="texto-card">
+                          {atleta.time || "Sem time"}
+                        </div>
+
+                        <div className="label-card">Categoria</div>
+                        <div className="texto-card">{atleta.categoria}</div>
+                      </div>
+                    </div>
+
+                    <div className="card-rodape">
+                      <span>Documento esportivo</span>
+                      <span>
+                        <MdQrCode2 className="inline-block mr-1" />
+                        QR Code
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="no-print mt-4 flex justify-end">
-                <button
-                  onClick={() => baixarPDF(atleta)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 shadow-md transition"
-                >
-                  <MdDownload />
-                  Baixar PDF
-                </button>
+                <div className="no-print mt-4 flex justify-end">
+                  <button
+                    onClick={() => baixarPDF(atleta)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 shadow-md transition"
+                  >
+                    <MdDownload />
+                    Baixar PDF
+                  </button>
+                </div>
               </div>
             </div>
           ))}

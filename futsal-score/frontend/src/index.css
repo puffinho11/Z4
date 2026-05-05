@@ -95,3 +95,22 @@ canvas {
   }
 }
 
+.verso-info {
+  padding-top: 6px;
+}
+
+.codigo-verso {
+  font-size: 19px;
+  line-height: 22px;
+  font-weight: 900;
+  color: #047857;
+  margin-bottom: 10px;
+}
+
+.verso-corpo {
+  height: 158px;
+  padding: 20px 18px 14px 18px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
