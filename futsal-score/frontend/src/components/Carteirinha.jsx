@@ -130,13 +130,13 @@ export default function Carteirinha() {
     const pdf = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: [85.6, 54],
+      format: [120, 76],
       compress: true,
     })
 
-    pdf.addImage(frenteImg, "PNG", 0, 0, 85.6, 54)
-    pdf.addPage([85.6, 54], "landscape")
-    pdf.addImage(versoImg, "PNG", 0, 0, 85.6, 54)
+    pdf.addImage(frenteImg, "PNG", 0, 0, 120, 76)
+    pdf.addPage([120, 76], "landscape")
+    pdf.addImage(versoImg, "PNG", 0, 0, 120, 76)
 
     pdf.save(`Carteirinha_${gerarCodigoAtleta(atleta)}_${atleta.nome}.pdf`)
   }
@@ -146,6 +146,11 @@ export default function Carteirinha() {
       <style>
         {`
           @media print {
+            @page {
+              size: A4;
+              margin: 8mm;
+            }
+
             body * {
               visibility: hidden;
             }
@@ -159,7 +164,7 @@ export default function Carteirinha() {
               left: 0;
               top: 0;
               width: 100%;
-              padding: 20px;
+              padding: 0;
             }
 
             .no-print {
@@ -169,24 +174,37 @@ export default function Carteirinha() {
             .carteirinha-print {
               break-inside: avoid;
               page-break-inside: avoid;
-              margin-bottom: 20px;
+              margin-bottom: 18mm;
+              box-shadow: none !important;
+              border: none !important;
+              padding: 0 !important;
+            }
+
+            .preview-cards {
+              justify-content: flex-start !important;
+              gap: 10mm !important;
+            }
+
+            .card-carteirinha {
+              width: 120mm !important;
+              height: 76mm !important;
             }
           }
 
           .card-carteirinha {
-            width: 430px;
-            height: 270px;
+            width: 560px;
+            height: 354px;
             overflow: hidden;
             background: #ffffff;
-            border-radius: 18px;
-            border: 4px solid #059669;
+            border-radius: 22px;
+            border: 5px solid #059669;
             box-sizing: border-box;
             font-family: Arial, Helvetica, sans-serif;
             flex-shrink: 0;
           }
 
           .card-topo {
-            height: 68px;
+            height: 92px;
             background: linear-gradient(90deg, #065f46, #10b981);
             color: white;
             display: flex;
@@ -194,37 +212,38 @@ export default function Carteirinha() {
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 8px 18px;
+            padding: 10px 22px;
           }
 
           .card-time {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
             text-transform: uppercase;
-            line-height: 24px;
-            max-width: 390px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+            line-height: 26px;
+            max-width: 500px;
+            overflow: visible;
+            white-space: normal;
+            text-overflow: unset;
+            text-align: center;
           }
 
           .card-subtitulo {
-            font-size: 11px;
-            margin-top: 3px;
+            font-size: 14px;
+            margin-top: 4px;
           }
 
           .card-corpo {
-            height: 158px;
-            padding: 18px;
+            height: 210px;
+            padding: 24px;
             display: flex;
-            gap: 18px;
+            gap: 24px;
           }
 
           .card-foto {
-            width: 105px;
-            height: 128px;
-            border-radius: 14px;
-            border: 3px solid #34d399;
+            width: 138px;
+            height: 168px;
+            border-radius: 18px;
+            border: 4px solid #34d399;
             background: #f3f4f6;
             display: flex;
             align-items: center;
@@ -239,29 +258,36 @@ export default function Carteirinha() {
           }
 
           .label-card {
-            font-size: 10px;
+            font-size: 13px;
             color: #6b7280;
             font-weight: 900;
             text-transform: uppercase;
-            line-height: 12px;
+            line-height: 15px;
           }
 
           .nome-card {
-            font-size: 18px;
-            line-height: 20px;
+            font-size: 22px;
+            line-height: 24px;
             font-weight: 900;
             color: #1f2937;
-            margin-top: 2px;
-            margin-bottom: 7px;
-            word-break: break-word;
+            margin-top: 3px;
+            margin-bottom: 8px;
+            height: 50px;
+            max-height: 50px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            word-break: normal;
           }
 
           .texto-card {
-            font-size: 14px;
+            font-size: 17px;
             font-weight: 700;
             color: #374151;
-            margin-top: 2px;
+            margin-top: 3px;
             margin-bottom: 8px;
+            line-height: 19px;
           }
 
           .categoria-card {
@@ -270,33 +296,33 @@ export default function Carteirinha() {
             justify-content: center;
             background: #d1fae5;
             color: #047857;
-            padding: 5px 12px;
+            padding: 5px 14px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 900;
             margin-top: 3px;
-            min-width: 125px;
-            max-width: 165px;
-            height: 28px;
-            line-height: 14px;
+            min-width: 150px;
+            max-width: 215px;
+            height: 34px;
+            line-height: 16px;
             text-align: center;
             white-space: nowrap;
           }
 
           .card-rodape {
-            height: 36px;
+            height: 42px;
             border-top: 1px solid #d1fae5;
-            padding: 0 18px;
+            padding: 0 22px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 11px;
+            font-size: 14px;
             color: #6b7280;
           }
 
           .codigo-card {
             color: #047857;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 900;
           }
 
@@ -305,18 +331,18 @@ export default function Carteirinha() {
           }
 
           .verso-corpo {
-            height: 158px;
-            padding: 22px 18px 14px 18px;
+            height: 210px;
+            padding: 28px 24px 18px 24px;
             display: flex;
-            gap: 18px;
+            gap: 24px;
             align-items: center;
           }
 
           .box-qrcode {
-            width: 122px;
-            height: 122px;
-            border: 3px solid #10b981;
-            border-radius: 14px;
+            width: 156px;
+            height: 156px;
+            border: 4px solid #10b981;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -329,7 +355,7 @@ export default function Carteirinha() {
           }
 
           .verso-info .texto-card {
-            margin-bottom: 9px;
+            margin-bottom: 11px;
           }
 
           .carteirinha-area {
@@ -340,7 +366,7 @@ export default function Carteirinha() {
 
           .preview-cards {
             display: flex;
-            gap: 16px;
+            gap: 22px;
             align-items: flex-start;
             justify-content: center;
             flex-wrap: wrap;
@@ -448,7 +474,7 @@ export default function Carteirinha() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <MdPhotoCamera className="text-5xl text-gray-400" />
+                          <MdPhotoCamera className="text-6xl text-gray-400" />
                         )}
                       </div>
 
@@ -491,7 +517,7 @@ export default function Carteirinha() {
                       <div className="box-qrcode">
                         <QRCodeCanvas
                           value={gerarValorQr(atleta)}
-                          size={94}
+                          size={118}
                           level="H"
                           includeMargin={true}
                         />
