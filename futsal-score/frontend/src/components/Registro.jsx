@@ -116,10 +116,15 @@ export default function Registro({ selectedCategoria }) {
   }
 
   function montarUrlFoto(foto) {
-    if (!foto) return ""
-    if (foto.startsWith("http")) return foto
-    return `${getApiBaseUrl()}${foto}`
+  if (!foto) return ""
+  if (foto.startsWith("data:image")) {
+    return foto
   }
+  if (foto.startsWith("http")) {
+    return foto
+  }
+  return `${getApiBaseUrl()}${foto}`
+}
 
   async function fetchRegistros() {
     setLoading(true)

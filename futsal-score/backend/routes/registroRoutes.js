@@ -1,26 +1,11 @@
 import express from "express"
 import multer from "multer"
-import path from "path"
-import fs from "fs"
 import Registro from "../models/Registro.js"
 import auth from "../middleware/auth.js"
 
 const router = express.Router()
 
-const uploadDir = "uploads/registros"
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
-    cb(null, uniqueSuffix + path.extname(file.originalname))
-  },
-})
-
+const storage = multer.memoryStorage()
 const upload = multer({ storage })
 
 function getUserId(user) {
@@ -39,6 +24,13 @@ function getUserRole(user) {
 function isAdminUser(user) {
   const role = getUserRole(user)
   return role === "admin" || user?.isAdmin === true
+}
+
+function converterFotoBase64(file) {
+  if (!file) return ""
+  const mimeType = file.mimetype
+  const base64 = file.buffer.toString("base64")
+  return `data:${mimeType};base64,${base64}`
 }
 
 router.post("/", auth, upload.single("foto"), async (req, res) => {
@@ -66,13 +58,12 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
       gols: Number(req.body.gols) || 0,
       amarelos: Number(req.body.amarelos) || 0,
       vermelhos: Number(req.body.vermelhos) || 0,
-      foto: req.file ? `/uploads/registros/${req.file.filename}` : "",
+      foto: converterFotoBase64(req.file),
       criadoPor: userId,
       time: user.time || req.body.time || "Sem time",
     })
 
     await novoRegistro.save()
-
     res.status(201).json(novoRegistro)
   } catch (error) {
     console.error("Erro ao criar registro:", error)
@@ -161,7 +152,7 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
     }
 
     if (req.file) {
-      dadosAtualizados.foto = `/uploads/registros/${req.file.filename}`
+      dadosAtualizados.foto = converterFotoBase64(req.file)
     }
 
     if (!isAdmin) {
@@ -209,14 +200,6 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(403).json({
         msg: "Sem permissão para excluir este registro.",
       })
-    }
-
-    if (registro.foto && registro.foto.startsWith("/uploads/registros/")) {
-      const fotoPath = path.join(process.cwd(), registro.foto)
-
-      if (fs.existsSync(fotoPath)) {
-        fs.unlinkSync(fotoPath)
-      }
     }
 
     await Registro.findByIdAndDelete(id)
