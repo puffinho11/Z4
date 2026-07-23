@@ -373,28 +373,23 @@ export default function Carteirinha() {
           }
         `}
       </style>
-
       <div className="no-print mb-8">
         <h2 className="text-4xl font-bold text-emerald-800 flex items-center gap-3">
           <MdBadge className="text-5xl text-emerald-600" />
           Carteirinhas dos Atletas
         </h2>
-
         <p className="text-gray-600 mt-2">
           Gere carteirinhas automaticamente com os dados cadastrados no registro.
         </p>
       </div>
-
       <div className="no-print bg-white rounded-2xl shadow-md border border-emerald-100 p-6 mb-8">
         <h3 className="text-lg font-bold text-emerald-800 mb-4">Filtros</h3>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdSearch />
               Buscar atleta
             </label>
-
             <input
               type="text"
               value={busca}
@@ -403,13 +398,11 @@ export default function Carteirinha() {
               className="w-full border border-emerald-300 rounded-xl p-2.5 mt-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
-
           <div>
             <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
               <MdSportsSoccer />
               Categoria
             </label>
-
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
@@ -435,7 +428,6 @@ export default function Carteirinha() {
           </div>
         </div>
       </div>
-
       {loading ? (
         <p className="text-center text-gray-500">Carregando atletas...</p>
       ) : atletasFiltrados.length === 0 ? (
@@ -464,7 +456,6 @@ export default function Carteirinha() {
                         Carteirinha de Identificação do Atleta
                       </div>
                     </div>
-
                     <div className="card-corpo">
                       <div className="card-foto">
                         {atleta.foto ? (
@@ -477,7 +468,6 @@ export default function Carteirinha() {
                           <MdPhotoCamera className="text-6xl text-gray-400" />
                         )}
                       </div>
-
                       <div className="card-info">
                         <div className="label-card">Nome</div>
                         <div className="nome-card">{atleta.nome}</div>
@@ -489,14 +479,12 @@ export default function Carteirinha() {
                         <div className="texto-card">
                           {formatarData(atleta.dataNascimento)}
                         </div>
-
                         <div className="label-card">Categoria</div>
                         <div className="categoria-card">
                           {atleta.categoria}
                         </div>
                       </div>
                     </div>
-
                     <div className="card-rodape">
                       <span>Código do atleta</span>
                       <span className="codigo-card">
@@ -504,7 +492,6 @@ export default function Carteirinha() {
                       </span>
                     </div>
                   </div>
-
                   <div id={`verso-${atleta._id}`} className="card-carteirinha">
                     <div className="card-topo verso-topo">
                       <div className="card-time">Validação do Atleta</div>
@@ -512,7 +499,6 @@ export default function Carteirinha() {
                         Escaneie o QR Code para conferir os dados
                       </div>
                     </div>
-
                     <div className="verso-corpo">
                       <div className="box-qrcode">
                         <QRCodeCanvas
@@ -522,7 +508,6 @@ export default function Carteirinha() {
                           includeMargin={true}
                         />
                       </div>
-
                       <div className="card-info verso-info">
                         <div className="label-card">Nome</div>
                         <div className="texto-card">{atleta.nome}</div>
@@ -536,7 +521,6 @@ export default function Carteirinha() {
                         <div className="texto-card">{atleta.categoria}</div>
                       </div>
                     </div>
-
                     <div className="card-rodape">
                       <span>Documento esportivo</span>
                       <span>
@@ -546,7 +530,6 @@ export default function Carteirinha() {
                     </div>
                   </div>
                 </div>
-
                 <div className="no-print mt-4 flex justify-end">
                   <button
                     onClick={() => baixarPDF(atleta)}

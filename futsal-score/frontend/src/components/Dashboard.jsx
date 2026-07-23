@@ -174,10 +174,6 @@ function ResumoOcorrencias({
   )
 }
 
-/**
- * ✅ sem classes dinâmicas do tailwind (text-${color}-600)
- * porque isso quebra no build
- */
 function ResumoItem({ label, value, tone = "emerald", icon: Icon, noBorder = false }) {
   const toneStyles = {
     red: { icon: "text-red-600", value: "text-red-700", badge: "bg-red-50 border-red-200" },
