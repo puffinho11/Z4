@@ -21,15 +21,48 @@ function getUserRole(user) {
   )
 }
 
-function isAdminUser(user) {
+function isSuperAdminUser(user) {
   const role = getUserRole(user)
-  return role === "admin" || user?.isAdmin === true
+
+  return role === "superadmin" || user?.isSuperAdmin === true
+}
+
+function getUserTime(user) {
+  return user?.time?._id || user?.time?.id || user?.time || null
+}
+
+function criarFiltroDoUsuario(user) {
+  if (isSuperAdminUser(user)) return {}
+
+  const userId = getUserId(user)
+  const time = getUserTime(user)
+
+  if (time) {
+    return {
+      $or: [
+        { time },
+        {
+          criadoPor: userId,
+          $or: [
+            { time: { $exists: false } },
+            { time: null },
+            { time: "" },
+            { time: "Sem time" },
+          ],
+        },
+      ],
+    }
+  }
+
+  return { criadoPor: userId }
 }
 
 function converterFotoBase64(file) {
   if (!file) return ""
+
   const mimeType = file.mimetype
   const base64 = file.buffer.toString("base64")
+
   return `data:${mimeType};base64,${base64}`
 }
 
@@ -60,14 +93,20 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
       vermelhos: Number(req.body.vermelhos) || 0,
       foto: converterFotoBase64(req.file),
       criadoPor: userId,
-      time: user.time || req.body.time || "Sem time",
+
+      // O time sempre vem do usuário autenticado.
+      time: getUserTime(user) || "Sem time",
     })
 
     await novoRegistro.save()
+
     res.status(201).json(novoRegistro)
   } catch (error) {
     console.error("Erro ao criar registro:", error)
-    res.status(500).json({ msg: "Erro interno ao criar registro." })
+
+    res.status(500).json({
+      msg: "Erro interno ao criar registro.",
+    })
   }
 })
 
@@ -75,22 +114,14 @@ router.get("/", auth, async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isAdminUser(user)
 
-    let query = {}
-
-    if (!isAdmin) {
-      query = {
-        $or: [
-          { criadoPor: userId },
-          { time: user.time },
-          { time: "Sem time" },
-          { time: null },
-          { time: "" },
-          { time: "Todos" },
-        ],
-      }
+    if (!userId) {
+      return res.status(401).json({
+        msg: "Usuário não identificado.",
+      })
     }
+
+    const query = criarFiltroDoUsuario(user)
 
     const registros = await Registro.find(query).sort({
       data: -1,
@@ -100,7 +131,10 @@ router.get("/", auth, async (req, res) => {
     res.json(registros)
   } catch (error) {
     console.error("Erro ao carregar registros:", error)
-    res.status(500).json({ msg: "Erro ao carregar registros." })
+
+    res.status(500).json({
+      msg: "Erro ao carregar registros.",
+    })
   }
 })
 
@@ -108,30 +142,17 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
   try {
     const user = req.user
     const userId = getUserId(user)
-    const isAdmin = isAdminUser(user)
+    const isSuperAdmin = isSuperAdminUser(user)
     const { id } = req.params
 
-    const registro = await Registro.findById(id)
+    const registro = await Registro.findOne({
+      _id: id,
+      ...criarFiltroDoUsuario(user),
+    })
 
     if (!registro) {
-      return res.status(404).json({ msg: "Registro não encontrado." })
-    }
-
-    const mesmoCriador =
-      registro.criadoPor && String(registro.criadoPor) === String(userId)
-
-    const mesmoTime =
-      registro.time && user.time && String(registro.time) === String(user.time)
-
-    const registroSemTime =
-      !registro.time ||
-      registro.time === "" ||
-      registro.time === "Todos" ||
-      registro.time === "Sem time"
-
-    if (!isAdmin && !mesmoCriador && !mesmoTime && !registroSemTime) {
-      return res.status(403).json({
-        msg: "Sem permissão para editar este registro.",
+      return res.status(404).json({
+        msg: "Registro não encontrado.",
       })
     }
 
@@ -155,59 +176,57 @@ router.put("/:id", auth, upload.single("foto"), async (req, res) => {
       dadosAtualizados.foto = converterFotoBase64(req.file)
     }
 
-    if (!isAdmin) {
+    if (!isSuperAdmin) {
       dadosAtualizados.criadoPor = registro.criadoPor || userId
-      dadosAtualizados.time = registro.time || user.time || "Sem time"
+      dadosAtualizados.time =
+        getUserTime(user) || registro.time || "Sem time"
     }
 
-    const atualizado = await Registro.findByIdAndUpdate(id, dadosAtualizados, {
-      new: true,
-    })
+    const atualizado = await Registro.findByIdAndUpdate(
+      id,
+      dadosAtualizados,
+      {
+        new: true,
+      }
+    )
 
     res.json(atualizado)
   } catch (error) {
     console.error("Erro ao atualizar registro:", error)
-    res.status(500).json({ msg: "Erro interno ao atualizar registro." })
+
+    res.status(500).json({
+      msg: "Erro interno ao atualizar registro.",
+    })
   }
 })
 
 router.delete("/:id", auth, async (req, res) => {
   try {
     const user = req.user
-    const userId = getUserId(user)
-    const isAdmin = isAdminUser(user)
     const { id } = req.params
 
-    const registro = await Registro.findById(id)
+    const registro = await Registro.findOne({
+      _id: id,
+      ...criarFiltroDoUsuario(user),
+    })
 
     if (!registro) {
-      return res.status(404).json({ msg: "Registro não encontrado." })
-    }
-
-    const mesmoCriador =
-      registro.criadoPor && String(registro.criadoPor) === String(userId)
-
-    const mesmoTime =
-      registro.time && user.time && String(registro.time) === String(user.time)
-
-    const registroSemTime =
-      !registro.time ||
-      registro.time === "" ||
-      registro.time === "Todos" ||
-      registro.time === "Sem time"
-
-    if (!isAdmin && !mesmoCriador && !mesmoTime && !registroSemTime) {
-      return res.status(403).json({
-        msg: "Sem permissão para excluir este registro.",
+      return res.status(404).json({
+        msg: "Registro não encontrado.",
       })
     }
 
     await Registro.findByIdAndDelete(id)
 
-    res.json({ msg: "Registro removido com sucesso." })
+    res.json({
+      msg: "Registro removido com sucesso.",
+    })
   } catch (error) {
     console.error("Erro ao deletar registro:", error)
-    res.status(500).json({ msg: "Erro interno ao deletar registro." })
+
+    res.status(500).json({
+      msg: "Erro interno ao deletar registro.",
+    })
   }
 })
 

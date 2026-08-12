@@ -13,7 +13,68 @@ import {
   MdGroup,
 } from "react-icons/md"
 
+function lerJson(valor) {
+  try {
+    return valor ? JSON.parse(valor) : null
+  } catch {
+    return null
+  }
+}
+
+function decodificarToken(token) {
+  try {
+    const payload = token?.split(".")[1]
+    if (!payload) return null
+
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/")
+    return JSON.parse(decodeURIComponent(escape(window.atob(base64))))
+  } catch {
+    return null
+  }
+}
+
+function obterEquipeAtual() {
+  const usuario =
+    lerJson(localStorage.getItem("usuario")) ||
+    lerJson(localStorage.getItem("user")) ||
+    lerJson(sessionStorage.getItem("usuario")) ||
+    lerJson(sessionStorage.getItem("user"))
+
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    sessionStorage.getItem("token") ||
+    sessionStorage.getItem("authToken")
+
+  const dados = usuario || decodificarToken(token) || {}
+  const equipe = dados.equipe || dados.time || dados.clube || {}
+
+  return (
+    dados.equipeId ||
+    dados.timeId ||
+    dados.clubeId ||
+    equipe._id ||
+    equipe.id ||
+    (typeof equipe === "string" ? equipe : "")
+  )
+}
+
+function obterEquipeDoRegistro(registro) {
+  const equipe = registro?.equipe || registro?.time || registro?.clube || {}
+
+  return String(
+    registro?.equipeId ||
+      registro?.timeId ||
+      registro?.clubeId ||
+      equipe?._id ||
+      equipe?.id ||
+      (typeof equipe === "string" ? equipe : "") ||
+      ""
+  )
+}
+
 export default function Chamada() {
+  const equipeId = obterEquipeAtual()
   const [categoria, setCategoria] = useState("")
   const [atletas, setAtletas] = useState([])
   const [presencas, setPresencas] = useState({})
@@ -40,10 +101,18 @@ export default function Chamada() {
   }, [])
 
   async function carregarHistorico() {
+    if (!equipeId) {
+      setHistorico([])
+      setMensagem("❌ Não foi possível identificar a equipe do usuário.")
+      return
+    }
+
     try {
-      const res = await api.get("/chamadas")
+      const res = await api.get("/chamadas", { params: { equipeId } })
       const sortedHistorico = Array.isArray(res.data)
-        ? res.data.sort((a, b) => new Date(b.data) - new Date(a.data))
+        ? res.data
+            .filter((chamada) => obterEquipeDoRegistro(chamada) === String(equipeId))
+            .sort((a, b) => new Date(b.data) - new Date(a.data))
         : []
 
       setHistorico(sortedHistorico)
@@ -90,11 +159,19 @@ export default function Chamada() {
         return
       }
 
+      if (!equipeId) {
+        setAtletas([])
+        setPresencas({})
+        setMensagem("❌ Não foi possível identificar a equipe do usuário.")
+        return
+      }
+
       try {
-        const res = await api.get("/registros")
+        const res = await api.get("/registros", { params: { equipeId } })
 
         const filtrados = Array.isArray(res.data)
           ? res.data
+              .filter((a) => obterEquipeDoRegistro(a) === String(equipeId))
               .filter((a) => categoriaConfere(a.categoria, categoria))
               .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
           : []
@@ -118,7 +195,7 @@ export default function Chamada() {
     }
 
     fetchAtletas()
-  }, [categoria])
+  }, [categoria, equipeId])
 
   const handleToggle = (id) => {
     setPresencas((p) => ({
@@ -145,6 +222,7 @@ export default function Chamada() {
       }))
 
       const payload = {
+        equipeId,
         categoria,
         data,
         professor,
@@ -179,7 +257,7 @@ export default function Chamada() {
     if (!window.confirm("Deseja realmente excluir esta chamada?")) return
 
     try {
-      await api.delete(`/chamadas/${id}`)
+      await api.delete(`/chamadas/${id}`, { params: { equipeId } })
       setMensagem("🗑️ Chamada excluída com sucesso!")
       carregarHistorico()
     } catch (err) {
@@ -189,6 +267,11 @@ export default function Chamada() {
   }
 
   const handleEditar = async (chamada) => {
+    if (obterEquipeDoRegistro(chamada) !== String(equipeId)) {
+      setMensagem("❌ Esta chamada pertence a outra equipe.")
+      return
+    }
+
     setEditandoId(chamada._id)
     setCategoria(chamada.categoria)
     setData(chamada.data?.slice(0, 10) || new Date().toISOString().slice(0, 10))
@@ -197,10 +280,11 @@ export default function Chamada() {
     window.scrollTo({ top: 0, behavior: "smooth" })
 
     try {
-      const resAtletas = await api.get("/registros")
+      const resAtletas = await api.get("/registros", { params: { equipeId } })
 
       const atletasDaCategoria = Array.isArray(resAtletas.data)
         ? resAtletas.data
+            .filter((a) => obterEquipeDoRegistro(a) === String(equipeId))
             .filter((a) => categoriaConfere(a.categoria, chamada.categoria))
             .sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
         : []
